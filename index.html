@@ -13,7 +13,7 @@
   .glow{filter:drop-shadow(0 0 8px currentColor)}
 
   /* ---------- HUD ---------- */
-  #hud{position:fixed;inset:0;pointer-events:none;z-index:5}
+  #hud{position:fixed;left:0;right:0;top:0;height:100svh;pointer-events:none;z-index:5}
   #xpbar{position:absolute;top:0;left:0;right:0;height:8px;background:rgba(255,255,255,.06)}
   #xpfill{height:100%;width:0;background:linear-gradient(90deg,#22e6ff,#7c5bff);box-shadow:0 0 10px #22e6ff;transition:width .12s}
   #topbar{position:absolute;top:14px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:3px}
@@ -23,13 +23,13 @@
   #lvchip{position:absolute;top:16px;left:16px;background:rgba(12,18,34,.7);border:1px solid rgba(124,139,255,.3);
     border-radius:10px;padding:6px 12px;font-size:13px;font-weight:800;backdrop-filter:blur(6px)}
   #lvchip span{color:var(--cyan)}
-  #hpwrap{position:absolute;left:16px;bottom:16px;width:230px;max-width:44vw}
-  #hpbar{height:16px;border-radius:9px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid rgba(255,255,255,.12)}
+  #hpwrap{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(14px + env(safe-area-inset-bottom,0px));width:min(340px,86vw)}
+  #hpbar{height:20px;border-radius:11px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid rgba(255,255,255,.14)}
   #hpfill{height:100%;width:100%;background:linear-gradient(90deg,#ff4d5e,#ff8a5e);box-shadow:0 0 10px #ff4d5e;transition:width .15s}
-  #hptxt{font-size:11px;font-weight:700;margin-top:3px;color:#ffb3bb;text-align:center}
+  #hptxt{font-size:13px;font-weight:800;margin-top:3px;color:#ffb3bb;text-align:center;text-shadow:0 0 8px rgba(0,0,0,.6)}
   #shardchip{position:absolute;right:16px;top:16px;background:rgba(12,18,34,.7);border:1px solid rgba(255,213,74,.35);
     border-radius:10px;padding:6px 12px;font-size:13px;font-weight:800;color:var(--gold);backdrop-filter:blur(6px)}
-  #weprow{position:absolute;right:16px;bottom:16px;display:flex;flex-direction:column;gap:5px;align-items:flex-end}
+  #weprow{position:absolute;right:12px;bottom:calc(64px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:5px;align-items:flex-end}
   .wchip{display:flex;align-items:center;gap:6px;background:rgba(12,18,34,.62);border:1px solid rgba(255,255,255,.1);
     border-radius:9px;padding:3px 8px;font-size:11px;font-weight:700;backdrop-filter:blur(4px)}
   .wchip .wi{font-size:14px}

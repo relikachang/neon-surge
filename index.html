@@ -265,6 +265,7 @@
   <div class="title" style="font-size:40px">暫停</div>
   <div id="pausebuild" style="text-align:left;margin-top:16px"></div>
   <button class="btn" id="resumebtn" style="margin-top:18px">繼續</button>
+  <button class="btn ghost" id="restartbtn">重新開始</button>
   <button class="btn ghost" id="quitbtn">放棄本局</button>
 </div></div>
 
@@ -1569,6 +1570,7 @@ $('shopbtn').onclick=function(){ renderShop(); $('menu').classList.remove('show'
 $('shopclose').onclick=function(){ $('shop').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('pausebtn').onclick=togglePause;
 $('resumebtn').onclick=function(){ togglePause(); };
+$('restartbtn').onclick=function(){ var d=!!(G&&G.daily); $('pause').classList.remove('show'); startGame(d); };
 $('quitbtn').onclick=function(){ G.over=true; gameOver(); $('pause').classList.remove('show'); };
 $('againbtn').onclick=function(){ startGame(!!(G&&G.daily)); };
 $('tomenu').onclick=toMenu;

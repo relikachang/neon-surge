@@ -381,6 +381,8 @@ var META=[
   {id:'regen', ic:'✚', name:'再生模組', desc:'初始每秒回血', per:'+0.3', max:5, cost:function(l){return 70+l*50;}},
   {id:'combo', ic:'🔥', name:'連擊延續', desc:'連擊保持時間', per:'+15%', max:5, cost:function(l){return 50+l*40;}},
   {id:'armor', ic:'🛡️', name:'裝甲鍍層', desc:'初始減傷', per:'+4%', max:5, cost:function(l){return 70+l*50;}},
+  {id:'haste', ic:'⏱️', name:'超載核心', desc:'初始攻速', per:'+5%', max:5, cost:function(l){return 60+l*50;}},
+  {id:'area',  ic:'🔵', name:'力場放大', desc:'初始攻擊範圍', per:'+5%', max:5, cost:function(l){return 60+l*50;}},
   {id:'revive',ic:'💫', name:'復生協議', desc:'每局復活一次', per:'解鎖', max:1, cost:function(l){return 400;}},
 ];
 function metaLv(id){return DB.meta[id]||0;}
@@ -617,7 +619,7 @@ function newRun(daily){
     weapons:[], passives:{}, base:{} };
   // 基礎屬性（含永久強化 + 角色 + 每日變異）
   player.base={ dmg:1*(1+0.08*metaLv('dmg'))*(ch.stat.dmg||1)*mut.pDmg,
-    fireRate:1*(ch.stat.fireRate||1), speed:230*(1+0.05*metaLv('spd'))*(ch.stat.speed||1)*mut.pSpd,
+    fireRate:1*(ch.stat.fireRate||1)*(1+0.05*metaLv('haste')), speed:230*(1+0.05*metaLv('spd'))*(ch.stat.speed||1)*mut.pSpd,
     maxHp:(100+12*metaLv('hp'))*(ch.stat.maxHp||1)*mut.pHp, pickup:90*(1+0.12*metaLv('pick'))*(ch.stat.pickup||1),
     crit:0.05+(ch.stat.crit||0)+0.03*metaLv('crit'), critMult:2, armor:0.04*metaLv('armor'), regen:0.3*metaLv('regen'), xpMult:1+0.08*metaLv('xp') };
   enemies=[]; bullets=[]; ebullets=[]; orbs=[]; particles=[]; dmgnums=[]; pickups=[]; blades=[]; fxRings=[]; wells=[]; beams=[]; mines=[]; clouds=[]; hazards=[];
@@ -646,7 +648,7 @@ function recalc(){
   player.armor=Math.min(0.7,b.armor+0.08*(p.parmor||0));
   player.regen=b.regen+0.6*(p.pregen||0);
   player.xpMult=b.xpMult*(1+0.15*(p.pxp||0));
-  player.area=1+0.16*(p.parea||0);      // 範圍/巨大化
+  player.area=1+0.16*(p.parea||0)+0.05*metaLv('area');      // 範圍/巨大化(含局外強化)
   player.amount=(p.pamount||0);          // 額外投射物
   player.pierceBonus=(p.ppierce||0);     // 額外貫穿
   if(player.hp>player.maxHp)player.hp=player.maxHp;

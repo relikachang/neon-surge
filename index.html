@@ -791,8 +791,8 @@ function killEnemy(e){
   // 掉落道具
   var lchance=0.02+G.luck;
   if(e.boss){ spawnPickup(e.x,e.y,'bosschest'); G.bossKills=(G.bossKills||0)+1; }   // 首領：超級戰利品
-  else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem'])); }   // 精英必掉道具
-  else if(Math.random()<lchance){ spawnPickup(e.x,e.y,pick(['heal','heal','bomb','magnet','frenzy','shield','timefreeze','xpgem'])); }
+  else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag'])); }   // 精英必掉道具
+  else if(Math.random()<lchance){ spawnPickup(e.x,e.y,pick(['heal','heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag'])); }
   if(e.boss){ announce('首領擊破！','#ffd54a'); G.shards+=Math.floor(20*(1+0.15*metaLv('greed'))); }
 }
 function addCombo(){ G.combo++; G.comboTimer=2.2*(1+0.15*metaLv('combo')); if(G.combo>G.peakCombo)G.peakCombo=G.combo;
@@ -1076,6 +1076,7 @@ function collectPickup(p){
   else if(p.type==='shield'){ player.iframe=Math.max(player.iframe,4); ringFx(player.x,player.y,200,'#22e6ff'); floatText('無敵護盾！','#22e6ff'); }
   else if(p.type==='timefreeze'){ enemies.forEach(function(e){ if(!e.boss)e.frozen=Math.max(e.frozen||0,3); else e.frozen=Math.max(e.frozen||0,1.5); }); ringFx(player.x,player.y,420,'#7dd3ff'); flashScreen('125,211,255',0.32); floatText('時間凍結！','#7dd3ff'); }
   else if(p.type==='xpgem'){ gainXP(G.xpNeed*0.8); ringFx(player.x,player.y,180,'#22e6ff'); floatText('經驗寶石！','#22e6ff'); }
+  else if(p.type==='shardbag'){ var sg=25+Math.floor(G.time/30)*5; G.shards+=sg; ringFx(player.x,player.y,150,'#ffd54a'); floatText('+◆'+sg+' 碎片','#ffd54a'); }
   else if(p.type==='chest'){ for(var i=0;i<3;i++)levelUp(); floatText('寶箱！三連升級','#ffd54a'); }
   else if(p.type==='bosschest'){ player.hp=player.maxHp; player.frenzyT=Math.max(player.frenzyT,5); G.shards+=Math.floor(80*(1+0.15*metaLv('greed')));
     for(var i=0;i<5;i++)levelUp(); floatText('首領戰利品！五連升級 + 回滿 + 狂化','#ffd54a'); }
@@ -1333,7 +1334,7 @@ function drawPlayer(){
   if(player.iframe>1){ ctx.strokeStyle='rgba(34,230,255,0.75)'; ctx.lineWidth=3; ctx.shadowColor='#22e6ff'; ctx.shadowBlur=14;
     ctx.beginPath(); ctx.arc(player.x,player.y,player.radius+11,0,TAU); ctx.stroke(); ctx.shadowBlur=0; }
 }
-function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎'}[p.type];
+function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙'}[p.type];
   var yy=p.y+Math.sin(G.time*4+p.x)*4;
   ctx.save(); ctx.shadowColor='#ffd54a'; ctx.shadowBlur=14; ctx.font='24px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText(ic,p.x,yy); ctx.restore(); }

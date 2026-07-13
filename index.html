@@ -865,7 +865,7 @@ function update(dt){
   if(keys.KeyA||keys.ArrowLeft)mx-=1; if(keys.KeyD||keys.ArrowRight)mx+=1;
   if(drag.active){ mx=drag.dx; my=drag.dy; }
   var ml=Math.hypot(mx,my); if(ml>1){mx/=ml;my/=ml;}
-  if(ml>0.05){ player.x+=mx*player.speed*dt; player.y+=my*player.speed*dt; player.aimAngle=Math.atan2(my,mx); }
+  if(ml>0.05){ var sandMul=(G.sandT>0)?0.62:1; player.x+=mx*player.speed*sandMul*dt; player.y+=my*player.speed*sandMul*dt; player.aimAngle=Math.atan2(my,mx); }
   if(player.iframe>0)player.iframe-=dt;
   if(player.frenzyT>0)player.frenzyT-=dt;
   if(player.regen>0&&player.hp<player.maxHp)player.hp=Math.min(player.maxHp,player.hp+player.regen*dt);
@@ -1043,6 +1043,9 @@ function spawnDirector(dt){
   // 環境危害：虛空深淵吸引帶(把玩家拉向中心，逼你走位)
   if(G.stage&&G.stage.id==='abyss'){ G.hazT=(G.hazT==null?4:G.hazT-dt); if(G.hazT<=0){ G.hazT=rand(3,4.6);
     hazards.push({kind:'pull',x:player.x+rand(-260,260),y:player.y+rand(-260,260),r:110+Math.random()*50,life:5,max:5,dtk:0}); } }
+  // 環境危害：緋紅荒原沙暴(週期性減速 + 視野變暗)
+  if(G.sandT>0)G.sandT-=dt;
+  if(G.stage&&G.stage.id==='wastes'){ G.sandCd=(G.sandCd==null?12:G.sandCd-dt); if(G.sandCd<=0){ G.sandCd=rand(13,18); G.sandT=4; announce('🌪 沙暴來襲！移動變慢','#e8a04a'); flashScreen('220,140,60',0.25); } }
   // 首領
   if(G.time>=G.nextBossAt){ G.nextBossAt+=120; spawnBoss(); }
 }
@@ -1260,6 +1263,8 @@ function render(){
   // 傷害紅屏
   if(hurtFlash>0){ ctx.fillStyle='rgba(255,40,60,'+(hurtFlash*0.35)+')'; ctx.fillRect(0,0,W,H); }
   if(flashA>0){ ctx.fillStyle='rgba('+flashRGB+','+Math.min(0.5,flashA*0.5)+')'; ctx.fillRect(0,0,W,H); }
+  // 沙暴視野變暗(緋紅荒原)
+  if(G.sandT>0){ ctx.save(); ctx.globalAlpha=Math.min(0.24,G.sandT*0.22); ctx.fillStyle='#c86428'; ctx.fillRect(0,0,W,H); ctx.restore(); }
   // 低血警示：HP<25% 螢幕紅框脈動
   if(!G.over&&player.maxHp>0&&player.hp/player.maxHp<0.25){ var lp=(Math.sin(Date.now()/200)+1)/2;
     ctx.save(); ctx.strokeStyle='rgba(255,40,60,'+(0.25+lp*0.45)+')'; ctx.lineWidth=16; ctx.strokeRect(8,8,W-16,H-16); ctx.restore(); }

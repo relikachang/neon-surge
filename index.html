@@ -955,7 +955,9 @@ function update(dt){
   for(var i=beams.length-1;i>=0;i--){ beams[i].life-=dt; if(beams[i].life<=0)beams.splice(i,1); }
   // ---- 環境危害(熔岩池)：站上去持續受傷 ----
   for(var i=hazards.length-1;i>=0;i--){ var hz=hazards[i]; hz.life-=dt; hz.dtk-=dt;
-    if(hz.life>0.5 && hz.dtk<=0 && dist2(player.x,player.y,hz.x,hz.y)<hz.r*hz.r){ hz.dtk=0.5; hurtPlayer(5*(1+G.time/360)); }
+    if(hz.life>0.5){ var hd2=dist2(player.x,player.y,hz.x,hz.y);
+      if(hz.kind==='pull'){ if(hd2<hz.r*hz.r && hd2>4){ var hpa=Math.atan2(hz.y-player.y,hz.x-player.x); player.x+=Math.cos(hpa)*135*dt; player.y+=Math.sin(hpa)*135*dt; } }
+      else if(hz.dtk<=0 && hd2<hz.r*hz.r){ hz.dtk=0.5; hurtPlayer(5*(1+G.time/360)); } }
     if(hz.life<=0)hazards.splice(i,1); }
 
   // ---- 地雷 ----
@@ -1034,7 +1036,10 @@ function spawnDirector(dt){
     else announce('第 '+wv+' 波','#22e6ff'); }
   // 環境危害：熔岩核心地面熔岩池
   if(G.stage&&G.stage.id==='core'){ G.hazT=(G.hazT==null?3:G.hazT-dt); if(G.hazT<=0){ G.hazT=rand(2.4,3.8);
-    hazards.push({x:player.x+rand(-280,280),y:player.y+rand(-280,280),r:50+Math.random()*40,life:5.5,max:5.5,dtk:0}); } }
+    hazards.push({kind:'lava',x:player.x+rand(-280,280),y:player.y+rand(-280,280),r:50+Math.random()*40,life:5.5,max:5.5,dtk:0}); } }
+  // 環境危害：虛空深淵吸引帶(把玩家拉向中心，逼你走位)
+  if(G.stage&&G.stage.id==='abyss'){ G.hazT=(G.hazT==null?4:G.hazT-dt); if(G.hazT<=0){ G.hazT=rand(3,4.6);
+    hazards.push({kind:'pull',x:player.x+rand(-260,260),y:player.y+rand(-260,260),r:110+Math.random()*50,life:5,max:5,dtk:0}); } }
   // 首領
   if(G.time>=G.nextBossAt){ G.nextBossAt+=120; spawnBoss(); }
 }
@@ -1181,9 +1186,13 @@ function render(){
 
   // 環境危害：熔岩池
   for(var i=0;i<hazards.length;i++){ var hz=hazards[i], ha=Math.max(0,hz.life/hz.max);
-    ctx.save(); ctx.globalAlpha=0.38*ha; ctx.fillStyle='#ff5a2b'; ctx.shadowColor='#ff5a2b'; ctx.shadowBlur=22;
+    var hzPull=hz.kind==='pull', hzC=hzPull?'#8b5cf6':'#ff5a2b', hzE=hzPull?'#c98bff':'#ffb347';
+    ctx.save(); ctx.globalAlpha=0.34*ha; ctx.fillStyle=hzC; ctx.shadowColor=hzC; ctx.shadowBlur=22;
     ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r,0,TAU); ctx.fill();
-    ctx.globalAlpha=0.7*ha; ctx.lineWidth=3; ctx.strokeStyle='#ffb347'; ctx.stroke(); ctx.restore(); }
+    if(hzPull){ ctx.globalAlpha=0.8*ha; ctx.lineWidth=3; ctx.strokeStyle=hzE;
+      for(var k=0;k<3;k++){ ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r*(0.35+k*0.22),(G.time*2+k)%TAU,(G.time*2+k)%TAU+4.4); ctx.stroke(); } }
+    else { ctx.globalAlpha=0.7*ha; ctx.lineWidth=3; ctx.strokeStyle=hzE; ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r,0,TAU); ctx.stroke(); }
+    ctx.restore(); }
 
   // 黑洞重力井
   for(var i=0;i<wells.length;i++){ var wl=wells[i], wa=Math.max(0,wl.life/wl.max);

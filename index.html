@@ -272,6 +272,7 @@
 <div id="over" class="overlay"><div class="panel">
   <div class="otitle">倒 下</div>
   <div class="oscore">分數 <b id="o-score">0</b></div>
+  <div id="o-record" style="display:none;text-align:center;font-size:15px;font-weight:900;color:#ffd54a;letter-spacing:2px;text-shadow:0 0 12px rgba(255,213,74,.6);margin-bottom:4px">🏆 新紀錄！</div>
   <div class="ostats">
     <div class="ost"><b id="o-time">0:00</b><span>存活時間</span></div>
     <div class="ost"><b id="o-kills">0</b><span>擊殺數</span></div>
@@ -1401,6 +1402,7 @@ function gameOver(){
   var reward=Math.floor((G.kills*0.6+G.time*0.5+G.level*3)*(1+0.15*metaLv('greed')))+G.shards;
   DB.shards+=reward;
   if(G.time>DB.best.time){DB.best={time:G.time,kills:G.kills};}
+  G.newRecord = (G.score||0) > (DB.bestScore||0); if(G.newRecord)DB.bestScore=G.score;
   // 解鎖角色：存活 5 分鐘解鎖刃舞者；擊殺 800 解鎖風暴使
   if(G.time>=300&&!DB.chars.blade){DB.chars.blade=true;}
   if(G.kills>=800&&!DB.chars.storm){DB.chars.storm=true;}
@@ -1424,6 +1426,7 @@ function gameOver(){
   $('o-time').textContent=fmtTime(G.time); $('o-kills').textContent=G.kills;
   $('o-level').textContent=G.level; $('o-wave').textContent=G.wave;
   $('o-score').textContent=G.score||0;
+  $('o-record').style.display=G.newRecord?'block':'none';
   $('o-boss').textContent=G.bossKills||0; $('o-elite').textContent=G.eliteKills||0;
   $('o-dps').textContent=Math.round((G.dmgDealt||0)/Math.max(1,G.time)); $('o-combo').textContent=G.peakCombo||0;
   $('o-reward').textContent='獲得 ◆ '+reward+' 碎片';

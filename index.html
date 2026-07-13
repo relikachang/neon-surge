@@ -714,7 +714,7 @@ function spawnEnemy(type,ex,ey,mul){
   // 精英變體：更大更肉、發光、掉更多、隨機詞綴（隨時間提高機率，每日變異可加成）
   var elite = mul>1 && Math.random()<Math.min(0.4,(0.015+G.time/1600)*mt.elite);
   var affix=null;
-  if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter']); if(affix==='haste')sp*=1.6;
+  if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst']); if(affix==='haste')sp*=1.6;
     if(G.time-(G._eliteWarn||-9)>4){ G._eliteWarn=G.time; announce('⚠ 精英出現','#ffffff'); GAudio.elite&&GAudio.elite(); } }
   var ang,rr=Math.max(W,H)*0.62;
   if(ex==null){ ang=rand(0,TAU); ex=player.x+Math.cos(ang)*rr; ey=player.y+Math.sin(ang)*rr; }
@@ -932,6 +932,7 @@ function update(dt){
     var espd=e.sp;
     if(e.frozen>0){ espd=0; e.frozen-=dt; } else if(e.slow>0){ espd*=0.4; e.slow-=dt; }
     if(e.boss&&e.frenzied)espd*=2.2; else if(e.boss&&e.enraged)espd*=1.5;   // 狂暴/絕命移速大增
+    if(e.affix==='berserk'&&e.hp<e.maxHp*0.5)espd*=1.7;   // 狂亂詞綴：半血後暴衝
     if(e.boss&&!e.enraged&&e.hp/e.maxHp<0.4){ e.enraged=true; announce('⚠ '+(e.name||'首領')+' 狂暴化！','#ff2b5e'); flashScreen('255,43,94',0.45); shake(12); }
     if(e.boss&&!e.frenzied&&e.hp/e.maxHp<0.15){ e.frenzied=true; e.enraged=true; announce('☠ '+(e.name||'首領')+' 絕命狂暴！','#ff1030'); flashScreen('255,20,48',0.55); shake(18); }
     if(e.boss){ e.summonT-=dt; if(e.summonT<=0 && enemies.length<200){ e.summonT=e.enraged?6:10; var sn=e.enraged?4:2;
@@ -944,6 +945,7 @@ function update(dt){
     if(e.affix==='regen'&&e.hp<e.maxHp)e.hp=Math.min(e.maxHp,e.hp+e.maxHp*0.04*dt);   // 再生詞綴：緩慢回血
     if(e.affix==='summoner'){ e.esT=(e.esT==null?4:e.esT-dt); if(e.esT<=0){ e.esT=5; if(enemies.length<180){ spawnEnemy('swarm',e.x+rand(-30,30),e.y+rand(-30,30),1); spawnEnemy('swarm',e.x+rand(-30,30),e.y+rand(-30,30),1); } } }  // 召喚師詞綴
     if(e.affix==='teleporter'){ e.tpT=(e.tpT==null?3:e.tpT-dt); if(e.tpT<=0){ e.tpT=4; var tta=Math.atan2(player.y-e.y,player.x-e.x); e.x=player.x-Math.cos(tta)*170; e.y=player.y-Math.sin(tta)*170; ringFx(e.x,e.y,44,e.color); } }  // 瞬影詞綴
+    if(e.affix==='burst'){ e.bt=(e.bt==null?3:e.bt-dt); if(e.bt<=0){ e.bt=3.5; for(var bk=0;bk<8;bk++){ var bka=bk/8*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(bka),Math.sin(bka),195,e.dmg*0.5); } } }  // 爆裂詞綴：週期放射彈
     if(e.ranged||e.boss||e.affix==='shooter'){ e.shoot-=dt; if(e.shoot<=0){ e.shoot=(e.boss?1.1:rand(1.8,3))*(e.frenzied?0.38:e.enraged?0.55:1);
       if(e.boss){ bossAttack(e,dx,dy); }
       else { spawnEnemyBullet(e.x,e.y,dx/d,dy/d,240,e.dmg); } } }
@@ -1320,7 +1322,7 @@ function drawEnemy(e){
   else if(e.shape==='boss'){ for(var i=0;i<8;i++){var a=i/8*TAU,rr=i%2?r:r*0.7;(i?ctx.lineTo:ctx.moveTo).call(ctx,Math.cos(a)*rr,Math.sin(a)*rr);} }
   else { ctx.arc(0,0,r,0,TAU); }
   ctx.closePath(); ctx.fill();
-  if(e.elite){ ctx.lineWidth=2.5; ctx.strokeStyle=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':'#ffffff'; ctx.stroke(); }   // 精英詞綴描邊
+  if(e.elite){ ctx.lineWidth=2.5; ctx.strokeStyle=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':'#ffffff'; ctx.stroke(); }   // 精英詞綴描邊
   ctx.shadowBlur=0; ctx.restore();
   // 血條（受傷過 / boss）
   if(e.hp<e.maxHp){ var w=e.r*2, hpr=Math.max(0,e.hp/e.maxHp); ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(e.x-w/2,e.y-e.r-8,w,3);

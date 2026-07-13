@@ -958,7 +958,11 @@ function update(dt){
   for(var i=beams.length-1;i>=0;i--){ beams[i].life-=dt; if(beams[i].life<=0)beams.splice(i,1); }
   // ---- 環境危害(熔岩池)：站上去持續受傷 ----
   for(var i=hazards.length-1;i>=0;i--){ var hz=hazards[i]; hz.life-=dt; hz.dtk-=dt;
-    if(hz.life>0.5){ var hd2=dist2(player.x,player.y,hz.x,hz.y);
+    if(hz.kind==='strike'){ hz.warn-=dt;
+      if(hz.warn<=0 && !hz.fired){ hz.fired=true;
+        if(dist2(player.x,player.y,hz.x,hz.y)<hz.r*hz.r)hurtPlayer(22*(1+G.time/360));
+        ringFx(hz.x,hz.y,hz.r,'#3df0c8'); flashScreen('61,240,200',0.22); shake(6); hz.life=0.3; } }
+    else if(hz.life>0.5){ var hd2=dist2(player.x,player.y,hz.x,hz.y);
       if(hz.kind==='pull'){ if(hd2<hz.r*hz.r && hd2>4){ var hpa=Math.atan2(hz.y-player.y,hz.x-player.x); player.x+=Math.cos(hpa)*135*dt; player.y+=Math.sin(hpa)*135*dt; } }
       else if(hz.dtk<=0 && hd2<hz.r*hz.r){ hz.dtk=0.5; hurtPlayer(5*(1+G.time/360)); } }
     if(hz.life<=0)hazards.splice(i,1); }
@@ -1046,6 +1050,9 @@ function spawnDirector(dt){
   // 環境危害：緋紅荒原沙暴(週期性減速 + 視野變暗)
   if(G.sandT>0)G.sandT-=dt;
   if(G.stage&&G.stage.id==='wastes'){ G.sandCd=(G.sandCd==null?12:G.sandCd-dt); if(G.sandCd<=0){ G.sandCd=rand(13,18); G.sandT=4; announce('🌪 沙暴來襲！移動變慢','#e8a04a'); flashScreen('220,140,60',0.25); } }
+  // 環境危害：機械要塞雷射打擊(預警後轟炸，站在圈內受重傷)
+  if(G.stage&&G.stage.id==='fortress'){ G.hazT=(G.hazT==null?2.5:G.hazT-dt); if(G.hazT<=0){ G.hazT=rand(1.8,2.8);
+    hazards.push({kind:'strike',x:player.x+rand(-120,120),y:player.y+rand(-120,120),r:70+Math.random()*30,life:2,max:2,warn:1.1,fired:false,dtk:0}); } }
   // 首領
   if(G.time>=G.nextBossAt){ G.nextBossAt+=120; spawnBoss(); }
 }
@@ -1192,6 +1199,11 @@ function render(){
 
   // 環境危害：熔岩池
   for(var i=0;i<hazards.length;i++){ var hz=hazards[i], ha=Math.max(0,hz.life/hz.max);
+    if(hz.kind==='strike'){ ctx.save();
+      if(hz.warn>0){ var wp=1-hz.warn/1.1; ctx.globalAlpha=0.15+wp*0.25; ctx.fillStyle='#3df0c8'; ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r,0,TAU); ctx.fill();
+        ctx.globalAlpha=0.6+0.4*Math.sin(G.time*20); ctx.lineWidth=3; ctx.strokeStyle='#3df0c8'; ctx.setLineDash([9,7]); ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r,0,TAU); ctx.stroke(); ctx.setLineDash([]); }
+      else { ctx.globalAlpha=Math.max(0,hz.life/0.3)*0.7; ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r,0,TAU); ctx.fill(); }
+      ctx.restore(); continue; }
     var hzPull=hz.kind==='pull', hzC=hzPull?'#8b5cf6':'#ff5a2b', hzE=hzPull?'#c98bff':'#ffb347';
     ctx.save(); ctx.globalAlpha=0.34*ha; ctx.fillStyle=hzC; ctx.shadowColor=hzC; ctx.shadowBlur=22;
     ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r,0,TAU); ctx.fill();

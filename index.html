@@ -337,6 +337,9 @@ var ACHIEVEMENTS=[
   {id:'core3',   ic:'🌋',name:'烈焰試煉',desc:'熔岩核心存活 3 分',rw:280,chk:function(){return G.stage&&G.stage.id==='core'&&G.time>=180;}},
   {id:'boss5',   ic:'👑',name:'弒神者',  desc:'單局擊敗 5 首領',rw:400,chk:function(){return (G.bossKills||0)>=5;}},
   {id:'combo200',ic:'💥',name:'極限連擊',desc:'達成 200 連擊',rw:250,chk:function(){return (G.peakCombo||0)>=200;}},
+  {id:'abyss3',  ic:'🕳️',name:'凝視深淵',desc:'虛空深淵存活 3 分',rw:280,chk:function(){return G.stage&&G.stage.id==='abyss'&&G.time>=180;}},
+  {id:'wave40',  ic:'🌪️',name:'滔天巨浪',desc:'抵達第 40 波',rw:350,chk:function(){return G.wave>=40;}},
+  {id:'hoard',   ic:'💰',name:'守財奴',  desc:'單局累積 500 碎片',rw:200,chk:function(){return G.shards>=500;}},
 ];
 function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); }
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';

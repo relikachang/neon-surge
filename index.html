@@ -711,7 +711,8 @@ function spawnEnemy(type,ex,ey,mul){
   var d=ETYPES[type]; mul=mul||1;
   var st=G.stage||STAGES[0], mt=G.mut||IDENTITY_MUT;
   var endless=1+G.time/360;   // 無盡難度：敵人傷害隨時間增長(6分鐘 +100%)
-  var hp=d.hp*mul*st.eHp*mt.eHp, sp=d.sp*st.eSpd*mt.eSpd, r=d.r, xp=d.xp, dm=d.dmg*endless;
+  var lateHp=1+Math.pow(Math.max(0,G.time-150)/60,1.5)*0.25;   // 後期(2.5分後)敵人血量指數陡增，避免無腦輾壓
+  var hp=d.hp*mul*st.eHp*mt.eHp*lateHp, sp=d.sp*st.eSpd*mt.eSpd, r=d.r, xp=d.xp, dm=d.dmg*endless;
   // 精英變體：更大更肉、發光、掉更多、隨機詞綴（隨時間提高機率，每日變異可加成）
   var elite = mul>1 && Math.random()<Math.min(0.4,(0.015+G.time/1600)*mt.elite);
   var affix=null;
@@ -726,7 +727,7 @@ function spawnEnemy(type,ex,ey,mul){
 function spawnBoss(){
   var st=G.stage||STAGES[0];
   var ang=rand(0,TAU),rr=Math.max(W,H)*0.6;
-  var mul=(1+G.time/70)*st.eHp;
+  var mul=((1+G.time/70)+Math.pow(Math.max(0,G.time-180)/60,1.4)*0.6)*st.eHp;  // 後期(3分後)首領血量陡增
   var e={x:player.x+Math.cos(ang)*rr,y:player.y+Math.sin(ang)*rr,type:'boss',r:46,
     hp:1400*mul,maxHp:1400*mul,sp:46*st.eSpd,dmg:26,color:st.bossColor,xp:60,shape:'boss',flash:0,shoot:1.4,knx:0,kny:0,boss:true,
     pattern:st.pattern,spin:0,dash:0,dvx:0,dvy:0,tp:0,name:st.bossName,slow:0,frozen:0,summonT:9};
@@ -1038,10 +1039,10 @@ function updateBlades(dt){ var w=weaponById('blades'); if(!w)return;
 // ---- 生成節奏 ----
 function spawnDirector(dt){
   var m=G.time/60; // 分鐘
-  var rate=Math.max(0.18,0.85-m*0.085)/((G.stage?G.stage.spawn:1)*(G.mut?G.mut.spawn:1)); // 生成間隔（地圖+每日加成）
+  var rate=Math.max(m>6?0.12:0.18,0.85-m*0.085)/((G.stage?G.stage.spawn:1)*(G.mut?G.mut.spawn:1)); // 生成間隔（地圖+每日加成，6分後更密集）
   G.spawnTimer-=dt;
-  if(G.spawnTimer<=0 && enemies.length<240){ G.spawnTimer=rate;
-    var mul=1+m*0.42; var batch=1+Math.floor(m*0.7);
+  if(G.spawnTimer<=0 && enemies.length<280){ G.spawnTimer=rate;
+    var mul=1+m*0.42; var batch=1+Math.floor(m*(m>6?0.95:0.7));  // 後期每波更多敵人
     for(var i=0;i<batch;i++){ spawnEnemy(chooseType(m),null,null,mul); }
   }
   // 精英/坦克群

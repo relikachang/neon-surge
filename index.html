@@ -680,7 +680,7 @@ function spawnOrb(x,y,val){ orbs.push({x:x,y:y,val:val,vx:rand(-40,40),vy:rand(-
 function spawnPickup(x,y,type){ pickups.push({x:x,y:y,type:type,vy:0,t:0}); }
 function burst(x,y,color,n,sp){ for(var i=0;i<n;i++){var a=rand(0,TAU),s=rand(0.3,1)*(sp||160);
   particles.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rand(0.3,0.7),max:0.7,color:color,r:rand(1.5,3.5)});} }
-function dmgNum(x,y,val,crit){ dmgnums.push({x:x+rand(-6,6),y:y,val:Math.round(val),life:0.7,crit:crit,vy:-40}); }
+function dmgNum(x,y,val,crit,hurt){ dmgnums.push({x:x+rand(-6,6),y:y,val:Math.round(val),life:0.7,crit:crit,hurt:hurt,vy:-40}); }
 function ringFx(x,y,r,color){ fxRings.push({x:x,y:y,r:r*0.6,tr:r,color:color,life:0.25,max:0.25}); }
 
 // =====================================================================
@@ -803,6 +803,7 @@ function hurtPlayer(amount){
   if(G.over||player.iframe>0)return;
   amount*=(1-player.armor);
   player.hp-=amount; player.iframe=0.6; shake(6);
+  if(amount>=0.5)dmgNum(player.x,player.y-26,amount,false,true);   // 玩家中彈：明顯紅色 -N
   flashHurt(); GAudio.hurt();
   if(player.hp<=0){
     if(!G.usedRevive && metaLv('revive')>0){ G.usedRevive=true; player.hp=player.maxHp*0.6; player.iframe=2.5;
@@ -830,6 +831,7 @@ function pEnd(){ drag.active=false; drag.dx=0; drag.dy=0; $('joy').style.display
 cv.addEventListener('touchstart',function(e){e.preventDefault();var t=e.changedTouches[0];pStart(t.clientX,t.clientY);},{passive:false});
 cv.addEventListener('touchmove',function(e){e.preventDefault();var t=e.changedTouches[0];pMove(t.clientX,t.clientY);},{passive:false});
 cv.addEventListener('touchend',function(e){e.preventDefault();pEnd();},{passive:false});
+cv.addEventListener('touchcancel',function(e){pEnd();},{passive:false});
 cv.addEventListener('mousedown',function(e){pStart(e.clientX,e.clientY);});
 window.addEventListener('mousemove',function(e){pMove(e.clientX,e.clientY);});
 window.addEventListener('mouseup',function(){pEnd();});
@@ -937,7 +939,7 @@ function update(dt){
     if(e.charger){ e.chargeT-=dt; if(e.chargeT<=0){ e.chargeT=rand(2.6,4.2); var ca=Math.atan2(dy,dx); e.dash=0.4; e.dvx=Math.cos(ca)*540; e.dvy=Math.sin(ca)*540; ringFx(e.x,e.y,e.r*2,e.color); } }
     if(e.dash>0){ e.dash-=dt; e.x+=e.dvx*dt; e.y+=e.dvy*dt; }   // 突進位移（首領/突進兵共用）
     // 接觸傷害
-    if(d<e.r+player.radius){ hurtPlayer(e.dmg*dt*3.0); }
+    if(d<e.r+player.radius){ hurtPlayer(e.dmg); }   // 固定接觸傷害(每 0.6s 無敵窗一次)，與幀率無關
   }
 
   // ---- 黑洞重力井 ----
@@ -1235,8 +1237,9 @@ function render(){
   for(var i=0;i<dmgnums.length;i++){ var n=dmgnums[i]; ctx.globalAlpha=Math.min(1,n.life*2);
     var sz=Math.min(36,(n.crit?18:13)+Math.log10(n.val+1)*4.2);   // 傷害越高數字越大
     ctx.font='900 '+sz.toFixed(0)+'px system-ui';
-    ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,0.55)'; ctx.strokeText(n.val,n.x,n.y);
-    ctx.fillStyle=n.crit?'#ffd54a':(n.val>=150?'#ff5a3a':n.val>=50?'#ff9a3d':'#ffffff'); ctx.fillText(n.val,n.x,n.y); }
+    var txt=n.hurt?('-'+n.val):(''+n.val);
+    ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,0.55)'; ctx.strokeText(txt,n.x,n.y);
+    ctx.fillStyle=n.hurt?'#ff3b4e':(n.crit?'#ffd54a':(n.val>=150?'#ff5a3a':n.val>=50?'#ff9a3d':'#ffffff')); ctx.fillText(txt,n.x,n.y); }
   ctx.globalAlpha=1;
 
   ctx.restore();

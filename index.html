@@ -856,6 +856,7 @@ var ETYPES={
   charger:{r:14,hp:26,sp:58,dmg:15,color:'#ff3d8a',xp:3,shape:'arrow',charger:true},
   brute:{r:30,hp:180,sp:32,dmg:26,color:'#b0463d',xp:6,shape:'hex'},   // 蠻兵：後期重甲肉盾，血厚傷高
   wraith:{r:14,hp:46,sp:120,dmg:14,color:'#9d6bff',xp:4,shape:'dia'},   // 厲魂：後期高速游擊
+  mortar:{r:16,hp:72,sp:40,dmg:16,color:'#ff8a3d',xp:5,shape:'sq',ranged:true,homer:true},   // 砲兵：後期遠程，發射追蹤彈
   // 稀有怪物（特定條件才會出現）
   phantom:{r:15,hp:54,sp:124,dmg:16,color:'#b98cff',xp:8,shape:'dia',rare:true},   // 幽影：8 分後成群高速幽靈
   golden:{r:20,hp:120,sp:56,dmg:8,color:'#ffd54a',xp:18,shape:'hex',rare:true,flee:true},   // 黃金巨獸：會逃跑的寶獸
@@ -874,6 +875,7 @@ var MONSTER_INFO={
   charger:{n:'突進兵',d:'定時朝你猛烈衝刺。'},
   brute:{n:'蠻兵',d:'後期登場的重甲肉盾，血極厚、傷害高、移動緩慢。'},
   wraith:{n:'厲魂',d:'後期登場的高速游擊幽魂，快速貼身騷擾。'},
+  mortar:{n:'砲兵',d:'後期登場的遠程砲兵，發射會轉彎追蹤你的砲彈。'},
   phantom:{n:'幽影',d:'第 8 分鐘後浮現的高速幽靈，成群出沒、經驗豐厚。',rare:true},
   golden:{n:'黃金巨獸',d:'膽小會逃跑的稀有寶獸，追上擊殺可獲大量碎片與道具。',rare:true},
   warden:{n:'監視者',d:'第 6 分鐘後偶爾降臨的稀有精英射手，血厚傷高。',rare:true},
@@ -1159,7 +1161,7 @@ function update(dt){
     if(e.affix==='lunger'&&e.dash<=0){ e.luT=(e.luT==null?rand(1.5,2.5):e.luT-dt); if(e.luT<=0){ e.luT=rand(2.8,3.8); var lua=Math.atan2(dy,dx); e.dash=0.4; e.dvx=Math.cos(lua)*560; e.dvy=Math.sin(lua)*560; ringFx(e.x,e.y,e.r*2,'#ffca54'); } }  // 突襲詞綴：週期朝玩家猛衝
     if(e.ranged||e.boss||e.affix==='shooter'){ e.shoot-=dt; if(e.shoot<=0){ e.shoot=(e.boss?1.1:rand(1.8,3))*(e.frenzied?0.38:e.enraged?0.55:1);
       if(e.boss){ bossAttack(e,dx,dy); }
-      else { spawnEnemyBullet(e.x,e.y,dx/d,dy/d,240,e.dmg); } } }
+      else { spawnEnemyBullet(e.x,e.y,dx/d,dy/d,e.homer?175:240,e.dmg,e.homer?1.3:0); } } }   // 砲兵 homer 發射追蹤彈
     // 突進兵：定時朝玩家猛衝
     if(e.charger){ e.chargeT-=dt; if(e.chargeT<=0){ e.chargeT=rand(2.6,4.2); var ca=Math.atan2(dy,dx); e.dash=0.4; e.dvx=Math.cos(ca)*540; e.dvy=Math.sin(ca)*540; ringFx(e.x,e.y,e.r*2,e.color); } }
     if(e.dash>0){ e.dash-=dt; e.x+=e.dvx*dt; e.y+=e.dvy*dt; }   // 突進位移（首領/突進兵共用）
@@ -1318,7 +1320,7 @@ function chooseType(m){ var r=Math.random();
   if(m<0.8)return r<0.45?'grunt':r<0.7?'swarm':r<0.85?'ranged':'charger';
   if(m<1.6)return r<0.32?'grunt':r<0.52?'swarm':r<0.66?'ranged':r<0.78?'bomber':r<0.9?'charger':'splitter';
   if(m<3.5)return r<0.24?'grunt':r<0.42?'swarm':r<0.56?'ranged':r<0.68?'bomber':r<0.8?'charger':r<0.9?'splitter':'tank';
-  return r<0.16?'grunt':r<0.3?'swarm':r<0.42?'ranged':r<0.53?'bomber':r<0.63?'charger':r<0.72?'splitter':r<0.82?'tank':r<0.92?'brute':'wraith';   // 後期(3.5分後)出現蠻兵/厲魂
+  return r<0.15?'grunt':r<0.28?'swarm':r<0.39?'ranged':r<0.49?'bomber':r<0.58?'charger':r<0.67?'splitter':r<0.76?'tank':r<0.85?'brute':r<0.93?'wraith':'mortar';   // 後期(3.5分後)出現蠻兵/厲魂/砲兵
 }
 
 // ---- 經驗 / 升級 ----
@@ -1731,7 +1733,7 @@ function renderCodex(){
       '<div class="cxd">'+d.desc(0)+'</div>'+line+'</div></div>'; }).join('');
   $('codexlist').innerHTML=html;
 }
-function renderBestiary(){ var order=['grunt','swarm','tank','ranged','bomber','splitter','charger','brute','wraith','phantom','golden','warden','conjurer','harbinger','boss'];
+function renderBestiary(){ var order=['grunt','swarm','tank','ranged','bomber','splitter','charger','brute','wraith','mortar','phantom','golden','warden','conjurer','harbinger','boss'];
   var seen=0; var html=order.map(function(id){ var mi=MONSTER_INFO[id]||{n:id,d:''}; var d=(id==='boss'?{color:'#ffd54a',shape:''}:ETYPES[id])||{color:'#888'};
     var found=!!(DB.bestiary&&DB.bestiary[id]); if(found)seen++;
     var star=mi.rare?' <span class="cxtag" style="color:#ffd54a;border-color:#ffd54a">★ 稀有</span>':'';

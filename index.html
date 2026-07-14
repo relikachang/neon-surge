@@ -212,8 +212,9 @@
   </div>
   <div style="display:flex;gap:10px">
     <button class="btn ghost" id="codexbtn" style="flex:1">武器圖鑑 📖</button>
-    <button class="btn ghost" id="shopbtn" style="flex:1">永久強化 ◆</button>
+    <button class="btn ghost" id="bestiarybtn" style="flex:1">怪物圖鑑 👾</button>
   </div>
+  <button class="btn ghost" id="shopbtn">永久強化 ◆</button>
   <div class="hint">WASD／方向鍵 或 拖曳移動 · 自動開火 · 撿經驗升級三選一 · 活越久越強</div>
 </div></div>
 
@@ -250,6 +251,14 @@
   <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">12 武器 · 進化(滿級+被動) · 合成(兩武器) · 昇華(進化+Lv18)</div>
   <div id="codexlist"></div>
   <button class="btn ghost" id="codexclose" style="margin-top:14px">返回</button>
+</div></div>
+
+<!-- 怪物圖鑑 -->
+<div id="bestiary" class="overlay"><div class="panel" style="max-width:620px">
+  <h2 style="text-align:center;font-size:24px;font-weight:900;letter-spacing:2px;color:#ff5bff;margin-bottom:4px">怪物圖鑑 👾</h2>
+  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">擊殺過的怪物才會解鎖圖鑑 · ★ 為特定條件才現身的稀有怪</div>
+  <div id="bestiarylist"></div>
+  <button class="btn ghost" id="bestiaryclose" style="margin-top:14px">返回</button>
 </div></div>
 
 <!-- 排行榜 -->
@@ -313,8 +322,8 @@ var TAU=Math.PI*2;
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{}};
-  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; return m;}}catch(e){} return d; }
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{}};
+  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; return m;}}catch(e){} return d; }
 
 // 成就
 var ACHIEVEMENTS=[
@@ -342,6 +351,11 @@ var ACHIEVEMENTS=[
   {id:'abyss3',  ic:'🕳️',name:'凝視深淵',desc:'虛空深淵存活 3 分',rw:280,chk:function(){return G.stage&&G.stage.id==='abyss'&&G.time>=180;}},
   {id:'wave40',  ic:'🌪️',name:'滔天巨浪',desc:'抵達第 40 波',rw:350,chk:function(){return G.wave>=40;}},
   {id:'hoard',   ic:'💰',name:'守財奴',  desc:'單局累積 500 碎片',rw:200,chk:function(){return G.shards>=500;}},
+  {id:'goldhunt',ic:'🪙',name:'獵金者',  desc:'擊殺 黃金巨獸',rw:180,chk:function(){return (G.goldKills||0)>=1;}},
+  {id:'goldrush',ic:'👑',name:'黃金狂潮',desc:'單局擊殺 5 隻黃金巨獸',rw:400,chk:function(){return (G.goldKills||0)>=5;}},
+  {id:'rarehunt',ic:'👻',name:'稀客獵人',desc:'擊殺 幽影 或 監視者',rw:200,chk:function(){return (G.rareKills||0)>=1;}},
+  {id:'zoologist',ic:'👾',name:'怪物學者',desc:'圖鑑解鎖 10 種怪物',rw:300,chk:function(){return Object.keys(DB.bestiary||{}).length>=10;}},
+  {id:'survive10',ic:'🕙',name:'不死之身',desc:'單局存活 10 分鐘',rw:500,chk:function(){return G.time>=600;}},
 ];
 function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); }
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';
@@ -706,6 +720,24 @@ var ETYPES={
   bomber:{r:15,hp:20,sp:70,dmg:20,color:'#ff5edb',xp:3,shape:'tri',explode:true},
   splitter:{r:17,hp:36,sp:54,dmg:11,color:'#3dff7a',xp:3,shape:'penta',split:true},
   charger:{r:14,hp:26,sp:58,dmg:15,color:'#ff3d8a',xp:3,shape:'arrow',charger:true},
+  // 稀有怪物（特定條件才會出現）
+  phantom:{r:15,hp:54,sp:124,dmg:16,color:'#b98cff',xp:8,shape:'dia',rare:true},   // 幽影：8 分後成群高速幽靈
+  golden:{r:20,hp:120,sp:56,dmg:8,color:'#ffd54a',xp:18,shape:'hex',rare:true,flee:true},   // 黃金巨獸：會逃跑的寶獸
+  warden:{r:28,hp:280,sp:40,dmg:22,color:'#ff5bff',xp:28,shape:'penta',ranged:true,rare:true},   // 監視者：稀有精英射手
+};
+// 怪物圖鑑資料
+var MONSTER_INFO={
+  grunt:{n:'兵蜂',d:'最基礎的三角敵人，數量取勝。'},
+  swarm:{n:'蟲群',d:'體型小、速度極快，成群包圍你。'},
+  tank:{n:'重甲',d:'血厚移動慢的六角坦克。'},
+  ranged:{n:'射手',d:'保持距離朝你放冷光彈。'},
+  bomber:{n:'爆裂兵',d:'死亡時引爆造成範圍傷害。'},
+  splitter:{n:'分裂體',d:'死亡分裂成三隻蟲群。'},
+  charger:{n:'突進兵',d:'定時朝你猛烈衝刺。'},
+  phantom:{n:'幽影',d:'第 8 分鐘後浮現的高速幽靈，成群出沒、經驗豐厚。',rare:true},
+  golden:{n:'黃金巨獸',d:'膽小會逃跑的稀有寶獸，追上擊殺可獲大量碎片與道具。',rare:true},
+  warden:{n:'監視者',d:'第 6 分鐘後偶爾降臨的稀有精英射手，血厚傷高。',rare:true},
+  boss:{n:'首領',d:'各地圖的統治者，具多階段攻擊、狂暴與絕命狂暴。',rare:true},
 };
 function spawnEnemy(type,ex,ey,mul,forceElite){
   var d=ETYPES[type]; mul=mul||1;
@@ -779,6 +811,15 @@ function hitEnemy(e,amount,fromx,fromy,knock){
 }
 function killEnemy(e){
   e.dead=true; G.kills++; if(e.elite){G.eliteKills=(G.eliteKills||0)+1; GAudio.elite&&GAudio.elite();} addCombo();
+  if(e.type&&!DB.bestiary[e.type]){ DB.bestiary[e.type]=true; saveDB(); }   // 怪物圖鑑：首次擊殺即解鎖
+  if(e.type==='phantom')G.rareKills=(G.rareKills||0)+1;
+  if(e.type==='golden'){ // 黃金巨獸：大量碎片 + 保底道具 + 華麗特效
+    G.goldKills=(G.goldKills||0)+1; var gr=60+Math.floor(G.time/30)*8; G.shards+=gr;
+    announce('💰 黃金巨獸！+◆'+gr,'#ffd54a'); flashScreen('255,213,74',0.4); shake(8);
+    for(var gk=0;gk<4;gk++)ringFx(e.x,e.y,60+gk*50,'#ffd54a'); burst(e.x,e.y,'#ffd54a',36,300);
+    spawnPickup(e.x,e.y,pick(['bomb','frenzy','shield','timefreeze']));
+    for(var go=0;go<10;go++)spawnPickup(e.x+rand(-40,40),e.y+rand(-40,40),'shardbag'); GAudio.achieve&&GAudio.achieve(); }
+  if(e.type==='warden')G.rareKills=(G.rareKills||0)+1;
   var km=G.kills; if(km===100||km===250||km===500||km===1000||km===2000||km===5000){ var kr=Math.floor(km/10); G.shards+=kr; player.frenzyT=Math.max(player.frenzyT,3);
     announce('擊殺 '+km+' 達成！ +◆'+kr,'#ffd54a'); GAudio.achieve&&GAudio.achieve(); }
   burst(e.x,e.y,e.color,e.boss?80:12,e.boss?300:180);
@@ -940,7 +981,8 @@ function update(dt){
     if(e.boss){ e.summonT-=dt; if(e.summonT<=0 && enemies.length<200){ e.summonT=e.enraged?6:10; var sn=e.enraged?4:2;
       for(var sm=0;sm<sn;sm++)spawnEnemy(chooseType(G.time/60),e.x+rand(-50,50),e.y+rand(-50,50),1.2); announce((e.name||'首領')+' 召喚增援！',e.color); } }
     var stop=e.ranged?260:0;
-    if(d>stop){ e.x+=dx/d*espd*dt; e.y+=dy/d*espd*dt; }
+    if(e.flee){ if(d<440){ e.x-=dx/d*espd*dt; e.y-=dy/d*espd*dt; } }   // 黃金巨獸：玩家靠近就逃跑
+    else if(d>stop){ e.x+=dx/d*espd*dt; e.y+=dy/d*espd*dt; }
     // 擊退位移衰減
     e.x+=e.knx*dt; e.y+=e.kny*dt; e.knx*=Math.pow(0.001,dt); e.kny*=Math.pow(0.001,dt);
     // 遠程 / boss 射擊
@@ -1053,6 +1095,12 @@ function spawnDirector(dt){
     var en=3+Math.floor((G.time-240)/90), emul=2.2+m*0.6;
     announce('☢ 精英波來襲 ×'+en+'！','#ff2b5e'); flashScreen('255,43,94',0.35); shake&&shake(10); GAudio.elite&&GAudio.elite();
     for(var s=0;s<en;s++)spawnEnemy(chooseType(m),null,null,emul,true); } }
+  // 稀有怪物（特定條件才會現身）
+  G.rareT=(G.rareT==null?rand(30,55):G.rareT-dt);
+  if(G.rareT<=0){ G.rareT=rand(45,75); var rr=Math.random();
+    if(m>=8 && rr<0.5){ var pn=3+Math.floor(m/4); for(var p=0;p<pn;p++)spawnEnemy('phantom',null,null,1+m*0.3); announce('👻 幽影群現身！','#b98cff'); flashScreen('185,140,255',0.22); }
+    else if(m>=6 && rr<0.75){ spawnEnemy('warden',null,null,1.4+m*0.3); announce('🛡 監視者降臨！','#ff5bff'); flashScreen('255,91,255',0.3); shake&&shake(8); GAudio.elite&&GAudio.elite(); }
+    else if(m>=2){ spawnEnemy('golden',null,null,1+m*0.4); announce('✨ 黃金巨獸出現！追上擊殺獲厚賞','#ffd54a'); GAudio.elite&&GAudio.elite(); } }
   // 波數（每 20 秒）
   var wv=1+Math.floor(G.time/20); if(wv>G.wave){ G.wave=wv;
     if(wv%5===0){ announce('⚡ 第 '+wv+' 波 · 霓潮湧現！','#ff3df0'); flashScreen('255,61,240',0.3); GAudio.boss&&GAudio.boss();
@@ -1458,7 +1506,7 @@ function renderPauseBuild(){
     '<div class="blabel">被動</div><div class="brow">'+ph+'</div>'+
     '<div class="blabel">角色 · 地圖</div><div class="brow"><span class="bchip">'+(CHARS.find(function(c){return c.id===selChar;})||{}).name+'</span><span class="bchip">'+G.stage.name+'</span>'+(G.daily?'<span class="bchip" style="border-color:#ffd54a">🗓️ '+G.mut.name+'</span>':'')+'</div>'; }
 
-function hideAll(){ ['menu','levelup','shop','pause','over','board','ach','codex'].forEach(function(id){$(id).classList.remove('show');}); }
+function hideAll(){ ['menu','levelup','shop','pause','over','board','ach','codex','bestiary'].forEach(function(id){$(id).classList.remove('show');}); }
 function renderAch(){ var got=0; var html=ACHIEVEMENTS.map(function(a){ var u=DB.achievements[a.id]; if(u)got++;
   return '<div class="achitem'+(u?'':' locked')+'"><div class="aic">'+a.ic+'</div>'+
     '<div><div class="an">'+a.name+'</div><div class="ad">'+a.desc+'</div></div>'+
@@ -1475,6 +1523,19 @@ function renderCodex(){
       '<div class="cxmain"><div class="cxn" style="color:'+d.color+'">'+d.name+' <span class="cxtag">'+d.tag+'</span></div>'+
       '<div class="cxd">'+d.desc(0)+'</div>'+line+'</div></div>'; }).join('');
   $('codexlist').innerHTML=html;
+}
+function renderBestiary(){ var order=['grunt','swarm','tank','ranged','bomber','splitter','charger','phantom','golden','warden','boss'];
+  var seen=0; var html=order.map(function(id){ var mi=MONSTER_INFO[id]||{n:id,d:''}; var d=(id==='boss'?{color:'#ffd54a',shape:''}:ETYPES[id])||{color:'#888'};
+    var found=!!(DB.bestiary&&DB.bestiary[id]); if(found)seen++;
+    var star=mi.rare?' <span class="cxtag" style="color:#ffd54a;border-color:#ffd54a">★ 稀有</span>':'';
+    var ic=id==='boss'?'👑':({grunt:'▲',swarm:'◆',tank:'⬢',ranged:'■',bomber:'▽',splitter:'⬠',charger:'➤',phantom:'◇',golden:'⬡',warden:'⬟'}[id]||'●');
+    if(!found)return '<div class="cxitem"><div class="cxic" style="color:#3a4568">❔</div>'+
+      '<div class="cxmain"><div class="cxn" style="color:#6b7ba0">？？？'+star+'</div>'+
+      '<div class="cxd" style="color:#4a5578">尚未擊殺 — 遭遇並擊殺後解鎖圖鑑</div></div></div>';
+    return '<div class="cxitem"><div class="cxic" style="color:'+d.color+'">'+ic+'</div>'+
+      '<div class="cxmain"><div class="cxn" style="color:'+d.color+'">'+mi.n+star+'</div>'+
+      '<div class="cxd">'+mi.d+'</div></div></div>'; }).join('');
+  $('bestiarylist').innerHTML='<div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:12px">已解鎖 '+seen+' / '+order.length+' 種</div>'+html;
 }
 function renderBoard(){ var mut=todaysMutator();
   $('dailyline').textContent='今日挑戰：'+mut.name+'（'+mut.desc+'）'+(DB.daily.date===dayKey()?('　你的最佳 '+fmtTime(DB.daily.time)):'');
@@ -1572,6 +1633,8 @@ $('achbtn').onclick=function(){ renderAch(); $('menu').classList.remove('show');
 $('achclose').onclick=function(){ $('ach').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('codexbtn').onclick=function(){ renderCodex(); $('menu').classList.remove('show'); $('codex').classList.add('show'); };
 $('codexclose').onclick=function(){ $('codex').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
+$('bestiarybtn').onclick=function(){ renderBestiary(); $('menu').classList.remove('show'); $('bestiary').classList.add('show'); };
+$('bestiaryclose').onclick=function(){ $('bestiary').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('shopbtn').onclick=function(){ renderShop(); $('menu').classList.remove('show'); $('shop').classList.add('show'); };
 $('shopclose').onclick=function(){ $('shop').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('pausebtn').onclick=togglePause;

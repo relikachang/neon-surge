@@ -783,6 +783,7 @@ var ETYPES={
   phantom:{r:15,hp:54,sp:124,dmg:16,color:'#b98cff',xp:8,shape:'dia',rare:true},   // 幽影：8 分後成群高速幽靈
   golden:{r:20,hp:120,sp:56,dmg:8,color:'#ffd54a',xp:18,shape:'hex',rare:true,flee:true},   // 黃金巨獸：會逃跑的寶獸
   warden:{r:28,hp:280,sp:40,dmg:22,color:'#ff5bff',xp:28,shape:'penta',ranged:true,rare:true},   // 監視者：稀有精英射手
+  conjurer:{r:24,hp:240,sp:42,dmg:16,color:'#7dff9b',xp:24,shape:'hex',rare:true,summonRare:true},   // 召魂者：持續召喚蟲群
 };
 // 怪物圖鑑資料
 var MONSTER_INFO={
@@ -796,6 +797,7 @@ var MONSTER_INFO={
   phantom:{n:'幽影',d:'第 8 分鐘後浮現的高速幽靈，成群出沒、經驗豐厚。',rare:true},
   golden:{n:'黃金巨獸',d:'膽小會逃跑的稀有寶獸，追上擊殺可獲大量碎片與道具。',rare:true},
   warden:{n:'監視者',d:'第 6 分鐘後偶爾降臨的稀有精英射手，血厚傷高。',rare:true},
+  conjurer:{n:'召魂者',d:'第 5 分鐘後現身的稀有召喚者，持續召喚蟲群，應優先擊殺。',rare:true},
   boss:{n:'首領',d:'各地圖的統治者，具多階段攻擊、狂暴與絕命狂暴。',rare:true},
 };
 function spawnEnemy(type,ex,ey,mul,forceElite){
@@ -885,7 +887,7 @@ function killEnemy(e){
     for(var gk=0;gk<4;gk++)ringFx(e.x,e.y,60+gk*50,'#ffd54a'); burst(e.x,e.y,'#ffd54a',36,300);
     spawnPickup(e.x,e.y,pick(['bomb','frenzy','shield','timefreeze']));
     for(var go=0;go<10;go++)spawnPickup(e.x+rand(-40,40),e.y+rand(-40,40),'shardbag'); GAudio.achieve&&GAudio.achieve(); }
-  if(e.type==='warden')G.rareKills=(G.rareKills||0)+1;
+  if(e.type==='warden'||e.type==='conjurer')G.rareKills=(G.rareKills||0)+1;
   var km=G.kills; if(km===100||km===250||km===500||km===1000||km===2000||km===5000){ var kr=Math.floor(km/10); G.shards+=kr; player.frenzyT=Math.max(player.frenzyT,3);
     announce('擊殺 '+km+' 達成！ +◆'+kr,'#ffd54a'); GAudio.achieve&&GAudio.achieve(); }
   burst(e.x,e.y,e.color,e.boss?80:12,e.boss?300:180);
@@ -1057,6 +1059,7 @@ function update(dt){
     if(e.affix==='teleporter'){ e.tpT=(e.tpT==null?3:e.tpT-dt); if(e.tpT<=0){ e.tpT=4; var tta=Math.atan2(player.y-e.y,player.x-e.x); e.x=player.x-Math.cos(tta)*170; e.y=player.y-Math.sin(tta)*170; ringFx(e.x,e.y,44,e.color); } }  // 瞬影詞綴
     if(e.affix==='burst'){ e.bt=(e.bt==null?3:e.bt-dt); if(e.bt<=0){ e.bt=3.5; for(var bk=0;bk<8;bk++){ var bka=bk/8*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(bka),Math.sin(bka),195,e.dmg*0.5); } } }  // 爆裂詞綴：週期放射彈
     if(e.affix==='magnetic'){ e.mgT=(e.mgT==null?2:e.mgT-dt); if(e.mgT<=0){ e.mgT=2.4; var ma=Math.atan2(e.y-player.y,e.x-player.x); player.x+=Math.cos(ma)*62; player.y+=Math.sin(ma)*62; ringFx(e.x,e.y,70,'#8b5bff'); ringFx(player.x,player.y,40,'#8b5bff'); } }  // 磁暴詞綴：週期把玩家拉向自己
+    if(e.summonRare){ e.srT=(e.srT==null?3:e.srT-dt); if(e.srT<=0){ e.srT=3.2; if(enemies.length<220){ for(var q=0;q<3;q++)spawnEnemy('swarm',e.x+rand(-40,40),e.y+rand(-40,40),1.3); } ringFx(e.x,e.y,54,'#7dff9b'); } }  // 召魂者：週期召喚蟲群
     if(e.ranged||e.boss||e.affix==='shooter'){ e.shoot-=dt; if(e.shoot<=0){ e.shoot=(e.boss?1.1:rand(1.8,3))*(e.frenzied?0.38:e.enraged?0.55:1);
       if(e.boss){ bossAttack(e,dx,dy); }
       else { spawnEnemyBullet(e.x,e.y,dx/d,dy/d,240,e.dmg); } } }
@@ -1166,8 +1169,9 @@ function spawnDirector(dt){
   // 稀有怪物（特定條件才會現身）
   G.rareT=(G.rareT==null?rand(30,55):G.rareT-dt);
   if(G.rareT<=0){ G.rareT=rand(45,75); var rr=Math.random();
-    if(m>=8 && rr<0.5){ var pn=3+Math.floor(m/4); for(var p=0;p<pn;p++)spawnEnemy('phantom',null,null,1+m*0.3); announce('👻 幽影群現身！','#b98cff'); flashScreen('185,140,255',0.22); }
-    else if(m>=6 && rr<0.75){ spawnEnemy('warden',null,null,1.4+m*0.3); announce('🛡 監視者降臨！','#ff5bff'); flashScreen('255,91,255',0.3); shake&&shake(8); GAudio.elite&&GAudio.elite(); }
+    if(m>=8 && rr<0.42){ var pn=3+Math.floor(m/4); for(var p=0;p<pn;p++)spawnEnemy('phantom',null,null,1+m*0.3); announce('👻 幽影群現身！','#b98cff'); flashScreen('185,140,255',0.22); }
+    else if(m>=6 && rr<0.62){ spawnEnemy('warden',null,null,1.4+m*0.3); announce('🛡 監視者降臨！','#ff5bff'); flashScreen('255,91,255',0.3); shake&&shake(8); GAudio.elite&&GAudio.elite(); }
+    else if(m>=5 && rr<0.8){ spawnEnemy('conjurer',null,null,1.3+m*0.3); announce('🟢 召魂者現身！優先擊殺','#7dff9b'); flashScreen('125,255,155',0.25); GAudio.elite&&GAudio.elite(); }
     else if(m>=2){ spawnEnemy('golden',null,null,1+m*0.4); announce('✨ 黃金巨獸出現！追上擊殺獲厚賞','#ffd54a'); GAudio.elite&&GAudio.elite(); } }
   // 波數（每 20 秒）
   // 無盡幕系統：每 150 秒進入新一幕，難度階梯上升 + 幕首領 + 幕間補給（呼應「遊戲節局」）

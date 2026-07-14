@@ -676,8 +676,9 @@ var PDEFS={
   pvamp:{ic:'🩸',name:'吸血',color:'#ff4d6a',max:5,desc:function(){return '每次擊殺回復 +0.4 生命';},apply:function(){recalc();}},
   pexec:{ic:'☠️',name:'處決',color:'#ff2b5e',max:5,desc:function(){return '低於 4% 生命的普通敵人直接處決';},apply:function(){recalc();}},
   pshield:{ic:'🔰',name:'能量護盾',color:'#5dd3ff',max:5,desc:function(){return '定期生成護盾抵擋一次攻擊';},apply:function(){recalc();}},
+  pthorns:{ic:'🌵',name:'荊棘',color:'#5dff9b',max:5,desc:function(){return '接觸你的敵人受到反傷';},apply:function(){recalc();}},
 };
-var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield'];
+var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns'];
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -799,6 +800,7 @@ function recalc(){
   player.lifesteal=0.4*(p.pvamp||0);   // 擊殺回血量
   player.execute=0.008*(p.pexec||0);   // 處決門檻(生命比例)
   player.blockInterval=(p.pshield>0)?Math.max(2.5,8-(p.pshield-1)*1.1):0;   // 護盾再生間隔(秒)
+  player.thorns=14*(p.pthorns||0);   // 荊棘反傷
   if(player.hp>player.maxHp)player.hp=player.maxHp;
 }
 function dmg(base){ var d=base*player.dmgMult*(player.frenzyT>0?1.4:1)*(1+0.015*metaLv('growth')*(G.time/60)); if(Math.random()<player.crit)d*=player.critMult; return d; }
@@ -1162,7 +1164,7 @@ function update(dt){
     if(e.charger){ e.chargeT-=dt; if(e.chargeT<=0){ e.chargeT=rand(2.6,4.2); var ca=Math.atan2(dy,dx); e.dash=0.4; e.dvx=Math.cos(ca)*540; e.dvy=Math.sin(ca)*540; ringFx(e.x,e.y,e.r*2,e.color); } }
     if(e.dash>0){ e.dash-=dt; e.x+=e.dvx*dt; e.y+=e.dvy*dt; }   // 突進位移（首領/突進兵共用）
     // 接觸傷害
-    if(d<e.r+player.radius){ hurtPlayer(e.dmg); }   // 固定接觸傷害(每 0.6s 無敵窗一次)，與幀率無關
+    if(d<e.r+player.radius){ var wasVuln=(player.iframe<=0); hurtPlayer(e.dmg); if(player.thorns>0&&e.hp>0&&wasVuln)hitEnemy(e,dmg(player.thorns),player.x,player.y,0.2); }   // 固定接觸傷害 + 荊棘反傷(隨無敵窗一次)
   }
 
   // ---- 黑洞重力井 ----

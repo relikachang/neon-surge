@@ -358,6 +358,10 @@ var ACHIEVEMENTS=[
   {id:'survive10',ic:'🕙',name:'不死之身',desc:'單局存活 10 分鐘',rw:500,chk:function(){return G.time>=600;}},
   {id:'act5',    ic:'☰',name:'幕終亦始',desc:'抵達第 5 幕',rw:400,chk:function(){return (G.act||1)>=5;}},
   {id:'rift3',   ic:'🌀',name:'裂隙行者',desc:'時空裂隙存活 3 分',rw:350,chk:function(){return G.stage&&G.stage.id==='rift'&&G.time>=180;}},
+  {id:'act8',    ic:'☷',name:'幕海無盡',desc:'抵達第 8 幕',rw:600,chk:function(){return (G.act||1)>=8;}},
+  {id:'rare5',   ic:'🎯',name:'稀客殺手',desc:'單局擊殺 5 隻稀有怪',rw:350,chk:function(){return (G.rareKills||0)>=5;}},
+  {id:'fullbestiary',ic:'📖',name:'圖鑑大師',desc:'圖鑑解鎖全部 12 種怪物',rw:500,chk:function(){return Object.keys(DB.bestiary||{}).length>=12;}},
+  {id:'octoarsenal',ic:'🎒',name:'八重奏',desc:'同時擁有 8 種武器',rw:400,chk:function(){return player.weapons.length>=8;}},
 ];
 function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); }
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';

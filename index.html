@@ -889,7 +889,7 @@ function spawnEnemy(type,ex,ey,mul,forceElite){
   // 精英變體：更大更肉、發光、掉更多、隨機詞綴（隨時間提高機率，每日變異可加成）
   var elite = forceElite || (mul>1 && Math.random()<Math.min(0.4,(0.015+G.time/1600)*mt.elite));
   var affix=null;
-  if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst','magnetic','trail','lunger']); if(affix==='haste')sp*=1.6;
+  if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst','magnetic','trail','lunger','reflector']); if(affix==='haste')sp*=1.6;
     if(G.time-(G._eliteWarn||-9)>4){ G._eliteWarn=G.time; announce('⚠ 精英出現','#ffffff'); GAudio.elite&&GAudio.elite(); } }
   var ang,rr=Math.max(W,H)*0.62;
   if(ex==null){ ang=rand(0,TAU); ex=player.x+Math.cos(ang)*rr; ey=player.y+Math.sin(ang)*rr; }
@@ -959,6 +959,7 @@ function hitEnemy(e,amount,fromx,fromy,knock){
   G.dmgDealt=(G.dmgDealt||0)+Math.min(amount,e.hp); e.hp-=amount; e.flash=0.08;
   dmgNum(e.x,e.y-e.r,amount,amount>= (18*player.dmgMult) && player.crit>0);
   if(knock){ var a=Math.atan2(e.y-fromy,e.x-fromx); e.knx+=Math.cos(a)*knock*120; e.kny+=Math.sin(a)*knock*120; }
+  if(e.hp>0&&e.affix==='reflector'&&Math.random()<0.3){ var rfa=Math.atan2(player.y-e.y,player.x-e.x); spawnEnemyBullet(e.x,e.y,Math.cos(rfa),Math.sin(rfa),265,e.dmg*0.5); }   // 反彈詞綴：被擊中時機率射回一發
   if(e.hp>0&&!e.boss&&player.execute>0&&e.hp<e.maxHp*player.execute){ e.hp=0; ringFx(e.x,e.y,e.r*2.2,'#ff2b5e'); }   // 處決技能：斬殺殘血普通敵
   if(e.hp<=0)killEnemy(e);
 }
@@ -1576,7 +1577,7 @@ function drawEnemy(e){
   else if(e.shape==='boss'){ for(var i=0;i<8;i++){var a=i/8*TAU,rr=i%2?r:r*0.7;(i?ctx.lineTo:ctx.moveTo).call(ctx,Math.cos(a)*rr,Math.sin(a)*rr);} }
   else { ctx.arc(0,0,r,0,TAU); }
   ctx.closePath(); ctx.fill();
-  if(e.elite){ ctx.lineWidth=2.5; ctx.strokeStyle=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':'#ffffff'; ctx.stroke(); }   // 精英詞綴描邊
+  if(e.elite){ ctx.lineWidth=2.5; ctx.strokeStyle=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':e.affix==='reflector'?'#3df0c8':'#ffffff'; ctx.stroke(); }   // 精英詞綴描邊
   ctx.shadowBlur=0; ctx.restore();
   // 血條（受傷過 / boss）
   if(e.hp<e.maxHp){ var w=e.r*2, hpr=Math.max(0,e.hp/e.maxHp); ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(e.x-w/2,e.y-e.r-8,w,3);

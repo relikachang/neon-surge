@@ -322,8 +322,8 @@ var TAU=Math.PI*2;
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{}};
-  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; return m;}}catch(e){} return d; }
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{}};
+  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; return m;}}catch(e){} return d; }
 
 // 成就
 var ACHIEVEMENTS=[
@@ -357,6 +357,7 @@ var ACHIEVEMENTS=[
   {id:'zoologist',ic:'👾',name:'怪物學者',desc:'圖鑑解鎖 10 種怪物',rw:300,chk:function(){return Object.keys(DB.bestiary||{}).length>=10;}},
   {id:'survive10',ic:'🕙',name:'不死之身',desc:'單局存活 10 分鐘',rw:500,chk:function(){return G.time>=600;}},
   {id:'act5',    ic:'☰',name:'幕終亦始',desc:'抵達第 5 幕',rw:400,chk:function(){return (G.act||1)>=5;}},
+  {id:'rift3',   ic:'🌀',name:'裂隙行者',desc:'時空裂隙存活 3 分',rw:350,chk:function(){return G.stage&&G.stage.id==='rift'&&G.time>=180;}},
 ];
 function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); }
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';
@@ -431,6 +432,7 @@ var STAGES=[
   {id:'abyss',  name:'虛空深淵', desc:'高血量群潮 · 螺旋彈幕',   bg:'#0a0518', grid:'rgba(130,80,200,0.13)', eHp:1.4,  eSpd:1.12, spawn:1.4,  bossName:'深淵之核', bossColor:'#b06bff', pattern:'spiral', locked:true, unlock:'wastes'},
   {id:'fortress',name:'機械要塞', desc:'密集彈幕 · 雙螺旋首領',  bg:'#080f12', grid:'rgba(70,170,180,0.14)', eHp:1.6,  eSpd:1.18, spawn:1.55, bossName:'核心守衛', bossColor:'#3df0c8', pattern:'twin',   locked:true, unlock:'abyss'},
   {id:'core',    name:'熔岩核心', desc:'高溫煉獄 · 追蹤爆發首領', bg:'#160604', grid:'rgba(210,90,40,0.15)',  eHp:1.85, eSpd:1.22, spawn:1.65, bossName:'熔心魔像', bossColor:'#ff5a2b', pattern:'aimburst', locked:true, unlock:'fortress'},
+  {id:'rift',    name:'時空裂隙', desc:'現實崩解 · 旋轉十字首領', bg:'#0c0614', grid:'rgba(150,110,255,0.15)', eHp:2.1,  eSpd:1.3,  spawn:1.75, bossName:'裂隙主宰', bossColor:'#c98bff', pattern:'cross',   locked:true, unlock:'core'},
 ];
 var selStage='city';
 function stageUnlocked(s){ return !s.locked || DB.stages[s.id]; }
@@ -1158,6 +1160,9 @@ function spawnDirector(dt){
   // 環境危害：機械要塞雷射打擊(預警後轟炸，站在圈內受重傷)
   if(G.stage&&G.stage.id==='fortress'){ G.hazT=(G.hazT==null?2.5:G.hazT-dt); if(G.hazT<=0){ G.hazT=rand(1.8,2.8);
     hazards.push({kind:'strike',x:player.x+rand(-120,120),y:player.y+rand(-120,120),r:70+Math.random()*30,life:2,max:2,warn:1.1,fired:false,dtk:0}); } }
+  // 環境危害：時空裂隙現實崩解(密集預警轟炸)
+  if(G.stage&&G.stage.id==='rift'){ G.hazT=(G.hazT==null?2.2:G.hazT-dt); if(G.hazT<=0){ G.hazT=rand(1.5,2.5);
+    hazards.push({kind:'strike',x:player.x+rand(-170,170),y:player.y+rand(-170,170),r:64+Math.random()*34,life:2,max:2,warn:1.0,fired:false,dtk:0}); } }
   // 首領
   if(G.time>=G.nextBossAt){ G.nextBossAt+=120; spawnBoss(); }
 }

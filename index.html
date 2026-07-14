@@ -631,8 +631,9 @@ var PDEFS={
   pamount:{ic:'✳️',name:'多重投射',color:'#ffd54a',max:4,desc:function(){return '投射物 +1（部分武器）';},apply:function(){recalc();}},
   ppierce:{ic:'➡️',name:'貫穿',color:'#22e6ff',max:4,desc:function(){return '子彈額外貫穿 +1';},apply:function(){recalc();}},
   pcritdmg:{ic:'💢',name:'致命一擊',color:'#ff2b5e',max:5,desc:function(){return '暴擊傷害 +25%';},apply:function(){recalc();}},
+  pdodge:{ic:'💨',name:'閃避',color:'#5dff9b',max:5,desc:function(){return '受擊時 8% 機率完全閃避';},apply:function(){recalc();}},
 };
-var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg'];
+var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge'];
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -726,6 +727,7 @@ function recalc(){
   player.area=1+0.16*(p.parea||0)+0.05*metaLv('area');      // 範圍/巨大化(含局外強化)
   player.amount=(p.pamount||0);          // 額外投射物
   player.pierceBonus=(p.ppierce||0);     // 額外貫穿
+  player.dodge=Math.min(0.5,0.08*(p.pdodge||0));   // 閃避機率(上限50%)
   if(player.hp>player.maxHp)player.hp=player.maxHp;
 }
 function dmg(base){ var d=base*player.dmgMult*(player.frenzyT>0?1.4:1); if(Math.random()<player.crit)d*=player.critMult; return d; }
@@ -925,6 +927,7 @@ function addCombo(){ G.combo++; G.comboTimer=2.2*(1+0.15*metaLv('combo')); if(G.
 
 function hurtPlayer(amount){
   if(G.over||player.iframe>0)return;
+  if(player.dodge>0 && Math.random()<player.dodge){ player.iframe=0.3; ringFx(player.x,player.y,32,'#5dff9b'); floatText('閃避！','#5dff9b'); return; }   // 閃避被動：機率完全免傷
   amount*=(1-player.armor);
   player.hp-=amount; player.iframe=0.6; shake(6);
   if(amount>=0.5)dmgNum(player.x,player.y-26,amount,false,true);   // 玩家中彈：明顯紅色 -N

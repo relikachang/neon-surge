@@ -693,6 +693,11 @@ var FUSIONS=[
     cd:function(l){return 1.5;},
     fire:function(w){ var maxN=4+player.amount; if(drones.length<maxN)drones.push({x:player.x,y:player.y,ang:rand(0,TAU),orbit:80,life:6,cd:rand(0,0.3),dmg:dmg(16+w.level*5)});
       dropMine(player.x+rand(-70,70),player.y+rand(-70,70),dmg(34+w.level*10),(80+w.level*6)*player.area,true); }},
+  {a:'blades',b:'shotgun',id:'bladehail',ic:'🗡️',name:'刃刀風暴',color:'#ff6bd0',desc:'旋轉刀刃光束橫掃，並向四周狂射刀片',max:3,
+    cd:function(l){return 0.3;},
+    fire:function(w){ if(w._ang==null)w._ang=0; w._ang+=0.6;
+      for(var b=0;b<3;b++)fireBeam(w._ang+b*(TAU/3),dmg(10+w.level*3),(340+w.level*20)*player.area,14*player.area,'#ff6bd0');
+      var n=6+w.level+player.amount; for(var i=0;i<n;i++){ var a=i/n*TAU+w._ang; spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),560,dmg(8+w.level*3),'#ff6bd0',1,5,0.5); } }},
 ];
 function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)return FUSIONS[i]; return null; }
 

@@ -248,7 +248,7 @@
 <!-- 武器圖鑑 -->
 <div id="codex" class="overlay"><div class="panel" style="max-width:620px">
   <h2 style="text-align:center;font-size:24px;font-weight:900;letter-spacing:2px;color:#22e6ff;margin-bottom:4px">武器圖鑑 📖</h2>
-  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">12 武器 · 進化(滿級+被動) · 合成(兩武器) · 昇華(進化+Lv18)</div>
+  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">13 武器 · 進化(滿級+被動) · 合成(兩武器) · 昇華(進化+Lv18)</div>
   <div id="codexlist"></div>
   <button class="btn ghost" id="codexclose" style="margin-top:14px">返回</button>
 </div></div>
@@ -570,9 +570,26 @@ var WDEFS={
       fire:function(w){ var t=nearestEnemy(player.x,player.y,700*700)||{x:player.x,y:player.y};
         spawnCloud(t.x,t.y,(130+w.level*14)*player.area,dmg(7+w.level*2.6),4.5); }
     }
+  },
+  thunder:{ic:'⚡',name:'天罰雷',color:'#ffe94a',tag:'落雷',max:8,
+    desc:function(l){return l===0?'從天召喚落雷轟擊隨機敵人，造成範圍傷害':'落雷數↑ 傷害↑ 範圍↑';},
+    cd:function(l){return Math.max(0.7,1.8-l*0.13);},
+    fire:function(w){ var n=1+Math.floor(w.level/2);
+      for(var i=0;i<n;i++){ var t=randEnemyNear(player.x,player.y,720); if(!t)break;
+        var r=(58+w.level*8)*player.area, r2=r*r, tx=t.x, ty=t.y;
+        enemyGrid.query(tx,ty,r,function(e){ if(e.hp>0&&dist2(e.x,e.y,tx,ty)<r2)hitEnemy(e,dmg(24+w.level*8),tx,ty,0.2); });
+        ringFx(tx,ty,r,'#ffe94a'); burst(tx,ty,'#ffffff',10,240); } },
+    evo:{reqPassive:'pcritdmg',ic:'🌩️',name:'審判',color:'#fff0a0',desc:'落雷化為連環天罰，全場範圍轟炸',
+      cd:function(l){return Math.max(0.5,1.2-l*0.08);},
+      fire:function(w){ var n=3+Math.floor(w.level/2);
+        for(var i=0;i<n;i++){ var t=randEnemyNear(player.x,player.y,960)||{x:player.x+rand(-320,320),y:player.y+rand(-320,320)};
+          var r=(108+w.level*10)*player.area, r2=r*r, tx=t.x, ty=t.y;
+          enemyGrid.query(tx,ty,r,function(e){ if(e.hp>0&&dist2(e.x,e.y,tx,ty)<r2)hitEnemy(e,dmg(40+w.level*10),tx,ty,0.25); });
+          ringFx(tx,ty,r,'#fff0a0'); burst(tx,ty,'#ffffff',14,320); } }
+    }
   }
 };
-var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic'];
+var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder'];
 
 // 被動定義
 var PDEFS={
@@ -588,8 +605,9 @@ var PDEFS={
   parea:{ic:'🔵',name:'巨大化',color:'#ff8a3a',max:5,desc:function(){return '攻擊範圍 +16%';},apply:function(){recalc();}},
   pamount:{ic:'✳️',name:'多重投射',color:'#ffd54a',max:4,desc:function(){return '投射物 +1（部分武器）';},apply:function(){recalc();}},
   ppierce:{ic:'➡️',name:'貫穿',color:'#22e6ff',max:4,desc:function(){return '子彈額外貫穿 +1';},apply:function(){recalc();}},
+  pcritdmg:{ic:'💢',name:'致命一擊',color:'#ff2b5e',max:5,desc:function(){return '暴擊傷害 +25%';},apply:function(){recalc();}},
 };
-var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce'];
+var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg'];
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -660,7 +678,7 @@ function recalc(){
   player.maxHp=b.maxHp+25*(p.php||0);
   player.pickup=b.pickup*(1+0.25*(p.ppick||0));
   player.crit=b.crit+0.08*(p.pcrit||0);
-  player.critMult=b.critMult;
+  player.critMult=b.critMult+0.25*(p.pcritdmg||0);
   player.armor=Math.min(0.7,b.armor+0.08*(p.parmor||0));
   player.regen=b.regen+0.6*(p.pregen||0);
   player.xpMult=b.xpMult*(1+0.15*(p.pxp||0));
@@ -1075,6 +1093,7 @@ function nearestEnemy(x,y,maxd2){ var best=null,bd=maxd2; enemyGrid.query(x,y,Ma
   for(var i=0;i<enemies.length;i++){ var e=enemies[i]; if(e.hp<=0)continue; var dd=dist2(e.x,e.y,x,y); if(dd<bd){bd=dd;best=e;} }
   return best;
 }
+function randEnemyNear(x,y,range){ var r2=range*range,pool=[]; for(var i=0;i<enemies.length;i++){ var e=enemies[i]; if(e.hp<=0)continue; if(dist2(e.x,e.y,x,y)<r2)pool.push(e); } return pool.length?pool[randi(0,pool.length-1)]:null; }
 function updateBlades(dt){ var w=weaponById('blades'); if(!w)return;
   var sp=(w.evolved?3.6:2.2)+w.level*0.15; for(var i=0;i<blades.length;i++)blades[i].ang+=sp*dt; }
 

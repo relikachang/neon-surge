@@ -652,8 +652,9 @@ var PDEFS={
   ppierce:{ic:'➡️',name:'貫穿',color:'#22e6ff',max:4,desc:function(){return '子彈額外貫穿 +1';},apply:function(){recalc();}},
   pcritdmg:{ic:'💢',name:'致命一擊',color:'#ff2b5e',max:5,desc:function(){return '暴擊傷害 +25%';},apply:function(){recalc();}},
   pdodge:{ic:'💨',name:'閃避',color:'#5dff9b',max:5,desc:function(){return '受擊時 8% 機率完全閃避';},apply:function(){recalc();}},
+  pvamp:{ic:'🩸',name:'吸血',color:'#ff4d6a',max:5,desc:function(){return '每次擊殺回復 +0.4 生命';},apply:function(){recalc();}},
 };
-var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge'];
+var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp'];
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -757,6 +758,7 @@ function recalc(){
   player.amount=(p.pamount||0);          // 額外投射物
   player.pierceBonus=(p.ppierce||0);     // 額外貫穿
   player.dodge=Math.min(0.5,0.08*(p.pdodge||0));   // 閃避機率(上限50%)
+  player.lifesteal=0.4*(p.pvamp||0);   // 擊殺回血量
   if(player.hp>player.maxHp)player.hp=player.maxHp;
 }
 function dmg(base){ var d=base*player.dmgMult*(player.frenzyT>0?1.4:1)*(1+0.015*metaLv('growth')*(G.time/60)); if(Math.random()<player.crit)d*=player.critMult; return d; }
@@ -916,6 +918,7 @@ function hitEnemy(e,amount,fromx,fromy,knock){
 }
 function killEnemy(e){
   e.dead=true; G.kills++; if(e.elite){G.eliteKills=(G.eliteKills||0)+1; GAudio.elite&&GAudio.elite();} addCombo();
+  if(player.lifesteal>0&&player.hp<player.maxHp){ player.hp=Math.min(player.maxHp,player.hp+player.lifesteal); }   // 吸血被動：擊殺回血
   if(e.type&&!DB.bestiary[e.type]){ DB.bestiary[e.type]=true; saveDB(); }   // 怪物圖鑑：首次擊殺即解鎖
   if(e.type==='phantom')G.rareKills=(G.rareKills||0)+1;
   if(e.type==='golden'){ // 黃金巨獸：大量碎片 + 保底道具 + 華麗特效

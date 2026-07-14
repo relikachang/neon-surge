@@ -837,7 +837,7 @@ function spawnEnemy(type,ex,ey,mul,forceElite){
   // 精英變體：更大更肉、發光、掉更多、隨機詞綴（隨時間提高機率，每日變異可加成）
   var elite = forceElite || (mul>1 && Math.random()<Math.min(0.4,(0.015+G.time/1600)*mt.elite));
   var affix=null;
-  if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst','magnetic']); if(affix==='haste')sp*=1.6;
+  if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst','magnetic','trail']); if(affix==='haste')sp*=1.6;
     if(G.time-(G._eliteWarn||-9)>4){ G._eliteWarn=G.time; announce('⚠ 精英出現','#ffffff'); GAudio.elite&&GAudio.elite(); } }
   var ang,rr=Math.max(W,H)*0.62;
   if(ex==null){ ang=rand(0,TAU); ex=player.x+Math.cos(ang)*rr; ey=player.y+Math.sin(ang)*rr; }
@@ -1090,6 +1090,7 @@ function update(dt){
     if(e.affix==='burst'){ e.bt=(e.bt==null?3:e.bt-dt); if(e.bt<=0){ e.bt=3.5; for(var bk=0;bk<8;bk++){ var bka=bk/8*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(bka),Math.sin(bka),195,e.dmg*0.5); } } }  // 爆裂詞綴：週期放射彈
     if(e.affix==='magnetic'){ e.mgT=(e.mgT==null?2:e.mgT-dt); if(e.mgT<=0){ e.mgT=2.4; var ma=Math.atan2(e.y-player.y,e.x-player.x); player.x+=Math.cos(ma)*62; player.y+=Math.sin(ma)*62; ringFx(e.x,e.y,70,'#8b5bff'); ringFx(player.x,player.y,40,'#8b5bff'); } }  // 磁暴詞綴：週期把玩家拉向自己
     if(e.summonRare){ e.srT=(e.srT==null?3:e.srT-dt); if(e.srT<=0){ e.srT=3.2; if(enemies.length<220){ for(var q=0;q<3;q++)spawnEnemy('swarm',e.x+rand(-40,40),e.y+rand(-40,40),1.3); } ringFx(e.x,e.y,54,'#7dff9b'); } }  // 召魂者：週期召喚蟲群
+    if(e.affix==='trail'){ e.trT=(e.trT==null?0.5:e.trT-dt); if(e.trT<=0 && hazards.length<80){ e.trT=0.55; hazards.push({kind:'lava',x:e.x,y:e.y,r:26,life:2.4,max:2.4,dtk:0}); } }  // 熔跡詞綴：移動留下灼熱地面
     if(e.ranged||e.boss||e.affix==='shooter'){ e.shoot-=dt; if(e.shoot<=0){ e.shoot=(e.boss?1.1:rand(1.8,3))*(e.frenzied?0.38:e.enraged?0.55:1);
       if(e.boss){ bossAttack(e,dx,dy); }
       else { spawnEnemyBullet(e.x,e.y,dx/d,dy/d,240,e.dmg); } } }
@@ -1502,7 +1503,7 @@ function drawEnemy(e){
   else if(e.shape==='boss'){ for(var i=0;i<8;i++){var a=i/8*TAU,rr=i%2?r:r*0.7;(i?ctx.lineTo:ctx.moveTo).call(ctx,Math.cos(a)*rr,Math.sin(a)*rr);} }
   else { ctx.arc(0,0,r,0,TAU); }
   ctx.closePath(); ctx.fill();
-  if(e.elite){ ctx.lineWidth=2.5; ctx.strokeStyle=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':'#ffffff'; ctx.stroke(); }   // 精英詞綴描邊
+  if(e.elite){ ctx.lineWidth=2.5; ctx.strokeStyle=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':'#ffffff'; ctx.stroke(); }   // 精英詞綴描邊
   ctx.shadowBlur=0; ctx.restore();
   // 血條（受傷過 / boss）
   if(e.hp<e.maxHp){ var w=e.r*2, hpr=Math.max(0,e.hp/e.maxHp); ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(e.x-w/2,e.y-e.r-8,w,3);

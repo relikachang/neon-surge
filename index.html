@@ -387,6 +387,7 @@ var MUTATORS=[
   {id:'tempest',name:'暴風日', desc:'敵潮洶湧 · 高速衝擊',    eSpd:1.35,eHp:0.85,spawn:1.5,elite:1,pHp:1,  pDmg:1,  pSpd:1.1},
   {id:'glassworld',name:'琉璃世界日',desc:'雙方都極度脆弱',   eSpd:1,   eHp:0.5,spawn:1.2, elite:1,pHp:0.6,pDmg:1.4,pSpd:1},
   {id:'onslaught',name:'殲滅日',    desc:'敵潮爆量 · 精英倍增 · 略韌', eSpd:1.1,eHp:1.2,spawn:1.8,elite:2,pHp:1,  pDmg:1,  pSpd:1},
+  {id:'apex',     name:'頂級日',    desc:'精英橫行 · 更韌更猛',       eSpd:1.15,eHp:1.3,spawn:1, elite:4,pHp:1,  pDmg:1,  pSpd:1},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }

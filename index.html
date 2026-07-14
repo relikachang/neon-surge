@@ -632,6 +632,13 @@ var FUSIONS=[
     fire:function(w){ var ang=player.aimAngle,n=6+w.level+player.amount; for(var i=0;i<n;i++){ var a=ang+rand(-0.6,0.6);
         spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),rand(560,700),dmg(9+w.level*3),'#ff9de0',1,5,0.6); }
       if(w._ang==null)w._ang=0; w._ang+=0.5; fireBeam(w._ang,dmg(8+w.level*3),620*player.area,16*player.area,'#ff9de0'); fireBeam(w._ang+Math.PI,dmg(8+w.level*3),620*player.area,16*player.area,'#ff9de0'); }},
+  {a:'thunder',b:'boomerang',id:'thundercyclone',ic:'🌀',name:'雷霆迴旋',color:'#ffe08a',desc:'旋刃橫掃並引落連環天雷',max:3,
+    cd:function(l){return 0.5;},
+    fire:function(w){ for(var i=0;i<4;i++)spawnBoomerang(i/4*TAU,dmg(18+w.level*6),1.8);
+      var n=2+Math.floor(w.level/2); for(var i=0;i<n;i++){ var t=randEnemyNear(player.x,player.y,760); if(!t)break;
+        var r=(70+w.level*8)*player.area,r2=r*r,tx=t.x,ty=t.y;
+        enemyGrid.query(tx,ty,r,function(e){ if(e.hp>0&&dist2(e.x,e.y,tx,ty)<r2)hitEnemy(e,dmg(26+w.level*8),tx,ty,0.2); });
+        ringFx(tx,ty,r,'#ffe08a'); burst(tx,ty,'#ffffff',10,240); } }},
 ];
 function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)return FUSIONS[i]; return null; }
 

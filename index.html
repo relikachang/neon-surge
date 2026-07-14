@@ -248,7 +248,7 @@
 <!-- 武器圖鑑 -->
 <div id="codex" class="overlay"><div class="panel" style="max-width:620px">
   <h2 style="text-align:center;font-size:24px;font-weight:900;letter-spacing:2px;color:#22e6ff;margin-bottom:4px">武器圖鑑 📖</h2>
-  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">13 武器 · 進化(滿級+被動) · 合成(兩武器) · 昇華(進化+Lv18)</div>
+  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">15 武器 · 進化(滿級+被動) · 合成(兩武器) · 昇華(進化+Lv18)</div>
   <div id="codexlist"></div>
   <button class="btn ghost" id="codexclose" style="margin-top:14px">返回</button>
 </div></div>
@@ -591,9 +591,28 @@ var WDEFS={
           enemyGrid.query(tx,ty,r,function(e){ if(e.hp>0&&dist2(e.x,e.y,tx,ty)<r2)hitEnemy(e,dmg(40+w.level*10),tx,ty,0.25); });
           ringFx(tx,ty,r,'#fff0a0'); burst(tx,ty,'#ffffff',14,320); } }
     }
+  },
+  flame:{ic:'🔥',name:'火焰噴射',color:'#ff7a2b',tag:'錐形',max:8,
+    desc:function(l){return l===0?'朝最近敵人噴射持續火焰，灼燒錐形範圍':'範圍↑ 傷害↑ 角度↑';},
+    cd:function(l){return 0.12;},
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var ang=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle;
+      var range=(120+w.level*18)*player.area, half=0.5+w.level*0.03, r2=range*range;
+      enemyGrid.query(player.x,player.y,range,function(e){ if(e.hp<=0)return; if(dist2(e.x,e.y,player.x,player.y)>r2)return;
+        var ea=Math.atan2(e.y-player.y,e.x-player.x); var da=Math.abs(((ea-ang+Math.PI*3)%(Math.PI*2))-Math.PI);
+        if(da<half){ hitEnemy(e,dmg(4+w.level*1.6),player.x,player.y,0.04); e.slow=Math.max(e.slow||0,0.3); } });
+      var fx=player.x+Math.cos(ang)*range*0.55, fy=player.y+Math.sin(ang)*range*0.55; burst(fx,fy,'#ff7a2b',3,140); },
+    evo:{reqPassive:'parea',ic:'🌋',name:'烈焰風暴',color:'#ffb347',desc:'噴射範圍與角度暴增，化為橫掃全場的火海',
+      cd:function(l){return 0.1;},
+      fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var ang=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle;
+        var range=(200+w.level*22)*player.area, half=0.9+w.level*0.04, r2=range*range;
+        enemyGrid.query(player.x,player.y,range,function(e){ if(e.hp<=0)return; if(dist2(e.x,e.y,player.x,player.y)>r2)return;
+          var ea=Math.atan2(e.y-player.y,e.x-player.x); var da=Math.abs(((ea-ang+Math.PI*3)%(Math.PI*2))-Math.PI);
+          if(da<half){ hitEnemy(e,dmg(7+w.level*2.4),player.x,player.y,0.05); e.slow=Math.max(e.slow||0,0.4); } });
+        for(var i=0;i<2;i++){ var a=ang+rand(-half,half); var fx=player.x+Math.cos(a)*range*0.5, fy=player.y+Math.sin(a)*range*0.5; burst(fx,fy,'#ffb347',3,180); } }
+    }
   }
 };
-var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder'];
+var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame'];
 
 // 被動定義
 var PDEFS={

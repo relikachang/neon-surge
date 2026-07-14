@@ -248,7 +248,7 @@
 <!-- 武器圖鑑 -->
 <div id="codex" class="overlay"><div class="panel" style="max-width:620px">
   <h2 style="text-align:center;font-size:24px;font-weight:900;letter-spacing:2px;color:#22e6ff;margin-bottom:4px">武器圖鑑 📖</h2>
-  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">15 武器 · 進化(滿級+被動) · 合成(兩武器) · 昇華(進化+Lv18)</div>
+  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">16 武器 · 進化(滿級+被動) · 合成(兩武器) · 昇華(進化+Lv18)</div>
   <div id="codexlist"></div>
   <button class="btn ghost" id="codexclose" style="margin-top:14px">返回</button>
 </div></div>
@@ -617,9 +617,20 @@ var WDEFS={
           if(da<half){ hitEnemy(e,dmg(7+w.level*2.4),player.x,player.y,0.05); e.slow=Math.max(e.slow||0,0.4); } });
         for(var i=0;i<2;i++){ var a=ang+rand(-half,half); var fx=player.x+Math.cos(a)*range*0.5, fy=player.y+Math.sin(a)*range*0.5; burst(fx,fy,'#ffb347',3,180); } }
     }
+  },
+  sentry:{ic:'🛰️',name:'哨衛無人機',color:'#5dffe0',tag:'召喚',max:8,
+    desc:function(l){return l===0?'召喚環繞的哨衛無人機，自動朝敵人開火':'數量↑ 傷害↑ 存續↑';},
+    cd:function(l){return Math.max(2.2,4.0-l*0.24);},
+    fire:function(w){ var maxN=2+Math.floor(w.level/2)+player.amount; if(drones.length>=maxN+2)return;
+      var n=1+Math.floor(w.level/4); for(var i=0;i<n;i++)drones.push({x:player.x,y:player.y,ang:rand(0,TAU),orbit:70+w.level*4,life:5+w.level*0.6,cd:rand(0,0.4),dmg:dmg(10+w.level*4)}); },
+    evo:{reqPassive:'pamount',ic:'🛸',name:'無人機蜂群',color:'#8bffe8',desc:'成群無人機環繞護衛，火力覆蓋全場',
+      cd:function(l){return Math.max(1.6,3.0-l*0.18);},
+      fire:function(w){ var maxN=5+Math.floor(w.level/2)+player.amount; if(drones.length>=maxN+3)return;
+        var n=2+Math.floor(w.level/3); for(var i=0;i<n;i++)drones.push({x:player.x,y:player.y,ang:rand(0,TAU),orbit:80+w.level*4,life:6+w.level*0.7,cd:rand(0,0.35),dmg:dmg(16+w.level*5)}); }
+    }
   }
 };
-var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame'];
+var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry'];
 
 // 被動定義
 var PDEFS={
@@ -684,7 +695,7 @@ function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)
 // =====================================================================
 // 遊戲狀態
 // =====================================================================
-var G, player, enemies, bullets, ebullets, orbs, particles, dmgnums, pickups, blades, fxRings, wells, beams, mines, clouds, hazards;
+var G, player, enemies, bullets, ebullets, orbs, particles, dmgnums, pickups, blades, fxRings, wells, beams, mines, clouds, hazards, drones;
 var enemyGrid;
 var running=false;
 
@@ -703,7 +714,7 @@ function newRun(daily){
     fireRate:1*(ch.stat.fireRate||1)*(1+0.05*metaLv('haste')), speed:230*(1+0.05*metaLv('spd'))*(ch.stat.speed||1)*mut.pSpd,
     maxHp:(100+12*metaLv('hp'))*(ch.stat.maxHp||1)*mut.pHp, pickup:90*(1+0.12*metaLv('pick'))*(ch.stat.pickup||1),
     crit:0.05+(ch.stat.crit||0)+0.03*metaLv('crit'), critMult:2, armor:0.04*metaLv('armor'), regen:0.3*metaLv('regen'), xpMult:1+0.08*metaLv('xp') };
-  enemies=[]; bullets=[]; ebullets=[]; orbs=[]; particles=[]; dmgnums=[]; pickups=[]; blades=[]; fxRings=[]; wells=[]; beams=[]; mines=[]; clouds=[]; hazards=[];
+  enemies=[]; bullets=[]; ebullets=[]; orbs=[]; particles=[]; dmgnums=[]; pickups=[]; blades=[]; fxRings=[]; wells=[]; beams=[]; mines=[]; clouds=[]; hazards=[]; drones=[];
   addWeapon(ch.start);
   recalc(); player.hp=player.maxHp;
   enemyGrid=makeGrid(96);
@@ -1112,6 +1123,13 @@ function update(dt){
     if(cl.t>=0.4){ cl.t=0; var cr2=cl.r*cl.r; (function(cl,cr2){ enemyGrid.query(cl.x,cl.y,cl.r,function(e){ if(e.hp>0&&dist2(e.x,e.y,cl.x,cl.y)<cr2){ hitEnemy(e,cl.dmg,cl.x,cl.y,0); e.slow=Math.max(e.slow||0,0.6); } }); })(cl,cr2); }
     if(cl.life<=0){ clouds.splice(i,1); } }
 
+  // ---- 哨衛無人機（環繞玩家、自動朝最近敵人開火）----
+  for(var i=drones.length-1;i>=0;i--){ var dr=drones[i]; dr.life-=dt; dr.ang+=dt*2.2;
+    var tx=player.x+Math.cos(dr.ang)*dr.orbit, ty=player.y+Math.sin(dr.ang)*dr.orbit;
+    dr.x+=(tx-dr.x)*Math.min(1,dt*8); dr.y+=(ty-dr.y)*Math.min(1,dt*8);
+    dr.cd-=dt; if(dr.cd<=0){ var t=nearestEnemy(dr.x,dr.y,520*520); if(t){ dr.cd=0.5; var a=Math.atan2(t.y-dr.y,t.x-dr.x); spawnBullet(dr.x,dr.y,Math.cos(a),Math.sin(a),640,dr.dmg,'#5dffe0',2,4,1.0); } }
+    if(dr.life<=0)drones.splice(i,1); }
+
   // ---- 環刃碰撞 ----
   var bw=weaponById('blades');
   if(bw&&blades.length){ var br=((bw.evolved?120:64)+bw.level*10)*(bw.asc?1.4:1), bdmg=dmg(((bw.evolved?22:8)+bw.level*4)*(bw.asc?2.2:1));
@@ -1377,6 +1395,11 @@ function render(){
     ctx.globalAlpha=wa; ctx.strokeStyle=wl.explode?'#c98bff':'#b06bff'; ctx.lineWidth=3; ctx.shadowColor='#b06bff'; ctx.shadowBlur=18;
     for(var k=0;k<3;k++){ ctx.beginPath(); ctx.arc(wl.x,wl.y,wl.r*(0.5+k*0.22),wl.spin+k,wl.spin+k+4.6); ctx.stroke(); }
     ctx.shadowBlur=0; ctx.restore(); }
+
+  // 哨衛無人機
+  for(var i=0;i<drones.length;i++){ var dr=drones[i], da=Math.min(1,dr.life/1.2);
+    ctx.save(); ctx.globalAlpha=da; ctx.translate(dr.x,dr.y); ctx.rotate(dr.ang*2); ctx.fillStyle='#5dffe0'; ctx.shadowColor='#5dffe0'; ctx.shadowBlur=12;
+    ctx.beginPath(); ctx.moveTo(0,-7); ctx.lineTo(6,0); ctx.lineTo(0,7); ctx.lineTo(-6,0); ctx.closePath(); ctx.fill(); ctx.restore(); }
 
   // 地雷
   for(var i=0;i<mines.length;i++){ var mn=mines[i]; var blink=mn.arm>0?0.4:(0.5+0.5*Math.sin(Date.now()/120));

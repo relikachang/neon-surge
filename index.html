@@ -251,7 +251,7 @@
 <!-- 武器圖鑑 -->
 <div id="codex" class="overlay"><div class="panel" style="max-width:620px">
   <h2 style="text-align:center;font-size:24px;font-weight:900;letter-spacing:2px;color:#22e6ff;margin-bottom:4px">武器圖鑑 📖</h2>
-  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">16 武器 · 進化(滿級+被動) · 合成(兩武器) · 昇華(進化+Lv18)</div>
+  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">17 武器 · 進化(滿級+被動) · 合成(兩武器) · 昇華(進化+Lv18)</div>
   <div id="codexlist"></div>
   <button class="btn ghost" id="codexclose" style="margin-top:14px">返回</button>
 </div></div>
@@ -653,9 +653,26 @@ var WDEFS={
       fire:function(w){ var maxN=5+Math.floor(w.level/2)+player.amount; if(drones.length>=maxN+3)return;
         var n=2+Math.floor(w.level/3); for(var i=0;i<n;i++)drones.push({x:player.x,y:player.y,ang:rand(0,TAU),orbit:80+w.level*4,life:6+w.level*0.7,cd:rand(0,0.35),dmg:dmg(16+w.level*5)}); }
     }
+  },
+  spike:{ic:'🔺',name:'地刺',color:'#c8a04a',tag:'直線',max:8,
+    desc:function(l){return l===0?'朝最近敵人從地面依序刺出一列尖刺':'長度↑ 傷害↑ 範圍↑';},
+    cd:function(l){return Math.max(0.5,1.2-l*0.08);},
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var ang=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle;
+      var seg=4+w.level, rr=(30+w.level*3)*player.area, rr2=rr*rr;
+      for(var s=1;s<=seg;s++){ var px=player.x+Math.cos(ang)*s*42, py=player.y+Math.sin(ang)*s*42;
+        (function(px,py){ enemyGrid.query(px,py,rr,function(e){ if(e.hp>0&&dist2(e.x,e.y,px,py)<rr2)hitEnemy(e,dmg(12+w.level*4),px,py,0.15); }); })(px,py);
+        ringFx(px,py,rr,'#c8a04a'); } },
+    evo:{reqPassive:'ppierce',ic:'⛰️',name:'碎地拒馬',color:'#ffd27a',desc:'貫穿全場的巨型地刺長廊，撕裂所經一切',
+      cd:function(l){return Math.max(0.35,0.9-l*0.06);},
+      fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var ang=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle;
+        var seg=8+w.level, rr=(46+w.level*4)*player.area, rr2=rr*rr;
+        for(var s=1;s<=seg;s++){ var px=player.x+Math.cos(ang)*s*54, py=player.y+Math.sin(ang)*s*54;
+          (function(px,py){ enemyGrid.query(px,py,rr,function(e){ if(e.hp>0&&dist2(e.x,e.y,px,py)<rr2)hitEnemy(e,dmg(20+w.level*6),px,py,0.2); }); })(px,py);
+          ringFx(px,py,rr,'#ffd27a'); } }
+    }
   }
 };
-var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry'];
+var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike'];
 
 // 被動定義
 var PDEFS={

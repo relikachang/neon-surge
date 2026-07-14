@@ -409,6 +409,7 @@ var META=[
   {id:'area',  ic:'🔵', name:'力場放大', desc:'初始攻擊範圍', per:'+5%', max:5, cost:function(l){return 60+l*50;}},
   {id:'revive',ic:'💫', name:'復生協議', desc:'每局復活一次', per:'解鎖', max:1, cost:function(l){return 400;}},
   {id:'slots', ic:'🎒', name:'武器槽擴充', desc:'武器欄位上限（突破 6 把）', per:'+1', max:2, cost:function(l){return 300+l*250;}},
+  {id:'growth', ic:'📈', name:'成長核心', desc:'傷害隨存活時間增長', per:'+1.5%/分', max:5, cost:function(l){return 80+l*70;}},
 ];
 function metaLv(id){return DB.meta[id]||0;}
 
@@ -757,7 +758,7 @@ function recalc(){
   player.dodge=Math.min(0.5,0.08*(p.pdodge||0));   // 閃避機率(上限50%)
   if(player.hp>player.maxHp)player.hp=player.maxHp;
 }
-function dmg(base){ var d=base*player.dmgMult*(player.frenzyT>0?1.4:1); if(Math.random()<player.crit)d*=player.critMult; return d; }
+function dmg(base){ var d=base*player.dmgMult*(player.frenzyT>0?1.4:1)*(1+0.015*metaLv('growth')*(G.time/60)); if(Math.random()<player.crit)d*=player.critMult; return d; }
 
 function weaponById(id){ return player.weapons.find(function(w){return w.id===id;}); }
 function addWeapon(id){ if(weaponById(id))return;

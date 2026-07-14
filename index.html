@@ -707,14 +707,14 @@ var ETYPES={
   splitter:{r:17,hp:36,sp:54,dmg:11,color:'#3dff7a',xp:3,shape:'penta',split:true},
   charger:{r:14,hp:26,sp:58,dmg:15,color:'#ff3d8a',xp:3,shape:'arrow',charger:true},
 };
-function spawnEnemy(type,ex,ey,mul){
+function spawnEnemy(type,ex,ey,mul,forceElite){
   var d=ETYPES[type]; mul=mul||1;
   var st=G.stage||STAGES[0], mt=G.mut||IDENTITY_MUT;
   var endless=1+G.time/360;   // 無盡難度：敵人傷害隨時間增長(6分鐘 +100%)
   var lateHp=1+Math.pow(Math.max(0,G.time-150)/60,1.5)*0.25;   // 後期(2.5分後)敵人血量指數陡增，避免無腦輾壓
   var hp=d.hp*mul*st.eHp*mt.eHp*lateHp, sp=d.sp*st.eSpd*mt.eSpd, r=d.r, xp=d.xp, dm=d.dmg*endless;
   // 精英變體：更大更肉、發光、掉更多、隨機詞綴（隨時間提高機率，每日變異可加成）
-  var elite = mul>1 && Math.random()<Math.min(0.4,(0.015+G.time/1600)*mt.elite);
+  var elite = forceElite || (mul>1 && Math.random()<Math.min(0.4,(0.015+G.time/1600)*mt.elite));
   var affix=null;
   if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst']); if(affix==='haste')sp*=1.6;
     if(G.time-(G._eliteWarn||-9)>4){ G._eliteWarn=G.time; announce('⚠ 精英出現','#ffffff'); GAudio.elite&&GAudio.elite(); } }
@@ -1048,6 +1048,11 @@ function spawnDirector(dt){
   // 精英/坦克群
   G.eliteTimer-=dt; if(G.eliteTimer<=0){ G.eliteTimer=rand(14,20);
     if(m>0.4){ var mul=1.5+m*0.7, n=randi(2,4); for(var i=0;i<n;i++)spawnEnemy('tank',null,null,mul); } }
+  // 後期精英波（4 分後每 ~70 秒一次，強制生成一群精英，隨時間變多變強）
+  if(G.time>240){ G.surgeT=(G.surgeT==null?rand(20,40):G.surgeT-dt); if(G.surgeT<=0){ G.surgeT=rand(60,80);
+    var en=3+Math.floor((G.time-240)/90), emul=2.2+m*0.6;
+    announce('☢ 精英波來襲 ×'+en+'！','#ff2b5e'); flashScreen('255,43,94',0.35); shake&&shake(10); GAudio.elite&&GAudio.elite();
+    for(var s=0;s<en;s++)spawnEnemy(chooseType(m),null,null,emul,true); } }
   // 波數（每 20 秒）
   var wv=1+Math.floor(G.time/20); if(wv>G.wave){ G.wave=wv;
     if(wv%5===0){ announce('⚡ 第 '+wv+' 波 · 霓潮湧現！','#ff3df0'); flashScreen('255,61,240',0.3); GAudio.boss&&GAudio.boss();

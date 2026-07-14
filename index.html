@@ -363,6 +363,10 @@ var ACHIEVEMENTS=[
   {id:'fullbestiary',ic:'📖',name:'圖鑑大師',desc:'圖鑑解鎖全部 12 種怪物',rw:500,chk:function(){return Object.keys(DB.bestiary||{}).length>=12;}},
   {id:'octoarsenal',ic:'🎒',name:'八重奏',desc:'同時擁有 8 種武器',rw:400,chk:function(){return player.weapons.length>=8;}},
   {id:'tundra3', ic:'❄️',name:'凍原征服',desc:'寒獄凍原存活 3 分',rw:400,chk:function(){return G.stage&&G.stage.id==='tundra'&&G.time>=180;}},
+  {id:'act10',   ic:'♾️',name:'永無止境',desc:'抵達第 10 幕',rw:800,chk:function(){return (G.act||1)>=10;}},
+  {id:'kills5000',ic:'💀',name:'血洗霓虹',desc:'單局擊殺 5000',rw:600,chk:function(){return G.kills>=5000;}},
+  {id:'combo300',ic:'🌟',name:'連擊之神',desc:'達成 300 連擊',rw:400,chk:function(){return (G.peakCombo||0)>=300;}},
+  {id:'shard1k', ic:'💎',name:'富可敵國',desc:'單局累積 1000 碎片',rw:400,chk:function(){return G.shards>=1000;}},
 ];
 function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); }
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';

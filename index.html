@@ -321,7 +321,7 @@ var TAU=Math.PI*2;
 // =====================================================================
 var SAVE='neonSurge_v1';
 var DB=loadDB();
-function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false};
+function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false};
   var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; return m;}}catch(e){} return d; }
 
@@ -419,9 +419,10 @@ var CHARS=[
   {id:'engineer',face:'🧨',name:'工兵',   desc:'耐久佈陷 · 起手地雷', start:'mine', locked:true, unlock:'engineer', stat:{maxHp:1.18,pickup:1.1}},
   {id:'pyro',    face:'🔥',name:'炎術士', desc:'範圍灼燒 · 起手烈焰環', start:'aura', locked:true, unlock:'pyro', stat:{dmg:1.08,maxHp:1.1}},
   {id:'demo',    face:'💥',name:'爆破手', desc:'爆發輸出 · 起手散彈', start:'shotgun', locked:true, unlock:'demo', stat:{dmg:1.16,speed:0.95}},
+  {id:'thundergod',face:'⚡',name:'雷神', desc:'落雷洗地 · 起手天罰雷', start:'thunder', locked:true, unlock:'thundergod', stat:{dmg:1.12,crit:0.06}},
 ];
 var selChar='ranger';
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕'};
 
 // =====================================================================
 // 地圖 / 關卡
@@ -1516,6 +1517,7 @@ function gameOver(){
   if((G.bossKills||0)>=3&&!DB.chars.engineer){DB.chars.engineer=true;}
   if(G.wave>=15&&!DB.chars.pyro){DB.chars.pyro=true;}
   if(G.kills>=1000&&!DB.chars.demo){DB.chars.demo=true;}
+  if((G.act||1)>=4&&!DB.chars.thundergod){DB.chars.thundergod=true;}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; } }

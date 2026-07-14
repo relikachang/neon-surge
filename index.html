@@ -689,6 +689,10 @@ var FUSIONS=[
         if(da<half){ hitEnemy(e,dmg(6+w.level*2),player.x,player.y,0.05); e.slow=Math.max(e.slow||0,0.4); } });
       var fx=player.x+Math.cos(ang)*range*0.6, fy=player.y+Math.sin(ang)*range*0.6; burst(fx,fy,'#b6ff3d',3,160);
       if(t)spawnCloud(t.x,t.y,(90+w.level*10)*player.area,dmg(5+w.level*1.8),2.6); }},
+  {a:'sentry',b:'mine',id:'bombdrone',ic:'🚁',name:'轟炸機群',color:'#ffd980',desc:'召喚投彈無人機環繞掃射，沿途佈設集束地雷',max:3,
+    cd:function(l){return 1.5;},
+    fire:function(w){ var maxN=4+player.amount; if(drones.length<maxN)drones.push({x:player.x,y:player.y,ang:rand(0,TAU),orbit:80,life:6,cd:rand(0,0.3),dmg:dmg(16+w.level*5)});
+      dropMine(player.x+rand(-70,70),player.y+rand(-70,70),dmg(34+w.level*10),(80+w.level*6)*player.area,true); }},
 ];
 function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)return FUSIONS[i]; return null; }
 

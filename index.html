@@ -402,6 +402,7 @@ var META=[
   {id:'haste', ic:'⏱️', name:'超載核心', desc:'初始攻速', per:'+5%', max:5, cost:function(l){return 60+l*50;}},
   {id:'area',  ic:'🔵', name:'力場放大', desc:'初始攻擊範圍', per:'+5%', max:5, cost:function(l){return 60+l*50;}},
   {id:'revive',ic:'💫', name:'復生協議', desc:'每局復活一次', per:'解鎖', max:1, cost:function(l){return 400;}},
+  {id:'slots', ic:'🎒', name:'武器槽擴充', desc:'武器欄位上限（突破 6 把）', per:'+1', max:2, cost:function(l){return 300+l*250;}},
 ];
 function metaLv(id){return DB.meta[id]||0;}
 
@@ -1236,7 +1237,7 @@ function buildChoices(){
   // 已有武器可升級
   player.weapons.forEach(function(w){ if(!w.fused && w.level<w.def.max-1) pool.push({kind:'wup',id:w.id}); });
   // 新武器（若欄位<6）
-  if(player.weapons.length<6){ WORDER.forEach(function(id){ if(!weaponById(id)) pool.push({kind:'wnew',id:id}); }); }
+  if(player.weapons.length<6+metaLv('slots')){ WORDER.forEach(function(id){ if(!weaponById(id)) pool.push({kind:'wnew',id:id}); }); }
   // 被動
   PORDER.forEach(function(id){ var lv=player.passives[id]||0; if(lv<PDEFS[id].max) pool.push({kind:'passive',id:id}); });
   // 洗牌抽 3

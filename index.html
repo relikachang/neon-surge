@@ -773,6 +773,11 @@ var FUSIONS=[
       var seg=8, rr=(44+w.level*4)*player.area, rr2=rr*rr;
       for(var s=1;s<=seg;s++){ var px=player.x+Math.cos(ang)*s*50, py=player.y+Math.sin(ang)*s*50; (function(px,py){ enemyGrid.query(px,py,rr,function(e){ if(e.hp>0&&dist2(e.x,e.y,px,py)<rr2)hitEnemy(e,dmg(18+w.level*6),px,py,0.2); }); })(px,py); ringFx(px,py,rr,'#ffd27a'); }
       fireBeam(ang,dmg(16+w.level*5),(560+w.level*30)*player.area,20*player.area,'#ffd27a'); }},
+  {a:'frost',b:'spike',id:'frostlance',ic:'❄️',name:'寒冰刺陣',color:'#8bd3ff',desc:'凍結一整列敵人的寒冰地刺長廊',max:3,
+    cd:function(l){return 0.5;},
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var ang=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle;
+      var seg=8, rr=(46+w.level*4)*player.area, rr2=rr*rr;
+      for(var s=1;s<=seg;s++){ var px=player.x+Math.cos(ang)*s*52, py=player.y+Math.sin(ang)*s*52; (function(px,py){ enemyGrid.query(px,py,rr,function(e){ if(e.hp>0&&dist2(e.x,e.y,px,py)<rr2){ hitEnemy(e,dmg(16+w.level*5),px,py,0.15); e.frozen=Math.max(e.frozen||0,1.2); } }); })(px,py); ringFx(px,py,rr,'#8bd3ff'); } }},
 ];
 function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)return FUSIONS[i]; return null; }
 

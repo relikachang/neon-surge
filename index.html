@@ -339,13 +339,15 @@ function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,v
 
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
 // 使用者只需在 firebase.google.com 建免費 Realtime Database、規則設 {".read":true,".write":true}，把資料庫網址貼在下面即可上線；留空則自動退回本機榜。
-var WORLD_DB_URL='';   // 例如 'https://your-project-default-rtdb.firebaseio.com'
+var WORLD_DB_URL='https://dowk-202c5-default-rtdb.firebaseio.com';   // 世界排行榜 Firebase Realtime Database
 function worldEnabled(){ return /^https?:\/\/.+/.test(WORLD_DB_URL); }
 function submitWorldScore(entry){ if(!worldEnabled())return;
   try{ fetch(WORLD_DB_URL.replace(/\/$/,'')+'/scores.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)}).catch(function(){}); }catch(e){} }
 function fetchWorldScores(cb){ if(!worldEnabled()){ cb(null); return; }
-  try{ fetch(WORLD_DB_URL.replace(/\/$/,'')+'/scores.json?orderBy="score"&limitToLast=50',{headers:{'Content-Type':'application/json'}})
-    .then(function(r){return r.json();}).then(function(o){ var arr=[]; if(o)for(var k in o)arr.push(o[k]); arr.sort(function(a,b){return (b.score||0)-(a.score||0);}); cb(arr.slice(0,20)); })
+  try{ fetch(WORLD_DB_URL.replace(/\/$/,'')+'/scores.json',{headers:{'Content-Type':'application/json'}})
+    .then(function(r){return r.json();}).then(function(o){ if(!o||o.error){ cb(o&&o.error?null:[]); return; }
+      var arr=[]; for(var k in o){ var e=o[k]; if(e&&typeof e==='object'&&('score' in e))arr.push(e); }   // 只收有效分數紀錄
+      arr.sort(function(a,b){return (b.score||0)-(a.score||0);}); cb(arr.slice(0,20)); })
     .catch(function(){cb(null);}); }catch(e){ cb(null); } }
 
 // 成就

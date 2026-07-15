@@ -203,6 +203,10 @@
   <div class="title">NEON<br>SURGE</div>
   <div class="sub">霓 · 潮 · 倖 · 存</div>
   <div class="best" id="bestline"></div>
+  <div id="namerow" style="display:flex;align-items:center;justify-content:center;gap:8px;margin:2px 0 10px">
+    <span style="color:#8ea0c8;font-size:13px">玩家</span>
+    <input id="pname" maxlength="12" placeholder="輸入暱稱" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:#eaf0ff;font-size:14px;padding:6px 10px;width:150px;text-align:center;font-family:inherit">
+  </div>
   <div class="sellabel">選擇角色</div>
   <div class="charsel" id="charsel"></div>
   <div class="sellabel">選擇地圖</div>
@@ -267,8 +271,13 @@
 <!-- 排行榜 -->
 <div id="board" class="overlay"><div class="panel" style="max-width:520px">
   <h2 style="text-align:center;font-size:24px;font-weight:900;letter-spacing:2px;color:#ffd54a;margin-bottom:6px">排行榜 🏆</h2>
+  <div style="display:flex;gap:8px;margin-bottom:10px">
+    <button class="btn ghost" id="tab-local" style="flex:1;padding:8px">本機 🏆</button>
+    <button class="btn ghost" id="tab-world" style="flex:1;padding:8px">世界 🌍</button>
+  </div>
   <div id="dailyline" style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px"></div>
   <div id="boardlist"></div>
+  <div id="worldlist" style="display:none"></div>
   <button class="btn ghost" id="boardclose" style="margin-top:14px">返回</button>
 </div></div>
 
@@ -325,8 +334,19 @@ var TAU=Math.PI*2;
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{}};
-  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; return m;}}catch(e){} return d; }
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:''};
+  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; return m;}}catch(e){} return d; }
+
+// ===== 世界排行榜(Firebase Realtime Database REST) =====
+// 使用者只需在 firebase.google.com 建免費 Realtime Database、規則設 {".read":true,".write":true}，把資料庫網址貼在下面即可上線；留空則自動退回本機榜。
+var WORLD_DB_URL='';   // 例如 'https://your-project-default-rtdb.firebaseio.com'
+function worldEnabled(){ return /^https?:\/\/.+/.test(WORLD_DB_URL); }
+function submitWorldScore(entry){ if(!worldEnabled())return;
+  try{ fetch(WORLD_DB_URL.replace(/\/$/,'')+'/scores.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)}).catch(function(){}); }catch(e){} }
+function fetchWorldScores(cb){ if(!worldEnabled()){ cb(null); return; }
+  try{ fetch(WORLD_DB_URL.replace(/\/$/,'')+'/scores.json?orderBy="score"&limitToLast=50',{headers:{'Content-Type':'application/json'}})
+    .then(function(r){return r.json();}).then(function(o){ var arr=[]; if(o)for(var k in o)arr.push(o[k]); arr.sort(function(a,b){return (b.score||0)-(a.score||0);}); cb(arr.slice(0,20)); })
+    .catch(function(){cb(null);}); }catch(e){ cb(null); } }
 
 // 成就
 var ACHIEVEMENTS=[
@@ -1796,7 +1816,9 @@ function gameOver(){
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; } }
   // 排行榜（保留前 10，依存活時間）
-  DB.scores.push({score:G.score,time:Math.round(G.time),kills:G.kills,level:G.level,stage:G.stage.id,char:selChar,daily:G.daily});
+  var scoreEntry={score:G.score,time:Math.round(G.time),kills:G.kills,level:G.level,stage:G.stage.id,char:selChar,daily:G.daily,name:(DB.playerName||'匿名玩家')};
+  DB.scores.push(scoreEntry);
+  submitWorldScore({name:scoreEntry.name,score:scoreEntry.score,time:scoreEntry.time,kills:scoreEntry.kills,level:scoreEntry.level,stage:scoreEntry.stage,char:scoreEntry.char,ts:Date.now()});   // 上傳世界排行榜(若已設定)
   DB.scores.sort(function(a,b){return (b.score||0)-(a.score||0);}); DB.scores=DB.scores.slice(0,10);
   // 每日挑戰最佳
   if(G.daily){ var dk=dayKey(); if(DB.daily.date!==dk||G.time>DB.daily.time)DB.daily={date:dk,time:Math.round(G.time),kills:G.kills}; }
@@ -1860,13 +1882,26 @@ function renderBestiary(){ var order=['grunt','swarm','tank','ranged','bomber','
       '<div class="cxd">'+mi.d+'</div></div></div>'; }).join('');
   $('bestiarylist').innerHTML='<div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:12px">已解鎖 '+seen+' / '+order.length+' 種</div>'+html;
 }
+function medal(i){ return i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1); }
+function scoreRow(s,i){ var ch=CHARS.find(function(c){return c.id===s.char;}), st=STAGES.find(function(x){return x.id===s.stage;});
+  var nm=s.name?('<b style="color:#ffd54a">'+String(s.name).slice(0,12)+'</b> · '):'';
+  return '<div class="shopitem"><div class="si">'+medal(i)+'</div>'+
+    '<div class="sm"><div class="sn">'+nm+(s.score||0)+' 分 · '+fmtTime(s.time)+(s.daily?' 🗓️':'')+'</div>'+
+    '<div class="sd">擊殺 '+s.kills+' · '+(ch?ch.name:'?')+' · '+(st?st.name:'?')+' · Lv'+s.level+'</div></div></div>'; }
+function showBoardTab(which){ var lo=which!=='world'; $('boardlist').style.display=lo?'':'none'; $('worldlist').style.display=lo?'none':'';
+  $('tab-local').style.opacity=lo?'1':'.5'; $('tab-world').style.opacity=lo?'.5':'1'; if(!lo)renderWorld(); }
 function renderBoard(){ var mut=todaysMutator();
   $('dailyline').textContent='今日挑戰：'+mut.name+'（'+mut.desc+'）'+(DB.daily.date===dayKey()?('　你的最佳 '+fmtTime(DB.daily.time)):'');
-  var l=$('boardlist'); if(!DB.scores.length){ l.innerHTML='<div style="text-align:center;color:#6b7ba0;padding:24px">尚無紀錄 — 開創你的傳說</div>'; return; }
-  l.innerHTML=DB.scores.map(function(s,i){ var ch=CHARS.find(function(c){return c.id===s.char;}), st=STAGES.find(function(x){return x.id===s.stage;});
-    return '<div class="shopitem"><div class="si">'+(i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1))+'</div>'+
-      '<div class="sm"><div class="sn">'+(s.score||0)+' 分 · '+fmtTime(s.time)+(s.daily?' 🗓️':'')+'</div>'+
-      '<div class="sd">擊殺 '+s.kills+' · '+(ch?ch.name:'?')+' · '+(st?st.name:'?')+' · Lv'+s.level+'</div></div></div>'; }).join('');
+  var l=$('boardlist'); if(!DB.scores.length){ l.innerHTML='<div style="text-align:center;color:#6b7ba0;padding:24px">尚無紀錄 — 開創你的傳說</div>'; }
+  else l.innerHTML=DB.scores.map(scoreRow).join('');
+  showBoardTab('local');
+}
+function renderWorld(){ var w=$('worldlist');
+  if(!worldEnabled()){ w.innerHTML='<div style="text-align:center;color:#6b7ba0;padding:20px;line-height:1.7">世界排行榜尚未啟用 🌍<br><span style="font-size:11px">（開發者在 neon.html 的 WORLD_DB_URL 填入 Firebase 資料庫網址即可上線）</span></div>'; return; }
+  w.innerHTML='<div style="text-align:center;color:#6b7ba0;padding:24px">載入世界排行榜中…</div>';
+  fetchWorldScores(function(arr){ if(arr==null){ w.innerHTML='<div style="text-align:center;color:#ff6b8a;padding:24px">世界排行榜連線失敗，請稍後再試</div>'; return; }
+    if(!arr.length){ w.innerHTML='<div style="text-align:center;color:#6b7ba0;padding:24px">世界榜尚無紀錄 — 成為第一人！</div>'; return; }
+    w.innerHTML=arr.map(scoreRow).join(''); });
 }
 function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').classList.add('show'); renderMenu(); }
 
@@ -1875,6 +1910,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
+  if($('pname'))$('pname').value=DB.playerName||'';
   $('dailybtn').textContent='每日挑戰 · '+todaysMutator().name;
   var cs=$('charsel'); cs.innerHTML='';
   CHARS.forEach(function(c){ var unlocked=!c.locked||DB.chars[c.unlock];
@@ -1951,6 +1987,9 @@ var GAudio=(function(){ var ac=null, muted=false;
 $('playbtn').onclick=function(){ startGame(false); };
 $('dailybtn').onclick=function(){ startGame(true); };
 $('boardbtn').onclick=function(){ renderBoard(); $('menu').classList.remove('show'); $('board').classList.add('show'); };
+$('tab-local').onclick=function(){ showBoardTab('local'); };
+$('tab-world').onclick=function(){ showBoardTab('world'); };
+if($('pname'))$('pname').addEventListener('change',function(){ DB.playerName=(this.value||'').trim().slice(0,12); saveDB(); });
 $('boardclose').onclick=function(){ $('board').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('achbtn').onclick=function(){ renderAch(); $('menu').classList.remove('show'); $('ach').classList.add('show'); };
 $('achclose').onclick=function(){ $('ach').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };

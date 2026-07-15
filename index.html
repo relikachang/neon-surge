@@ -408,6 +408,7 @@ var MUTATORS=[
   {id:'onslaught',name:'殲滅日',    desc:'敵潮爆量 · 精英倍增 · 略韌', eSpd:1.1,eHp:1.2,spawn:1.8,elite:2,pHp:1,  pDmg:1,  pSpd:1},
   {id:'apex',     name:'頂級日',    desc:'精英橫行 · 更韌更猛',       eSpd:1.15,eHp:1.3,spawn:1, elite:4,pHp:1,  pDmg:1,  pSpd:1},
   {id:'swift',    name:'疾影日',    desc:'敵人極速但極脆 · 大量湧現',  eSpd:1.6, eHp:0.4,spawn:1.4,elite:1,pHp:1,  pDmg:1,  pSpd:1},
+  {id:'apocalypse',name:'末日日',   desc:'全面地獄 · 敵強量多 · 玩家亦脆弱', eSpd:1.35,eHp:1.6,spawn:1.6,elite:3,pHp:0.8,pDmg:1,pSpd:1},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }

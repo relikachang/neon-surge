@@ -324,7 +324,7 @@ var TAU=Math.PI*2;
 // =====================================================================
 var SAVE='neonSurge_v1';
 var DB=loadDB();
-function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false};
+function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false};
   var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; return m;}}catch(e){} return d; }
 
@@ -461,9 +461,10 @@ var CHARS=[
   {id:'plaguer',face:'☣️',name:'瘟疫師', desc:'毒雲蔓延 · 起手毒霧彈', start:'toxic', locked:true, unlock:'plaguer', stat:{dmg:1.05,pickup:1.2}},
   {id:'rover',  face:'🪃',name:'游俠',   desc:'靈動迴旋 · 起手回力刃', start:'boomerang', locked:true, unlock:'rover', stat:{speed:1.12,crit:0.08}},
   {id:'breaker',face:'🔺',name:'陷陣士', desc:'正面碾壓 · 起手地刺', start:'spike', locked:true, unlock:'breaker', stat:{dmg:1.12,maxHp:1.08}},
+  {id:'duelist',face:'⛓️',name:'決鬥者', desc:'近身格擋 · 起手能量鞭', start:'lash', locked:true, unlock:'duelist', stat:{speed:1.1,maxHp:1.1}},
 ];
 var selChar='ranger';
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分'};
 
 // =====================================================================
 // 地圖 / 關卡
@@ -1765,6 +1766,7 @@ function gameOver(){
   if(G.time>=360&&!DB.chars.plaguer){DB.chars.plaguer=true;}
   if((G.goldKills||0)>=3&&!DB.chars.rover){DB.chars.rover=true;}
   if((G.peakCombo||0)>=150&&!DB.chars.breaker){DB.chars.breaker=true;}
+  if(G.time>=480&&!DB.chars.duelist){DB.chars.duelist=true;}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; } }

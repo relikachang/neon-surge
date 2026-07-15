@@ -775,8 +775,9 @@ var PDEFS={
   pthorns:{ic:'🌵',name:'荊棘',color:'#5dff9b',max:5,desc:function(){return '接觸你的敵人受到反傷';},apply:function(){recalc();}},
   pchain:{ic:'💥',name:'連鎖爆破',color:'#ffb347',max:5,desc:function(){return '擊殺時 10% 機率引發範圍爆炸';},apply:function(){recalc();}},
   pfrost:{ic:'🧊',name:'霜寒',color:'#8bd3ff',max:5,desc:function(){return '攻擊 10% 機率減速敵人';},apply:function(){recalc();}},
+  pnova:{ic:'💫',name:'新星脈衝',color:'#ffd54a',max:5,desc:function(){return '每 2 秒在身邊釋放範圍衝擊波';},apply:function(){recalc();}},
 };
-var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost'];
+var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova'];
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -930,6 +931,7 @@ function recalc(){
   player.thorns=14*(p.pthorns||0);   // 荊棘反傷
   player.chain=0.1*(p.pchain||0);   // 連鎖爆破機率
   player.chill=0.1*(p.pfrost||0);   // 霜寒減速機率
+  player.nova=(p.pnova||0);   // 新星脈衝等級
   if(player.hp>player.maxHp)player.hp=player.maxHp;
 }
 function dmg(base){ var d=base*player.dmgMult*(player.frenzyT>0?1.4:1)*(1+0.015*metaLv('growth')*(G.time/60)); if(Math.random()<player.crit)d*=player.critMult; return d; }
@@ -1227,6 +1229,8 @@ function update(dt){
   if(player.frenzyT>0)player.frenzyT-=dt;
   if(player.regen>0&&player.hp<player.maxHp)player.hp=Math.min(player.maxHp,player.hp+player.regen*dt);
   if(player.blockInterval>0&&!player.blockReady){ player.blockT=(player.blockT||0)+dt; if(player.blockT>=player.blockInterval){ player.blockReady=true; player.blockT=0; } }   // 能量護盾再生
+  if(player.nova>0){ player.novaT=(player.novaT||0)-dt; if(player.novaT<=0){ player.novaT=2; var nvr=(120+player.nova*22)*player.area, nvr2=nvr*nvr, nvd=dmg(14+player.nova*8);   // 新星脈衝：週期範圍衝擊波
+    enemyGrid.query(player.x,player.y,nvr,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<nvr2)hitEnemy(e,nvd,player.x,player.y,0.3); }); ringFx(player.x,player.y,nvr,'#ffd54a'); } }
 
   // ---- 生成敵人 ----
   spawnDirector(dt);

@@ -255,7 +255,7 @@
 <!-- 武器圖鑑 -->
 <div id="codex" class="overlay"><div class="panel" style="max-width:620px">
   <h2 style="text-align:center;font-size:24px;font-weight:900;letter-spacing:2px;color:#22e6ff;margin-bottom:4px">武器圖鑑 📖</h2>
-  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">18 武器 · 進化(滿級+被動) · 合成(兩武器) · 昇華(進化+Lv18)</div>
+  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">19 武器 · 進化(滿級+被動) · 合成(兩武器) · 昇華(進化+Lv18)</div>
   <div id="codexlist"></div>
   <button class="btn ghost" id="codexclose" style="margin-top:14px">返回</button>
 </div></div>
@@ -727,9 +727,28 @@ var WDEFS={
         enemyGrid.query(player.x,player.y,range,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<r2)hitEnemy(e,dmg(22+w.level*6),player.x,player.y,0.8); });
         ringFx(player.x,player.y,range,'#ff9de0'); }
     }
+  },
+  saw:{ic:'🪚',name:'環鋸',color:'#c8c8ff',tag:'彈跳',max:8,
+    desc:function(l){return l===0?'射出鋸刃在敵群間彈跳，連續切割':'彈跳數↑ 傷害↑';},
+    cd:function(l){return Math.max(0.5,1.15-l*0.08);},
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,520*520); if(!t)return;
+      var hops=4+w.level+player.amount, hitset={}, cur=t; hitset[t._id||(t._id=++eidc)]=1;
+      hitEnemy(t,dmg(14+w.level*5),player.x,player.y,0.2); fxLightning(player.x,player.y,t.x,t.y);
+      for(var h=0;h<hops;h++){ var best=null,bd=260*260;
+        enemyGrid.query(cur.x,cur.y,260,function(e){ if(e.hp<=0)return; var id=e._id||(e._id=++eidc); if(hitset[id])return; var dd=dist2(e.x,e.y,cur.x,cur.y); if(dd<bd){bd=dd;best=e;} });
+        if(!best)break; hitset[best._id]=1; hitEnemy(best,dmg(14+w.level*5),cur.x,cur.y,0.2); fxLightning(cur.x,cur.y,best.x,best.y); cur=best; } },
+    evo:{reqPassive:'pamount',ic:'🌀',name:'千刃亂舞',color:'#e0e0ff',desc:'鋸刃無限彈跳，切裂全場敵群',
+      cd:function(l){return Math.max(0.35,0.8-l*0.05);},
+      fire:function(w){ var t=nearestEnemy(player.x,player.y,600*600); if(!t)return;
+        var hops=8+w.level+player.amount, hitset={}, cur=t; hitset[t._id||(t._id=++eidc)]=1;
+        hitEnemy(t,dmg(20+w.level*6),player.x,player.y,0.25); fxLightning(player.x,player.y,t.x,t.y);
+        for(var h=0;h<hops;h++){ var best=null,bd=320*320;
+          enemyGrid.query(cur.x,cur.y,320,function(e){ if(e.hp<=0)return; var id=e._id||(e._id=++eidc); if(hitset[id])return; var dd=dist2(e.x,e.y,cur.x,cur.y); if(dd<bd){bd=dd;best=e;} });
+          if(!best)break; hitset[best._id]=1; hitEnemy(best,dmg(20+w.level*6),cur.x,cur.y,0.25); fxLightning(cur.x,cur.y,best.x,best.y); cur=best; } }
+    }
   }
 };
-var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash'];
+var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw'];
 
 // 被動定義
 var PDEFS={

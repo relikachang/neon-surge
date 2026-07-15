@@ -439,6 +439,7 @@ var META=[
   {id:'startshield',ic:'🔰',name:'啟動護盾', desc:'開局無敵時間', per:'+1.5秒', max:3, cost:function(l){return 120+l*100;}},
   {id:'bounty', ic:'💎', name:'懸賞', desc:'碎片袋與首領碎片獲取', per:'+20%', max:5, cost:function(l){return 100+l*90;}},
   {id:'overcharge',ic:'🔩',name:'超載核心', desc:'額外初始傷害(高階)', per:'+6%', max:8, cost:function(l){return 200+l*160;}},
+  {id:'critdmg', ic:'💢', name:'致命核心', desc:'初始暴擊傷害', per:'+10%', max:5, cost:function(l){return 90+l*80;}},
 ];
 function metaLv(id){return DB.meta[id]||0;}
 
@@ -829,7 +830,7 @@ function newRun(daily){
   player.base={ dmg:1*(1+0.08*metaLv('dmg'))*(1+0.06*metaLv('overcharge'))*(ch.stat.dmg||1)*mut.pDmg,
     fireRate:1*(ch.stat.fireRate||1)*(1+0.05*metaLv('haste')), speed:230*(1+0.05*metaLv('spd'))*(ch.stat.speed||1)*mut.pSpd,
     maxHp:(100+12*metaLv('hp'))*(ch.stat.maxHp||1)*mut.pHp, pickup:90*(1+0.12*metaLv('pick'))*(ch.stat.pickup||1),
-    crit:0.05+(ch.stat.crit||0)+0.03*metaLv('crit'), critMult:2, armor:0.04*metaLv('armor'), regen:0.3*metaLv('regen'), xpMult:1+0.08*metaLv('xp') };
+    crit:0.05+(ch.stat.crit||0)+0.03*metaLv('crit'), critMult:2*(1+0.1*metaLv('critdmg')), armor:0.04*metaLv('armor'), regen:0.3*metaLv('regen'), xpMult:1+0.08*metaLv('xp') };
   enemies=[]; bullets=[]; ebullets=[]; orbs=[]; particles=[]; dmgnums=[]; pickups=[]; blades=[]; fxRings=[]; wells=[]; beams=[]; mines=[]; clouds=[]; hazards=[]; drones=[];
   addWeapon(ch.start);
   recalc(); player.hp=player.maxHp;

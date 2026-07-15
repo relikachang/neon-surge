@@ -702,8 +702,9 @@ var PDEFS={
   pexec:{ic:'☠️',name:'處決',color:'#ff2b5e',max:5,desc:function(){return '低於 4% 生命的普通敵人直接處決';},apply:function(){recalc();}},
   pshield:{ic:'🔰',name:'能量護盾',color:'#5dd3ff',max:5,desc:function(){return '定期生成護盾抵擋一次攻擊';},apply:function(){recalc();}},
   pthorns:{ic:'🌵',name:'荊棘',color:'#5dff9b',max:5,desc:function(){return '接觸你的敵人受到反傷';},apply:function(){recalc();}},
+  pchain:{ic:'💥',name:'連鎖爆破',color:'#ffb347',max:5,desc:function(){return '擊殺時 10% 機率引發範圍爆炸';},apply:function(){recalc();}},
 };
-var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns'];
+var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain'];
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -832,6 +833,7 @@ function recalc(){
   player.execute=0.008*(p.pexec||0);   // 處決門檻(生命比例)
   player.blockInterval=(p.pshield>0)?Math.max(2.5,8-(p.pshield-1)*1.1):0;   // 護盾再生間隔(秒)
   player.thorns=14*(p.pthorns||0);   // 荊棘反傷
+  player.chain=0.1*(p.pchain||0);   // 連鎖爆破機率
   if(player.hp>player.maxHp)player.hp=player.maxHp;
 }
 function dmg(base){ var d=base*player.dmgMult*(player.frenzyT>0?1.4:1)*(1+0.015*metaLv('growth')*(G.time/60)); if(Math.random()<player.crit)d*=player.critMult; return d; }
@@ -1009,6 +1011,8 @@ function hitEnemy(e,amount,fromx,fromy,knock){
 function killEnemy(e){
   e.dead=true; G.kills++; if(e.elite){G.eliteKills=(G.eliteKills||0)+1; GAudio.elite&&GAudio.elite();} addCombo();
   if(player.lifesteal>0&&player.hp<player.maxHp){ player.hp=Math.min(player.maxHp,player.hp+player.lifesteal); }   // 吸血被動：擊殺回血
+  if(player.chain>0&&!e.boss&&(G._chd||0)<3&&Math.random()<player.chain){ G._chd=(G._chd||0)+1; var chr=90*player.area, chr2=chr*chr, cx=e.x, cy=e.y;   // 連鎖爆破：擊殺引發範圍爆炸(深度上限3防止無限遞迴)
+    ringFx(cx,cy,chr,'#ffb347'); burst(cx,cy,'#ffb347',10,200); enemyGrid.query(cx,cy,chr,function(o){ if(o!==e&&o.hp>0&&dist2(o.x,o.y,cx,cy)<chr2)hitEnemy(o,dmg(22),cx,cy,0.25); }); G._chd--; }
   if(e.type&&!DB.bestiary[e.type]){ DB.bestiary[e.type]=true; saveDB(); }   // 怪物圖鑑：首次擊殺即解鎖
   if(e.type==='phantom')G.rareKills=(G.rareKills||0)+1;
   if(e.type==='golden'){ // 黃金巨獸：大量碎片 + 保底道具 + 華麗特效

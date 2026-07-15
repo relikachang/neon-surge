@@ -812,6 +812,10 @@ var FUSIONS=[
       enemyGrid.query(player.x,player.y,range,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<r2)hitEnemy(e,dmg(20+w.level*6),player.x,player.y,0.7); });
       ringFx(player.x,player.y,range,'#c98bff');
       var t=nearestEnemy(player.x,player.y,600*600); if(t)spawnWell(t.x,t.y,(80+w.level*8)*player.area,dmg(6+w.level*2),1.6,false); }},
+  {a:'shotgun',b:'boomerang',id:'scattercyclone',ic:'🌪️',name:'散射迴旋',color:'#ffb3e6',desc:'扇形散彈伴隨環繞旋刃，攻守一體',max:3,
+    cd:function(l){return 0.35;},
+    fire:function(w){ var ang=player.aimAngle,n=8+w.level+player.amount; for(var i=0;i<n;i++){ var a=ang+rand(-0.7,0.7); spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),rand(560,720),dmg(10+w.level*3),'#ffb3e6',1,5,0.6); }
+      for(var b=0;b<4;b++)spawnBoomerang(b/4*TAU,dmg(16+w.level*5),1.8); }},
 ];
 function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)return FUSIONS[i]; return null; }
 

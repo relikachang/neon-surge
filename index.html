@@ -857,6 +857,14 @@ var FUSIONS=[
     cd:function(l){return 0.35;},
     fire:function(w){ var ang=player.aimAngle,n=8+w.level+player.amount; for(var i=0;i<n;i++){ var a=ang+rand(-0.7,0.7); spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),rand(560,720),dmg(10+w.level*3),'#ffb3e6',1,5,0.6); }
       for(var b=0;b<4;b++)spawnBoomerang(b/4*TAU,dmg(16+w.level*5),1.8); }},
+  {a:'saw',b:'frost',id:'frostsaw',ic:'❄️',name:'寒冰鋸刃',color:'#a0e8ff',desc:'彈跳鋸刃切割並凍結所經敵人',max:3,
+    cd:function(l){return 0.5;},
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,560*560); if(!t)return;
+      var hops=8+w.level, hitset={}, cur=t; hitset[t._id||(t._id=++eidc)]=1;
+      hitEnemy(t,dmg(18+w.level*5),player.x,player.y,0.2); t.frozen=Math.max(t.frozen||0,1.0); fxLightning(player.x,player.y,t.x,t.y);
+      for(var h=0;h<hops;h++){ var best=null,bd=300*300;
+        enemyGrid.query(cur.x,cur.y,300,function(e){ if(e.hp<=0)return; var id=e._id||(e._id=++eidc); if(hitset[id])return; var dd=dist2(e.x,e.y,cur.x,cur.y); if(dd<bd){bd=dd;best=e;} });
+        if(!best)break; hitset[best._id]=1; hitEnemy(best,dmg(18+w.level*5),cur.x,cur.y,0.2); best.frozen=Math.max(best.frozen||0,1.0); fxLightning(cur.x,cur.y,best.x,best.y); cur=best; } }},
 ];
 function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)return FUSIONS[i]; return null; }
 

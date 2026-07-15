@@ -251,7 +251,7 @@
 <!-- 武器圖鑑 -->
 <div id="codex" class="overlay"><div class="panel" style="max-width:620px">
   <h2 style="text-align:center;font-size:24px;font-weight:900;letter-spacing:2px;color:#22e6ff;margin-bottom:4px">武器圖鑑 📖</h2>
-  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">17 武器 · 進化(滿級+被動) · 合成(兩武器) · 昇華(進化+Lv18)</div>
+  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">18 武器 · 進化(滿級+被動) · 合成(兩武器) · 昇華(進化+Lv18)</div>
   <div id="codexlist"></div>
   <button class="btn ghost" id="codexclose" style="margin-top:14px">返回</button>
 </div></div>
@@ -682,9 +682,25 @@ var WDEFS={
           (function(px,py){ enemyGrid.query(px,py,rr,function(e){ if(e.hp>0&&dist2(e.x,e.y,px,py)<rr2)hitEnemy(e,dmg(20+w.level*6),px,py,0.2); }); })(px,py);
           ringFx(px,py,rr,'#ffd27a'); } }
     }
+  },
+  lash:{ic:'⛓️',name:'能量鞭',color:'#ff5edb',tag:'近戰',max:8,
+    desc:function(l){return l===0?'左右揮舞能量鞭橫掃身邊，強力擊退敵人':'範圍↑ 傷害↑ 擊退↑';},
+    cd:function(l){return Math.max(0.28,0.7-l*0.045);},
+    fire:function(w){ if(w._sw==null)w._sw=1; w._sw*=-1; var base=player.aimAngle+w._sw*0.7;
+      var range=(90+w.level*9)*player.area, r2=range*range, half=1.05;
+      enemyGrid.query(player.x,player.y,range,function(e){ if(e.hp<=0)return; if(dist2(e.x,e.y,player.x,player.y)>r2)return;
+        var ea=Math.atan2(e.y-player.y,e.x-player.x); var da=Math.abs(((ea-base+Math.PI*3)%(Math.PI*2))-Math.PI);
+        if(da<half)hitEnemy(e,dmg(16+w.level*5),player.x,player.y,0.7); });
+      ringFx(player.x+Math.cos(base)*range*0.5,player.y+Math.sin(base)*range*0.5,range*0.5,'#ff5edb'); },
+    evo:{reqPassive:'parea',ic:'🌪️',name:'湮滅鞭',color:'#ff9de0',desc:'環身橫掃全方位，撕裂並擊飛整片敵群',
+      cd:function(l){return Math.max(0.22,0.55-l*0.035);},
+      fire:function(w){ var range=(150+w.level*12)*player.area, r2=range*range;
+        enemyGrid.query(player.x,player.y,range,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<r2)hitEnemy(e,dmg(22+w.level*6),player.x,player.y,0.8); });
+        ringFx(player.x,player.y,range,'#ff9de0'); }
+    }
   }
 };
-var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike'];
+var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash'];
 
 // 被動定義
 var PDEFS={

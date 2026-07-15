@@ -325,8 +325,8 @@ var TAU=Math.PI*2;
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{}};
-  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; return m;}}catch(e){} return d; }
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{}};
+  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; return m;}}catch(e){} return d; }
 
 // 成就
 var ACHIEVEMENTS=[
@@ -367,6 +367,7 @@ var ACHIEVEMENTS=[
   {id:'octoarsenal',ic:'🎒',name:'八重奏',desc:'同時擁有 8 種武器',rw:400,chk:function(){return player.weapons.length>=8;}},
   {id:'tundra3', ic:'❄️',name:'凍原征服',desc:'寒獄凍原存活 3 分',rw:400,chk:function(){return G.stage&&G.stage.id==='tundra'&&G.time>=180;}},
   {id:'meteorite3',ic:'☄️',name:'星隕征途',desc:'星隕之境存活 3 分',rw:450,chk:function(){return G.stage&&G.stage.id==='meteorite'&&G.time>=180;}},
+  {id:'oblivion3',ic:'🕳️',name:'湮滅倖存',desc:'湮滅之域存活 3 分',rw:500,chk:function(){return G.stage&&G.stage.id==='oblivion'&&G.time>=180;}},
   {id:'survive15',ic:'🕰️',name:'持久戰',  desc:'單局存活 15 分鐘',rw:600,chk:function(){return G.time>=900;}},
   {id:'act12',   ic:'🎭',name:'幕影深淵',desc:'抵達第 12 幕',rw:700,chk:function(){return (G.act||1)>=12;}},
   {id:'kills8000',ic:'💥',name:'絕滅',    desc:'單局擊殺 8000',rw:600,chk:function(){return G.kills>=8000;}},
@@ -471,6 +472,7 @@ var STAGES=[
   {id:'rift',    name:'時空裂隙', desc:'現實崩解 · 旋轉十字首領', bg:'#0c0614', grid:'rgba(150,110,255,0.15)', eHp:2.1,  eSpd:1.3,  spawn:1.75, bossName:'裂隙主宰', bossColor:'#c98bff', pattern:'cross',   locked:true, unlock:'core'},
   {id:'tundra',  name:'寒獄凍原', desc:'冰封煉獄 · 彈幕牆首領',   bg:'#050a12', grid:'rgba(90,200,255,0.14)', eHp:2.3,  eSpd:1.15, spawn:1.7,  bossName:'凍原霸主', bossColor:'#5dd3ff', pattern:'wall',    locked:true, unlock:'rift'},
   {id:'meteorite',name:'星隕之境', desc:'隕石轟炸 · 隕石雨首領',   bg:'#0a0805', grid:'rgba(200,140,70,0.14)', eHp:2.5,  eSpd:1.2,  spawn:1.75, bossName:'隕星君王', bossColor:'#ff9a3d', pattern:'meteor',  locked:true, unlock:'tundra'},
+  {id:'oblivion',name:'湮滅之域', desc:'終焉虛無 · 追蹤彈幕首領', bg:'#08040c', grid:'rgba(180,80,255,0.14)', eHp:2.7,  eSpd:1.25, spawn:1.8,  bossName:'湮滅者',   bossColor:'#b06bff', pattern:'seeker',  locked:true, unlock:'meteorite'},
 ];
 var selStage='city';
 function stageUnlocked(s){ return !s.locked || DB.stages[s.id]; }
@@ -1349,6 +1351,9 @@ function spawnDirector(dt){
   // 環境危害：星隕之境隕石轟炸(密集預警墜擊)
   if(G.stage&&G.stage.id==='meteorite'){ G.hazT=(G.hazT==null?2:G.hazT-dt); if(G.hazT<=0){ G.hazT=rand(1.5,2.5);
     hazards.push({kind:'strike',x:player.x+rand(-200,200),y:player.y+rand(-200,200),r:70+Math.random()*34,life:2,max:2,warn:1.0,fired:false,dtk:0}); } }
+  // 環境危害：湮滅之域虛空吸引(多重重力井拉扯玩家)
+  if(G.stage&&G.stage.id==='oblivion'){ G.hazT=(G.hazT==null?3:G.hazT-dt); if(G.hazT<=0){ G.hazT=rand(2.4,3.8);
+    hazards.push({kind:'pull',x:player.x+rand(-240,240),y:player.y+rand(-240,240),r:120+Math.random()*54,life:5,max:5,dtk:0}); } }
   // 首領
   if(G.time>=G.nextBossAt){ G.nextBossAt+=120; spawnBoss(); }
 }

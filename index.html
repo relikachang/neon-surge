@@ -726,8 +726,9 @@ var PDEFS={
   pshield:{ic:'🔰',name:'能量護盾',color:'#5dd3ff',max:5,desc:function(){return '定期生成護盾抵擋一次攻擊';},apply:function(){recalc();}},
   pthorns:{ic:'🌵',name:'荊棘',color:'#5dff9b',max:5,desc:function(){return '接觸你的敵人受到反傷';},apply:function(){recalc();}},
   pchain:{ic:'💥',name:'連鎖爆破',color:'#ffb347',max:5,desc:function(){return '擊殺時 10% 機率引發範圍爆炸';},apply:function(){recalc();}},
+  pfrost:{ic:'🧊',name:'霜寒',color:'#8bd3ff',max:5,desc:function(){return '攻擊 10% 機率減速敵人';},apply:function(){recalc();}},
 };
-var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain'];
+var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost'];
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -868,6 +869,7 @@ function recalc(){
   player.blockInterval=(p.pshield>0)?Math.max(2.5,8-(p.pshield-1)*1.1):0;   // 護盾再生間隔(秒)
   player.thorns=14*(p.pthorns||0);   // 荊棘反傷
   player.chain=0.1*(p.pchain||0);   // 連鎖爆破機率
+  player.chill=0.1*(p.pfrost||0);   // 霜寒減速機率
   if(player.hp>player.maxHp)player.hp=player.maxHp;
 }
 function dmg(base){ var d=base*player.dmgMult*(player.frenzyT>0?1.4:1)*(1+0.015*metaLv('growth')*(G.time/60)); if(Math.random()<player.crit)d*=player.critMult; return d; }
@@ -1037,6 +1039,7 @@ function fxLightning(x1,y1,x2,y2){ lightningSeg.push({x1:x1,y1:y1,x2:x2,y2:y2,li
 function hitEnemy(e,amount,fromx,fromy,knock){
   if(e.hp<=0)return; if(e.affix==='shielded')amount*=0.5;   // 護盾詞綴：減傷 50%
   G.dmgDealt=(G.dmgDealt||0)+Math.min(amount,e.hp); e.hp-=amount; e.flash=0.08;
+  if(player.chill>0&&!e.boss&&Math.random()<player.chill)e.slow=Math.max(e.slow||0,0.9);   // 霜寒被動：機率減速
   dmgNum(e.x,e.y-e.r,amount,amount>= (18*player.dmgMult) && player.crit>0);
   if(knock){ var a=Math.atan2(e.y-fromy,e.x-fromx); e.knx+=Math.cos(a)*knock*120; e.kny+=Math.sin(a)*knock*120; }
   if(e.hp>0&&e.affix==='reflector'&&Math.random()<0.3){ var rfa=Math.atan2(player.y-e.y,player.x-e.x); spawnEnemyBullet(e.x,e.y,Math.cos(rfa),Math.sin(rfa),265,e.dmg*0.5); }   // 反彈詞綴：被擊中時機率射回一發

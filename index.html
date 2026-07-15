@@ -54,6 +54,8 @@
   .achitem.locked{opacity:.45}
   .achitem.legendary{border:1px solid rgba(255,213,74,.55);background:linear-gradient(90deg,rgba(255,213,74,.10),rgba(255,90,180,.06));box-shadow:0 0 18px -4px rgba(255,213,74,.35)}
   .achitem.legendary.locked{opacity:.6;box-shadow:none}
+  .achitem.hidden.locked{border:1px dashed rgba(180,120,255,.45);background:rgba(140,90,255,.05)}
+  .achitem.hidden.locked .an{color:#b98cff}
   .achitem.legendary .an{background:linear-gradient(90deg,#ffd54a,#ff7bd0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-weight:900}
   .achitem .aic{font-size:26px;width:34px;text-align:center}
   .achitem .an{font-weight:800;font-size:15px;color:#fff}
@@ -281,6 +283,12 @@
   <button class="btn ghost" id="boardclose" style="margin-top:14px">返回</button>
 </div></div>
 
+<!-- 世界排名 · 個人檔案 -->
+<div id="profile" class="overlay"><div class="panel" style="max-width:520px">
+  <div id="profilebody"></div>
+  <button class="btn ghost" id="profileclose" style="margin-top:14px">返回世界榜</button>
+</div></div>
+
 <!-- 暫停 -->
 <div id="pause" class="overlay"><div class="panel" style="max-width:420px;text-align:center">
   <div class="title" style="font-size:40px">暫停</div>
@@ -340,14 +348,27 @@ function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,v
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
 // 使用者只需在 firebase.google.com 建免費 Realtime Database、規則設 {".read":true,".write":true}，把資料庫網址貼在下面即可上線；留空則自動退回本機榜。
 var WORLD_DB_URL='https://dowk-202c5-default-rtdb.firebaseio.com';   // 世界排行榜 Firebase Realtime Database
+var worldAll=[], worldTop=[];   // worldAll=全部紀錄(供個人頁面), worldTop=榜上前20(供點擊)
 function worldEnabled(){ return /^https?:\/\/.+/.test(WORLD_DB_URL); }
+function nameKey(nm){ var k=String(nm==null?'':nm).replace(/[.#$\/\[\]\s]/g,'_').slice(0,24); return k||'匿名玩家'; }
+// 每個暱稱只保留一筆(以暱稱為 key)：存最佳分快照 + 累計場次/擊殺/角色使用
 function submitWorldScore(entry){ if(!worldEnabled())return;
-  try{ fetch(WORLD_DB_URL.replace(/\/$/,'')+'/scores.json',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(entry)}).catch(function(){}); }catch(e){} }
+  var url=WORLD_DB_URL.replace(/\/$/,'')+'/players/'+encodeURIComponent(nameKey(entry.name))+'.json';
+  try{ fetch(url).then(function(r){return r.json();}).then(function(ex){
+    var rec=(ex&&typeof ex==='object'&&!ex.error)?ex:{};
+    var runs=(rec.runs||0)+1, totalKills=(rec.totalKills||0)+(entry.kills||0), bestTime=Math.max(rec.bestTime||0,entry.time||0);
+    var chars=rec.chars||{}; if(entry.char)chars[entry.char]=(chars[entry.char]||0)+1;
+    var merged = (!rec.score || (entry.score||0)>rec.score)   // 這場刷新最高分 → 採用這場快照
+      ? {name:entry.name,score:entry.score,time:entry.time,kills:entry.kills,level:entry.level,stage:entry.stage,char:entry.char}
+      : {name:rec.name||entry.name,score:rec.score,time:rec.time,kills:rec.kills,level:rec.level,stage:rec.stage,char:rec.char};
+    merged.runs=runs; merged.totalKills=totalKills; merged.bestTime=bestTime; merged.chars=chars; merged.ts=Date.now();
+    fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(merged)}).catch(function(){});
+  }).catch(function(){}); }catch(e){} }
 function fetchWorldScores(cb){ if(!worldEnabled()){ cb(null); return; }
-  try{ fetch(WORLD_DB_URL.replace(/\/$/,'')+'/scores.json',{headers:{'Content-Type':'application/json'}})
+  try{ fetch(WORLD_DB_URL.replace(/\/$/,'')+'/players.json',{headers:{'Content-Type':'application/json'}})
     .then(function(r){return r.json();}).then(function(o){ if(!o||o.error){ cb(o&&o.error?null:[]); return; }
-      var arr=[]; for(var k in o){ var e=o[k]; if(e&&typeof e==='object'&&('score' in e))arr.push(e); }   // 只收有效分數紀錄
-      arr.sort(function(a,b){return (b.score||0)-(a.score||0);}); cb(arr.slice(0,20)); })
+      var arr=[]; for(var k in o){ var e=o[k]; if(e&&typeof e==='object'&&('score' in e))arr.push(e); }   // 每個暱稱一筆，天然無重複
+      arr.sort(function(a,b){return (b.score||0)-(a.score||0);}); worldAll=arr; cb(arr.slice(0,20)); })
     .catch(function(){cb(null);}); }catch(e){ cb(null); } }
 
 // 成就
@@ -413,6 +434,13 @@ var ACHIEVEMENTS=[
   {id:'kills10k', ic:'🩸',name:'【傳說】霓虹絞肉機',desc:'單局擊殺 10000',rw:2500,chk:function(){return G.kills>=10000;}},
   {id:'golden10', ic:'👑',name:'【傳說】黃金國王',desc:'單局擊殺 10 隻黃金巨獸',rw:2000,chk:function(){return (G.goldKills||0)>=10;}},
   {id:'boss15',   ic:'⚔️',name:'【傳說】弒神無雙',desc:'單局擊敗 15 首領',rw:2500,chk:function(){return (G.bossKills||0)>=15;}},
+  // ===== 隱藏成就（解鎖前顯示 ??? ）=====
+  {id:'h_blitz',  ic:'⚡',hidden:true,name:'閃電開局',desc:'開局 45 秒內擊殺 100',rw:400,chk:function(){return G.kills>=100&&G.time<=45;}},
+  {id:'h_tycoon', ic:'🤑',hidden:true,name:'暴發戶',  desc:'單局累積 3000 碎片',rw:500,chk:function(){return G.shards>=3000;}},
+  {id:'h_phoenix',ic:'🐣',hidden:true,name:'浴火重生',desc:'復活後撐到單局第 5 分鐘',rw:500,chk:function(){return G.usedRevive&&G.time>=300;}},
+  {id:'h_demigod',ic:'😇',hidden:true,name:'半神',    desc:'單局達到 Lv60',rw:600,chk:function(){return G.level>=60;}},
+  {id:'h_samsara',ic:'🌀',hidden:true,name:'輪迴永恆',desc:'抵達第 20 幕',rw:1500,chk:function(){return (G.act||1)>=20;}},
+  {id:'h_bosshunt',ic:'☠️',hidden:true,name:'首領獵人',desc:'單局擊敗 20 首領',rw:1500,chk:function(){return (G.bossKills||0)>=20;}},
 ];
 function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); }
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';
@@ -1885,13 +1913,17 @@ function renderPauseBuild(){
     '<div class="blabel">被動</div><div class="brow">'+ph+'</div>'+
     '<div class="blabel">角色 · 地圖</div><div class="brow"><span class="bchip">'+(CHARS.find(function(c){return c.id===selChar;})||{}).name+'</span><span class="bchip">'+G.stage.name+'</span>'+(G.daily?'<span class="bchip" style="border-color:#ffd54a">🗓️ '+G.mut.name+'</span>':'')+'</div>'; }
 
-function hideAll(){ ['menu','levelup','shop','pause','over','board','ach','codex','bestiary'].forEach(function(id){$(id).classList.remove('show');}); }
-function renderAch(){ var got=0, lgTotal=0, lgGot=0; var html=ACHIEVEMENTS.map(function(a){ var u=DB.achievements[a.id]; if(u)got++;
+function hideAll(){ ['menu','levelup','shop','pause','over','board','ach','codex','bestiary','profile'].forEach(function(id){$(id).classList.remove('show');}); }
+function renderAch(){ var got=0, lgTotal=0, lgGot=0, hidGot=0, hidTotal=0; var html=ACHIEVEMENTS.map(function(a){ var u=DB.achievements[a.id]; if(u)got++;
   var lg=a.name.indexOf('【傳說】')>=0; if(lg){lgTotal++; if(u)lgGot++;}
-  return '<div class="achitem'+(lg?' legendary':'')+(u?'':' locked')+'"><div class="aic">'+a.ic+'</div>'+
-    '<div><div class="an">'+a.name+'</div><div class="ad">'+a.desc+(a.rw?' · +'+a.rw+'◆':'')+'</div></div>'+
-    '<div class="ax">'+(u?'✅':'🔒')+'</div></div>'; }).join('');
-  $('achlist').innerHTML='<div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:12px">已解鎖 '+got+' / '+ACHIEVEMENTS.length+'　·　🏆 傳說 '+lgGot+' / '+lgTotal+'</div>'+html;
+  if(a.hidden){ hidTotal++; if(u)hidGot++; }
+  var secret=a.hidden&&!u;   // 未解鎖的隱藏成就：遮蔽名稱與說明
+  var nm=secret?'❔ ??? 隱藏成就':a.name, dc=secret?'達成神秘條件即可解鎖':(a.desc+(a.rw?' · +'+a.rw+'◆':''));
+  var ic=secret?'❔':a.ic;
+  return '<div class="achitem'+(lg?' legendary':'')+(a.hidden?' hidden':'')+(u?'':' locked')+'"><div class="aic">'+ic+'</div>'+
+    '<div><div class="an">'+nm+'</div><div class="ad">'+dc+'</div></div>'+
+    '<div class="ax">'+(u?'✅':(a.hidden?'❔':'🔒'))+'</div></div>'; }).join('');
+  $('achlist').innerHTML='<div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:12px">已解鎖 '+got+' / '+ACHIEVEMENTS.length+'　·　🏆 傳說 '+lgGot+' / '+lgTotal+'　·　❔ 隱藏 '+hidGot+' / '+hidTotal+'</div>'+html;
 }
 function renderCodex(){
   var html=WORDER.map(function(id){ var d=WDEFS[id];
@@ -1936,8 +1968,28 @@ function renderWorld(){ var w=$('worldlist');
   w.innerHTML='<div style="text-align:center;color:#6b7ba0;padding:24px">載入世界排行榜中…</div>';
   fetchWorldScores(function(arr){ if(arr==null){ w.innerHTML='<div style="text-align:center;color:#ff6b8a;padding:24px">世界排行榜連線失敗，請稍後再試</div>'; return; }
     if(!arr.length){ w.innerHTML='<div style="text-align:center;color:#6b7ba0;padding:24px">世界榜尚無紀錄 — 成為第一人！</div>'; return; }
-    w.innerHTML=arr.map(scoreRow).join(''); });
+    worldTop=arr;
+    w.innerHTML='<div style="text-align:center;color:#6b7ba0;font-size:11px;margin-bottom:8px">點擊玩家查看個人檔案 👤</div>'+
+      arr.map(function(s,i){ return '<div style="cursor:pointer" onclick="showWorldProfile('+i+')">'+scoreRow(s,i)+'</div>'; }).join(''); });
 }
+function showWorldProfile(i){ var e=worldTop[i]; if(!e)return; var nm=e.name||'匿名玩家';
+  var cc=e.chars||{}; if(e.char&&!Object.keys(cc).length)cc[e.char]=1;
+  var favc=Object.keys(cc).sort(function(a,b){return cc[b]-cc[a];})[0]||e.char;
+  var favCh=CHARS.find(function(c){return c.id===favc;});
+  var bestSt=STAGES.find(function(s){return s.id===e.stage;});
+  var rank=(worldAll.indexOf(e)>=0)?(worldAll.indexOf(e)+1):(i+1);
+  var stat=function(lb,v){ return '<div style="flex:1;min-width:80px;background:rgba(255,255,255,.04);border-radius:10px;padding:10px;text-align:center"><div style="color:#8ea0c8;font-size:11px">'+lb+'</div><div style="font-size:18px;font-weight:900;color:#ffd54a">'+v+'</div></div>'; };
+  var charList=Object.keys(cc).sort(function(a,b){return cc[b]-cc[a];}).slice(0,4).map(function(id){ var c=CHARS.find(function(x){return x.id===id;}); return (c?c.face+c.name:id)+' ×'+cc[id]; }).join('　');
+  var html='<div style="text-align:center;margin-bottom:14px"><div style="font-size:40px">'+(favCh?favCh.face:'👤')+'</div>'+
+    '<div style="font-size:24px;font-weight:900;color:#ffd54a;margin-top:4px">'+String(nm).slice(0,12)+'</div>'+
+    '<div style="color:#8ea0c8;font-size:12px;margin-top:2px">世界排名 #'+rank+' · 共 '+(e.runs||1)+' 場遊戲</div></div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'+stat('最高分',(e.score||0))+stat('最佳存活',fmtTime(e.bestTime||e.time||0))+stat('最高等級','Lv'+(e.level||0))+'</div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">'+stat('累計擊殺',(e.totalKills||e.kills||0))+stat('最佳單場擊殺',(e.kills||0))+stat('最佳地圖',(bestSt?bestSt.name:'—'))+'</div>'+
+    '<div style="color:#8ea0c8;font-size:12px;margin-bottom:6px">🎭 使用角色</div>'+
+    '<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:12px;font-size:13px;line-height:1.9;color:#eaf0ff">'+(charList||'—')+'</div>';
+  $('profilebody').innerHTML=html; $('board').classList.remove('show'); $('profile').classList.add('show');
+}
+window.showWorldProfile=showWorldProfile;   // 供世界榜列的 inline onclick 呼叫
 function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').classList.add('show'); renderMenu(); }
 
 // =====================================================================
@@ -2026,6 +2078,7 @@ $('tab-local').onclick=function(){ showBoardTab('local'); };
 $('tab-world').onclick=function(){ showBoardTab('world'); };
 if($('pname'))$('pname').addEventListener('change',function(){ DB.playerName=(this.value||'').trim().slice(0,12); saveDB(); });
 $('boardclose').onclick=function(){ $('board').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
+$('profileclose').onclick=function(){ $('profile').classList.remove('show'); $('board').classList.add('show'); showBoardTab('world'); };
 $('achbtn').onclick=function(){ renderAch(); $('menu').classList.remove('show'); $('ach').classList.add('show'); };
 $('achclose').onclick=function(){ $('ach').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('codexbtn').onclick=function(){ renderCodex(); $('menu').classList.remove('show'); $('codex').classList.add('show'); };

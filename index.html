@@ -1080,8 +1080,8 @@ function killEnemy(e){
   // 掉落道具
   var lchance=0.02+G.luck;
   if(e.boss){ spawnPickup(e.x,e.y,'bosschest'); G.bossKills=(G.bossKills||0)+1; }   // 首領：超級戰利品
-  else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex'])); }   // 精英必掉道具
-  else if(Math.random()<lchance){ spawnPickup(e.x,e.y,pick(['heal','heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex'])); }
+  else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike'])); }   // 精英必掉道具
+  else if(Math.random()<lchance){ spawnPickup(e.x,e.y,pick(['heal','heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike'])); }
   if(e.boss){ announce('首領擊破！','#ffd54a'); G.shards+=Math.floor(20*(1+0.15*metaLv('greed'))*(1+0.2*metaLv('bounty'))); }
 }
 function addCombo(){ G.combo++; G.comboTimer=2.2*(1+0.15*metaLv('combo')); if(G.combo>G.peakCombo)G.peakCombo=G.combo;
@@ -1431,6 +1431,7 @@ function collectPickup(p){
   else if(p.type==='clover'){ for(var ci=0;ci<4;ci++)spawnPickup(player.x+rand(-80,80),player.y+rand(-80,80),pick(['heal','xpgem','shardbag','frenzy','magnet','shield'])); ringFx(player.x,player.y,160,'#5dff9b'); floatText('幸運草！天降補給','#5dff9b'); }
   else if(p.type==='squad'){ for(var qi=0;qi<5;qi++)drones.push({x:player.x,y:player.y,ang:qi/5*TAU,orbit:82,life:8,cd:rand(0,0.3),dmg:dmg(20)}); ringFx(player.x,player.y,160,'#5dffe0'); floatText('援護小隊！5 台無人機助陣','#5dffe0'); }
   else if(p.type==='vortex'){ var t=nearestEnemy(player.x,player.y,600*600)||{x:player.x+rand(-120,120),y:player.y+rand(-120,120)}; spawnWell(t.x,t.y,270,dmg(22),3.2,true); ringFx(t.x,t.y,270,'#b06bff'); ringFx(t.x,t.y,150,'#fff'); flashScreen('176,107,255',0.3); floatText('奇點爆發！吸入絞殺','#b06bff'); }
+  else if(p.type==='airstrike'){ for(var ai=0;ai<6;ai++){ var at=randEnemyNear(player.x,player.y,620)||{x:player.x+rand(-220,220),y:player.y+rand(-220,220)}; var ar=100,ar2=ar*ar,atx=at.x,aty=at.y; (function(atx,aty){ enemyGrid.query(atx,aty,ar,function(e){ if(e.hp>0&&dist2(e.x,e.y,atx,aty)<ar2)hitEnemy(e,dmg(42),atx,aty,0.3); }); })(atx,aty); ringFx(atx,aty,ar,'#ff5030'); burst(atx,aty,'#ff5030',12,240); } shake(12); flashScreen('255,80,48',0.35); floatText('空襲！轟炸敵群','#ff5030'); }
   else if(p.type==='chest'){ for(var i=0;i<3;i++)levelUp(); floatText('寶箱！三連升級','#ffd54a'); }
   else if(p.type==='bosschest'){ player.hp=player.maxHp; player.frenzyT=Math.max(player.frenzyT,5); G.shards+=Math.floor(80*(1+0.15*metaLv('greed')));
     for(var i=0;i<5;i++)levelUp(); floatText('首領戰利品！五連升級 + 回滿 + 狂化','#ffd54a'); }
@@ -1693,7 +1694,7 @@ function drawPlayer(){
   if(player.iframe>1){ ctx.strokeStyle='rgba(34,230,255,0.75)'; ctx.lineWidth=3; ctx.shadowColor='#22e6ff'; ctx.shadowBlur=14;
     ctx.beginPath(); ctx.arc(player.x,player.y,player.radius+11,0,TAU); ctx.stroke(); ctx.shadowBlur=0; }
 }
-function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️'}[p.type];
+function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️'}[p.type];
   var yy=p.y+Math.sin(G.time*4+p.x)*4;
   ctx.save(); ctx.shadowColor='#ffd54a'; ctx.shadowBlur=14; ctx.font='24px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText(ic,p.x,yy); ctx.restore(); }

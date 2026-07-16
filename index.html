@@ -42,6 +42,10 @@
   #mutebtn{position:fixed;top:14px;right:14px;z-index:65;width:40px;height:40px;border-radius:10px;cursor:pointer;
     background:rgba(20,24,40,.8);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:18px;backdrop-filter:blur(6px)}
   #mutebtn:active{transform:scale(.94)}
+  #autobtn{position:fixed;top:62px;right:14px;z-index:65;height:34px;padding:0 12px;border-radius:10px;cursor:pointer;
+    background:rgba(20,24,40,.8);border:1px solid rgba(255,255,255,.15);color:#8a94b0;font-size:13px;font-weight:700;backdrop-filter:blur(6px);white-space:nowrap}
+  #autobtn.on{color:#0a0f1e;background:#5dff9b;border-color:#5dff9b;box-shadow:0 0 14px rgba(93,255,155,.6)}
+  #autobtn:active{transform:scale(.94)}
   #achpop{position:fixed;top:20px;right:-320px;z-index:60;display:flex;align-items:center;gap:12px;
     background:linear-gradient(135deg,rgba(20,24,40,.96),rgba(40,30,60,.96));border:1px solid #ffd54a;border-radius:14px;
     padding:12px 18px;box-shadow:0 6px 30px rgba(255,213,74,.35);transition:right .45s cubic-bezier(.2,1.2,.3,1)}
@@ -243,6 +247,8 @@
 
 <!-- 靜音切換 -->
 <button id="mutebtn">🔊</button>
+<!-- 自動選技能(掛機)切換 -->
+<button id="autobtn" title="自動選技能(掛機)">🤖 自動 關</button>
 
 <!-- 成就解鎖彈出 -->
 <div id="achpop"></div>
@@ -342,8 +348,8 @@ var TAU=Math.PI*2;
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:''};
-  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; return m;}}catch(e){} return d; }
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false};
+  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; return m;}}catch(e){} return d; }
 
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
 // 使用者只需在 firebase.google.com 建免費 Realtime Database、規則設 {".read":true,".write":true}，把資料庫網址貼在下面即可上線；留空則自動退回本機榜。
@@ -1667,6 +1673,18 @@ function openLevelUp(){ if(G.over)return; G.paused=true; pendingChoices=buildCho
     box.appendChild(el);
   });
   $('levelup').classList.add('show');
+  // 掛機自動選技能：短暫延遲讓玩家看見卡片，再自動挑選（特殊卡優先）
+  if(DB.autopick){ clearTimeout(openLevelUp._t); openLevelUp._t=setTimeout(function(){
+    if(!$('levelup').classList.contains('show'))return;   // 已被手動選掉
+    var idx=autoPickChoice(); var el=$('cards').children[idx]; if(el)el.style.outline='3px solid #5dff9b';
+    applyChoice(pendingChoices[idx]); closeLevelUp();
+  },420); }
+}
+function autoPickChoice(){ var cs=pendingChoices;
+  for(var i=0;i<cs.length;i++){ var k=cs[i].kind; if(k==='ascend'||k==='fuse'||k==='evolve')return i; }   // 質變卡最優先
+  var rank={wup:3,wnew:3,passive:2,heal:0}, best=0, bs=-1;
+  for(var j=0;j<cs.length;j++){ var s=rank[cs[j].kind]; if(s==null)s=1; if(s>bs){bs=s;best=j;} }
+  return best;
 }
 function closeLevelUp(){ $('levelup').classList.remove('show');
   // 可能連續升級（寶箱）
@@ -2144,6 +2162,10 @@ $('quitbtn').onclick=function(){ G.over=true; gameOver(); $('pause').classList.r
 $('againbtn').onclick=function(){ startGame(!!(G&&G.daily)); };
 $('tomenu').onclick=toMenu;
 $('mutebtn').onclick=function(){ var m=GAudio.toggleMute(); this.textContent=m?'🔇':'🔊'; };
+function refreshAutoBtn(){ var b=$('autobtn'); if(!b)return; b.textContent=DB.autopick?'🤖 自動 開':'🤖 自動 關'; b.classList.toggle('on',!!DB.autopick); }
+$('autobtn').onclick=function(){ DB.autopick=!DB.autopick; saveDB(); refreshAutoBtn();
+  if(DB.autopick&&G&&!G.over&&$('levelup').classList.contains('show')){ var idx=autoPickChoice(); applyChoice(pendingChoices[idx]); closeLevelUp(); } };
+refreshAutoBtn();
 
 // 啟動
 renderMenu();
@@ -2176,6 +2198,8 @@ window.__neon={
   setTime:function(t){ G.time=t; return G.time; },
   setBossHpFrac:function(f){ var b=enemies.filter(function(e){return e.boss;})[0]; if(b){b.hp=b.maxHp*f;} return !!b; },
   hazardCount:function(){ return hazards.length; },
+  autopick:function(v){ if(v!=null){ DB.autopick=!!v; if(typeof refreshAutoBtn==='function')refreshAutoBtn(); } return DB.autopick; },
+  forceLevelUp:function(){ openLevelUp(); return {paused:G.paused,shown:$('levelup').classList.contains('show'),choices:pendingChoices.length}; },
   hurtOnHazard:function(){ if(hazards.length){ player.x=hazards[0].x; player.y=hazards[0].y; player.iframe=0; var h0=player.hp; for(var i=0;i<20;i++)update(0.05); return h0-player.hp; } return -1; },
   bossState:function(){ var b=enemies.filter(function(e){return e.boss;})[0]; return b?{frac:+(b.hp/b.maxHp).toFixed(2),enraged:!!b.enraged,frenzied:!!b.frenzied}:null; },
   killWeakest:function(){ var w=null; enemies.forEach(function(e){ if(e.hp>0&&(!w||e.hp<w.hp))w=e; }); if(w){ hitEnemy(w,99999,player.x,player.y,0); return true; } return false; },

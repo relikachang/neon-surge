@@ -428,6 +428,7 @@ var ACHIEVEMENTS=[
   {id:'kills5000',ic:'💀',name:'血洗霓虹',desc:'單局擊殺 5000',rw:600,chk:function(){return G.kills>=5000;}},
   {id:'combo300',ic:'🌟',name:'連擊之神',desc:'達成 300 連擊',rw:400,chk:function(){return (G.peakCombo||0)>=300;}},
   {id:'shard1k', ic:'💎',name:'富可敵國',desc:'單局累積 1000 碎片',rw:400,chk:function(){return G.shards>=1000;}},
+  {id:'dmg1m',   ic:'💥',name:'百萬傷害',desc:'單局造成 100 萬總傷害',rw:450,chk:function(){return (G.dmgDealt||0)>=1000000;}},
   // ===== 傳說徽章（0.001% 玩家才拿得到）=====
   {id:'act15',   ic:'🌌',name:'【傳說】幕海主宰',desc:'抵達第 15 幕（約 37 分）',rw:2000,chk:function(){return (G.act||1)>=15;}},
   {id:'survive20',ic:'⏳',name:'【傳說】時間盡頭',desc:'單局存活 20 分鐘',rw:2000,chk:function(){return G.time>=1200;}},
@@ -469,6 +470,7 @@ var MUTATORS=[
   {id:'swift',    name:'疾影日',    desc:'敵人極速但極脆 · 大量湧現',  eSpd:1.6, eHp:0.4,spawn:1.4,elite:1,pHp:1,  pDmg:1,  pSpd:1},
   {id:'apocalypse',name:'末日日',   desc:'全面地獄 · 敵強量多 · 玩家亦脆弱', eSpd:1.35,eHp:1.6,spawn:1.6,elite:3,pHp:0.8,pDmg:1,pSpd:1},
   {id:'gauntlet', name:'試煉日',    desc:'精英倍增 · 你更強但更脆',   eSpd:1.1, eHp:1.2,spawn:1.2,elite:3,pHp:0.85,pDmg:1.3,pSpd:1},
+  {id:'overdrive',name:'超速日',    desc:'萬物飛快 · 敵脆你也脆 · 大量湧現', eSpd:1.7,eHp:0.55,spawn:1.5,elite:1,pHp:0.7,pDmg:1.3,pSpd:1.7},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
@@ -1053,6 +1055,7 @@ var ETYPES={
   stalker:{r:15,hp:80,sp:92,dmg:24,color:'#7d3cff',xp:6,shape:'arrow',stalker:true},   // 潛襲者：瞬移到你身邊突刺
   bombard:{r:20,hp:130,sp:38,dmg:20,color:'#ff3d8a',xp:6,shape:'penta',bombard:true},   // 重砲手：週期環狀彈幕
   shade:{r:18,hp:120,sp:66,dmg:20,color:'#b98cff',xp:7,shape:'dia',shade:true},   // 幻影領主：瞬移到玩家旁後放射爆彈
+  marksman:{r:16,hp:96,sp:44,dmg:22,color:'#ffd24a',xp:7,shape:'sq',ranged:true,sniper:true},   // 狙擊手：預警後射出高速貫穿狙擊彈，懲罰站樁
   // 稀有怪物（特定條件才會出現）
   phantom:{r:15,hp:54,sp:124,dmg:16,color:'#b98cff',xp:8,shape:'dia',rare:true},   // 幽影：8 分後成群高速幽靈
   golden:{r:20,hp:120,sp:56,dmg:8,color:'#ffd54a',xp:18,shape:'hex',rare:true,flee:true},   // 黃金巨獸：會逃跑的寶獸
@@ -1077,6 +1080,7 @@ var MONSTER_INFO={
   stalker:{n:'潛襲者',d:'深後期登場的暗殺者，瞬移到你身邊後高速突刺。'},
   bombard:{n:'重砲手',d:'深後期登場的砲擊單位，週期噴發環狀彈幕。'},
   shade:{n:'幻影領主',d:'深後期登場的幻影，週期瞬移到你身邊後放射爆彈。'},
+  marksman:{n:'狙擊手',d:'深後期登場的精準射手，預警後射出高速狙擊彈，逼你離開直線。'},
   phantom:{n:'幽影',d:'第 8 分鐘後浮現的高速幽靈，成群出沒、經驗豐厚。',rare:true},
   golden:{n:'黃金巨獸',d:'膽小會逃跑的稀有寶獸，追上擊殺可獲大量碎片與道具。',rare:true},
   warden:{n:'監視者',d:'第 6 分鐘後偶爾降臨的稀有精英射手，血厚傷高。',rare:true},
@@ -1384,6 +1388,7 @@ function update(dt){
     if(e.titan){ e.tqT=(e.tqT==null?3:e.tqT-dt); if(e.tqT<=0){ e.tqT=3.4; for(var tq=0;tq<12;tq++){ var tqa=tq/12*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(tqa),Math.sin(tqa),200,e.dmg*0.5); } ringFx(e.x,e.y,e.r*2.6,'#ff5030'); } }   // 泰坦：週期環狀震波
     if(e.stalker&&e.dash<=0){ e.stT=(e.stT==null?rand(2,3):e.stT-dt); if(e.stT<=0){ e.stT=rand(3,4.2); var sta=rand(0,TAU); e.x=player.x+Math.cos(sta)*165; e.y=player.y+Math.sin(sta)*165; ringFx(e.x,e.y,46,'#7d3cff'); var sda=Math.atan2(player.y-e.y,player.x-e.x); e.dash=0.35; e.dvx=Math.cos(sda)*620; e.dvy=Math.sin(sda)*620; } }   // 潛襲者：瞬移+突刺
     if(e.bombard){ e.bbT=(e.bbT==null?rand(1.5,2.5):e.bbT-dt); if(e.bbT<=0){ e.bbT=rand(2.8,3.6); for(var bb=0;bb<10;bb++){ var bba=bb/10*TAU+rand(-0.1,0.1); spawnEnemyBullet(e.x,e.y,Math.cos(bba),Math.sin(bba),210,e.dmg*0.5); } ringFx(e.x,e.y,e.r*2,'#ff3d8a'); } }   // 重砲手：週期環狀彈幕
+    if(e.sniper){ e.snT=(e.snT==null?rand(1.8,2.6):e.snT-dt); if(e.snT<=0){ e.snT=rand(2.6,3.4); var sna=Math.atan2(dy,dx); ringFx(e.x,e.y,e.r*2.2,'#ffd24a'); spawnEnemyBullet(e.x,e.y,Math.cos(sna),Math.sin(sna),470,e.dmg*0.8); } }   // 狙擊手：預警後射出高速狙擊彈
     if(e.shade){ e.sdT=(e.sdT==null?rand(2.5,3.5):e.sdT-dt); if(e.sdT<=0){ e.sdT=rand(3,4.5); var sda2=rand(0,TAU); e.x=player.x+Math.cos(sda2)*180; e.y=player.y+Math.sin(sda2)*180; ringFx(e.x,e.y,50,'#b98cff'); for(var sd=0;sd<6;sd++){ var sdb=sd/6*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(sdb),Math.sin(sdb),190,e.dmg*0.5); } } }   // 幻影領主：瞬移+放射爆彈
     if(e.ranged||e.boss||e.affix==='shooter'){ e.shoot-=dt; if(e.shoot<=0){ e.shoot=(e.boss?1.1:rand(1.8,3))*(e.frenzied?0.38:e.enraged?0.55:1);
       if(e.boss){ bossAttack(e,dx,dy); }
@@ -1554,7 +1559,7 @@ function chooseType(m){ var r=Math.random();
   if(m<1.6)return r<0.32?'grunt':r<0.52?'swarm':r<0.66?'ranged':r<0.78?'bomber':r<0.9?'charger':'splitter';
   if(m<3.5)return r<0.24?'grunt':r<0.42?'swarm':r<0.56?'ranged':r<0.68?'bomber':r<0.8?'charger':r<0.9?'splitter':'tank';
   if(m<6)return r<0.15?'grunt':r<0.28?'swarm':r<0.39?'ranged':r<0.49?'bomber':r<0.58?'charger':r<0.67?'splitter':r<0.76?'tank':r<0.85?'brute':r<0.93?'wraith':'mortar';   // 後期(3.5分後)出現蠻兵/厲魂/砲兵
-  return r<0.11?'grunt':r<0.21?'swarm':r<0.31?'ranged':r<0.4?'charger':r<0.49?'splitter':r<0.57?'tank':r<0.65?'brute':r<0.72?'wraith':r<0.79?'mortar':r<0.86?'titan':r<0.91?'stalker':r<0.96?'bombard':'shade';   // 深後期(6分後)出現泰坦/潛襲者/重砲手/幻影領主
+  return r<0.11?'grunt':r<0.20?'swarm':r<0.30?'ranged':r<0.39?'charger':r<0.48?'splitter':r<0.56?'tank':r<0.64?'brute':r<0.71?'wraith':r<0.78?'mortar':r<0.85?'titan':r<0.90?'stalker':r<0.94?'bombard':r<0.97?'marksman':'shade';   // 深後期(6分後)出現泰坦/潛襲者/重砲手/狙擊手/幻影領主
 }
 
 // ---- 經驗 / 升級 ----
@@ -1981,7 +1986,7 @@ function renderCodex(){
       '<div class="cxd">'+d.desc(0)+'</div>'+line+'</div></div>'; }).join('');
   $('codexlist').innerHTML=html;
 }
-function renderBestiary(){ var order=['grunt','swarm','tank','ranged','bomber','splitter','charger','brute','wraith','mortar','titan','stalker','bombard','shade','phantom','golden','warden','conjurer','harbinger','gargantua','boss'];
+function renderBestiary(){ var order=['grunt','swarm','tank','ranged','bomber','splitter','charger','brute','wraith','mortar','titan','stalker','bombard','marksman','shade','phantom','golden','warden','conjurer','harbinger','gargantua','boss'];
   var seen=0; var html=order.map(function(id){ var mi=MONSTER_INFO[id]||{n:id,d:''}; var d=(id==='boss'?{color:'#ffd54a',shape:''}:ETYPES[id])||{color:'#888'};
     var found=!!(DB.bestiary&&DB.bestiary[id]); if(found)seen++;
     var star=mi.rare?' <span class="cxtag" style="color:#ffd54a;border-color:#ffd54a">★ 稀有</span>':'';

@@ -901,6 +901,10 @@ var FUSIONS=[
     cd:function(l){return 0.35;},
     fire:function(w){ var ang=player.aimAngle,n=8+w.level+player.amount; for(var i=0;i<n;i++){ var a=ang+rand(-0.7,0.7); spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),rand(560,720),dmg(10+w.level*3),'#ffb3e6',1,5,0.6); }
       for(var b=0;b<4;b++)spawnBoomerang(b/4*TAU,dmg(16+w.level*5),1.8); }},
+  {a:'turret',b:'toxic',id:'toxturret',ic:'☣️',name:'劇毒砲台',color:'#9dff5d',desc:'部署劇毒砲台，開火同時噴灑毒雲',max:3,
+    cd:function(l){return 2.2;},
+    fire:function(w){ var fixed=drones.filter(function(d){return d.fixed;}).length; if(fixed<3+player.amount)drones.push({x:player.x+rand(-24,24),y:player.y+rand(-24,24),ang:0,orbit:0,fixed:true,color:'#9dff5d',range:600,rate:0.35,life:8,cd:rand(0,0.3),dmg:dmg(16+w.level*5)});
+      var t=nearestEnemy(player.x,player.y,600*600); if(t)spawnCloud(t.x,t.y,(90+w.level*10)*player.area,dmg(5+w.level*2),3.0); }},
   {a:'saw',b:'frost',id:'frostsaw',ic:'❄️',name:'寒冰鋸刃',color:'#a0e8ff',desc:'彈跳鋸刃切割並凍結所經敵人',max:3,
     cd:function(l){return 0.5;},
     fire:function(w){ var t=nearestEnemy(player.x,player.y,560*560); if(!t)return;

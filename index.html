@@ -341,7 +341,7 @@ var TAU=Math.PI*2;
 // =====================================================================
 var SAVE='neonSurge_v1';
 var DB=loadDB();
-function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false};
+function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false};
   var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:''};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; return m;}}catch(e){} return d; }
 
@@ -521,9 +521,10 @@ var CHARS=[
   {id:'breaker',face:'🔺',name:'陷陣士', desc:'正面碾壓 · 起手地刺', start:'spike', locked:true, unlock:'breaker', stat:{dmg:1.12,maxHp:1.08}},
   {id:'duelist',face:'⛓️',name:'決鬥者', desc:'近身格擋 · 起手能量鞭', start:'lash', locked:true, unlock:'duelist', stat:{speed:1.1,maxHp:1.1}},
   {id:'shredder',face:'🪚',name:'碎裂者', desc:'彈跳切割 · 起手環鋸', start:'saw', locked:true, unlock:'shredder', stat:{crit:0.1,speed:1.05}},
+  {id:'fortifier',face:'🗼',name:'守望者', desc:'定點防禦 · 起手部署砲塔', start:'turret', locked:true, unlock:'fortifier', stat:{maxHp:1.15,pickup:1.1}},
 ];
 var selChar='ranger';
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領'};
 
 // =====================================================================
 // 地圖 / 關卡
@@ -913,6 +914,19 @@ var FUSIONS=[
       for(var h=0;h<hops;h++){ var best=null,bd=300*300;
         enemyGrid.query(cur.x,cur.y,300,function(e){ if(e.hp<=0)return; var id=e._id||(e._id=++eidc); if(hitset[id])return; var dd=dist2(e.x,e.y,cur.x,cur.y); if(dd<bd){bd=dd;best=e;} });
         if(!best)break; hitset[best._id]=1; hitEnemy(best,dmg(18+w.level*5),cur.x,cur.y,0.2); best.frozen=Math.max(best.frozen||0,1.0); fxLightning(cur.x,cur.y,best.x,best.y); cur=best; } }},
+  {a:'turret',b:'laser',id:'laserturret',ic:'🗼',name:'雷射砲塔',color:'#ff7de0',desc:'部署雷射砲台，同時旋轉光束掃射全場',max:3,
+    cd:function(l){return 1.6;},
+    fire:function(w){ var fixed=drones.filter(function(d){return d.fixed;}).length; if(fixed<3+player.amount)drones.push({x:player.x+rand(-24,24),y:player.y+rand(-24,24),ang:0,orbit:0,fixed:true,color:'#ff7de0',range:640,rate:0.3,life:9,cd:rand(0,0.3),dmg:dmg(15+w.level*5)});
+      if(w._ang==null)w._ang=0; w._ang+=0.5; fireBeam(w._ang,dmg(12+w.level*4),(560+w.level*30)*player.area,16*player.area,'#ff7de0'); fireBeam(w._ang+Math.PI,dmg(12+w.level*4),(560+w.level*30)*player.area,16*player.area,'#ff7de0'); }},
+  {a:'missiles',b:'flame',id:'flamemissile',ic:'🔥',name:'燃燒飛彈群',color:'#ff8a3d',desc:'火焰追蹤飛彈墜地引爆，留下熾焰灼燒雲',max:3,
+    cd:function(l){return 0.55;},
+    fire:function(w){ for(var i=0;i<2+Math.floor(w.level/3);i++){ var a=rand(0,TAU); spawnMissile(player.x,player.y,Math.cos(a),Math.sin(a),dmg(16+w.level*6)); }
+      var t=nearestEnemy(player.x,player.y,640*640); if(t){ spawnCloud(t.x,t.y,(80+w.level*10)*player.area,dmg(7+w.level*2.4),2.4); burst(t.x,t.y,'#ff8a3d',8,220); } }},
+  {a:'saw',b:'boomerang',id:'sawcyclone',ic:'🌀',name:'旋刃鋸暴',color:'#8affc0',desc:'環繞旋刃伴隨彈跳鋸片，貼身絞殺',max:3,
+    cd:function(l){return 0.5;},
+    fire:function(w){ for(var b=0;b<4;b++)spawnBoomerang(b/4*TAU,dmg(16+w.level*5),1.8);
+      var t=nearestEnemy(player.x,player.y,560*560); if(!t)return; var hops=6+w.level,hitset={},cur=t; hitset[t._id||(t._id=++eidc)]=1; hitEnemy(t,dmg(16+w.level*5),player.x,player.y,0.2); fxLightning(player.x,player.y,t.x,t.y);
+      for(var h=0;h<hops;h++){ var best=null,bd=300*300; enemyGrid.query(cur.x,cur.y,300,function(e){ if(e.hp<=0)return; var id=e._id||(e._id=++eidc); if(hitset[id])return; var dd=dist2(e.x,e.y,cur.x,cur.y); if(dd<bd){bd=dd;best=e;} }); if(!best)break; hitset[best._id]=1; hitEnemy(best,dmg(16+w.level*5),cur.x,cur.y,0.2); fxLightning(cur.x,cur.y,best.x,best.y); cur=best; } }},
 ];
 function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)return FUSIONS[i]; return null; }
 
@@ -1897,6 +1911,7 @@ function gameOver(){
   if((G.peakCombo||0)>=150&&!DB.chars.breaker){DB.chars.breaker=true;}
   if(G.time>=480&&!DB.chars.duelist){DB.chars.duelist=true;}
   if((G.eliteKills||0)>=30&&!DB.chars.shredder){DB.chars.shredder=true;}
+  if((G.bossKills||0)>=6&&!DB.chars.fortifier){DB.chars.fortifier=true;}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; } }

@@ -496,6 +496,7 @@ var META=[
   {id:'bounty', ic:'💎', name:'懸賞', desc:'碎片袋與首領碎片獲取', per:'+20%', max:5, cost:function(l){return 100+l*90;}},
   {id:'overcharge',ic:'🔩',name:'超載核心', desc:'額外初始傷害(高階)', per:'+6%', max:8, cost:function(l){return 200+l*160;}},
   {id:'critdmg', ic:'💢', name:'致命核心', desc:'初始暴擊傷害', per:'+10%', max:5, cost:function(l){return 90+l*80;}},
+  {id:'omni',    ic:'🌌', name:'萬能核心 · 殿堂', desc:'傷害/生命/攻速/移速全面提升（碎片無底洞）', per:'+3%全能', max:20, cost:function(l){return 8000*(l+1)*(l+1);}},
 ];
 function metaLv(id){return DB.meta[id]||0;}
 
@@ -918,9 +919,10 @@ function newRun(daily){
   player={ x:0,y:0, radius:15, hp:0, maxHp:0, speed:0, iframe:0, aimAngle:0, frenzyT:0,
     weapons:[], passives:{}, base:{} };
   // 基礎屬性（含永久強化 + 角色 + 每日變異）
-  player.base={ dmg:1*(1+0.08*metaLv('dmg'))*(1+0.06*metaLv('overcharge'))*(ch.stat.dmg||1)*mut.pDmg,
-    fireRate:1*(ch.stat.fireRate||1)*(1+0.05*metaLv('haste')), speed:230*(1+0.05*metaLv('spd'))*(ch.stat.speed||1)*mut.pSpd,
-    maxHp:(100+12*metaLv('hp'))*(ch.stat.maxHp||1)*mut.pHp, pickup:90*(1+0.12*metaLv('pick'))*(ch.stat.pickup||1),
+  var omni=1+0.03*metaLv('omni');   // 萬能核心：全能加成
+  player.base={ dmg:1*(1+0.08*metaLv('dmg'))*(1+0.06*metaLv('overcharge'))*omni*(ch.stat.dmg||1)*mut.pDmg,
+    fireRate:1*(ch.stat.fireRate||1)*(1+0.05*metaLv('haste'))*omni, speed:230*(1+0.05*metaLv('spd'))*omni*(ch.stat.speed||1)*mut.pSpd,
+    maxHp:(100+12*metaLv('hp'))*omni*(ch.stat.maxHp||1)*mut.pHp, pickup:90*(1+0.12*metaLv('pick'))*(ch.stat.pickup||1),
     crit:0.05+(ch.stat.crit||0)+0.03*metaLv('crit'), critMult:2*(1+0.1*metaLv('critdmg')), armor:0.04*metaLv('armor'), regen:0.3*metaLv('regen'), xpMult:1+0.08*metaLv('xp') };
   enemies=[]; bullets=[]; ebullets=[]; orbs=[]; particles=[]; dmgnums=[]; pickups=[]; blades=[]; fxRings=[]; wells=[]; beams=[]; mines=[]; clouds=[]; hazards=[]; drones=[];
   addWeapon(ch.start);
@@ -1178,7 +1180,7 @@ function killEnemy(e){
   // 掉落道具
   var lchance=0.02+G.luck;
   if(e.boss){ spawnPickup(e.x,e.y,'bosschest'); G.bossKills=(G.bossKills||0)+1; }   // 首領：超級戰利品
-  else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike'])); }   // 精英必掉道具
+  else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','revivecharm'])); }   // 精英必掉道具
   else if(Math.random()<lchance){ spawnPickup(e.x,e.y,pick(['heal','heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike'])); }
   if(e.boss){ announce('首領擊破！','#ffd54a'); G.shards+=Math.floor(20*(1+0.15*metaLv('greed'))*(1+0.2*metaLv('bounty'))); }
 }
@@ -1198,6 +1200,8 @@ function hurtPlayer(amount){
   if(amount>=0.5)dmgNum(player.x,player.y-26,amount,false,true);   // 玩家中彈：明顯紅色 -N
   flashHurt(); GAudio.hurt();
   if(player.hp<=0){
+    if(G.charmRevive){ G.charmRevive=false; player.hp=player.maxHp*0.7; player.iframe=2.8;
+      clearNearby(); announce('復活符發動！浴火重生','#5dff9b'); flashScreen('93,255,155',0.4); GAudio.level&&GAudio.level(); return; }   // 復活符：保底復活一次
     if(!G.usedRevive && metaLv('revive')>0){ G.usedRevive=true; player.hp=player.maxHp*0.6; player.iframe=2.5;
       clearNearby(); announce('復生協議！','#5dff9b'); GAudio.level(); return; }
     player.hp=0; gameOver();
@@ -1537,6 +1541,7 @@ function collectPickup(p){
   else if(p.type==='squad'){ for(var qi=0;qi<5;qi++)drones.push({x:player.x,y:player.y,ang:qi/5*TAU,orbit:82,life:8,cd:rand(0,0.3),dmg:dmg(20)}); ringFx(player.x,player.y,160,'#5dffe0'); floatText('援護小隊！5 台無人機助陣','#5dffe0'); }
   else if(p.type==='vortex'){ var t=nearestEnemy(player.x,player.y,600*600)||{x:player.x+rand(-120,120),y:player.y+rand(-120,120)}; spawnWell(t.x,t.y,270,dmg(22),3.2,true); ringFx(t.x,t.y,270,'#b06bff'); ringFx(t.x,t.y,150,'#fff'); flashScreen('176,107,255',0.3); floatText('奇點爆發！吸入絞殺','#b06bff'); }
   else if(p.type==='airstrike'){ for(var ai=0;ai<6;ai++){ var at=randEnemyNear(player.x,player.y,620)||{x:player.x+rand(-220,220),y:player.y+rand(-220,220)}; var ar=100,ar2=ar*ar,atx=at.x,aty=at.y; (function(atx,aty){ enemyGrid.query(atx,aty,ar,function(e){ if(e.hp>0&&dist2(e.x,e.y,atx,aty)<ar2)hitEnemy(e,dmg(42),atx,aty,0.3); }); })(atx,aty); ringFx(atx,aty,ar,'#ff5030'); burst(atx,aty,'#ff5030',12,240); } shake(12); flashScreen('255,80,48',0.35); floatText('空襲！轟炸敵群','#ff5030'); }
+  else if(p.type==='revivecharm'){ G.charmRevive=true; ringFx(player.x,player.y,200,'#5dff9b'); ringFx(player.x,player.y,120,'#fff'); floatText('復活符！死亡時自動復活一次','#5dff9b'); }
   else if(p.type==='chest'){ for(var i=0;i<3;i++)levelUp(); floatText('寶箱！三連升級','#ffd54a'); }
   else if(p.type==='bosschest'){ player.hp=player.maxHp; player.frenzyT=Math.max(player.frenzyT,5); G.shards+=Math.floor(80*(1+0.15*metaLv('greed')));
     for(var i=0;i<5;i++)levelUp(); floatText('首領戰利品！五連升級 + 回滿 + 狂化','#ffd54a'); }
@@ -1799,7 +1804,7 @@ function drawPlayer(){
   if(player.iframe>1){ ctx.strokeStyle='rgba(34,230,255,0.75)'; ctx.lineWidth=3; ctx.shadowColor='#22e6ff'; ctx.shadowBlur=14;
     ctx.beginPath(); ctx.arc(player.x,player.y,player.radius+11,0,TAU); ctx.stroke(); ctx.shadowBlur=0; }
 }
-function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️'}[p.type];
+function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️',revivecharm:'🕊️'}[p.type];
   var yy=p.y+Math.sin(G.time*4+p.x)*4;
   ctx.save(); ctx.shadowColor='#ffd54a'; ctx.shadowBlur=14; ctx.font='24px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText(ic,p.x,yy); ctx.restore(); }

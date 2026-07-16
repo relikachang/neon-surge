@@ -257,7 +257,7 @@
 <!-- 武器圖鑑 -->
 <div id="codex" class="overlay"><div class="panel" style="max-width:620px">
   <h2 style="text-align:center;font-size:24px;font-weight:900;letter-spacing:2px;color:#22e6ff;margin-bottom:4px">武器圖鑑 📖</h2>
-  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">19 武器 · 進化(滿級+被動) · 合成(兩武器) · 昇華(進化+Lv18)</div>
+  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">20 武器 · 進化(滿級+被動) · 合成(兩武器) · 昇華(進化+Lv18)</div>
   <div id="codexlist"></div>
   <button class="btn ghost" id="codexclose" style="margin-top:14px">返回</button>
 </div></div>
@@ -778,9 +778,20 @@ var WDEFS={
           enemyGrid.query(cur.x,cur.y,320,function(e){ if(e.hp<=0)return; var id=e._id||(e._id=++eidc); if(hitset[id])return; var dd=dist2(e.x,e.y,cur.x,cur.y); if(dd<bd){bd=dd;best=e;} });
           if(!best)break; hitset[best._id]=1; hitEnemy(best,dmg(20+w.level*6),cur.x,cur.y,0.25); fxLightning(cur.x,cur.y,best.x,best.y); cur=best; } }
     }
+  },
+  turret:{ic:'🗼',name:'部署砲塔',color:'#ffa03d',tag:'部署',max:8,
+    desc:function(l){return l===0?'在原地部署固定砲塔，持續朝敵人開火':'砲塔數↑ 傷害↑ 存續↑';},
+    cd:function(l){return Math.max(2.0,3.6-l*0.2);},
+    fire:function(w){ var fixed=drones.filter(function(d){return d.fixed;}).length, maxN=1+Math.floor(w.level/3)+player.amount; if(fixed>=maxN+1)return;
+      drones.push({x:player.x+rand(-24,24),y:player.y+rand(-24,24),ang:0,orbit:0,fixed:true,color:'#ffa03d',range:560,rate:0.45,life:7+w.level*0.6,cd:rand(0,0.3),dmg:dmg(14+w.level*5)}); },
+    evo:{reqPassive:'parea',ic:'🏰',name:'要塞砲台',color:'#ffca7a',desc:'高耐久重砲台，射程與火力全面壓制',
+      cd:function(l){return Math.max(1.4,2.8-l*0.16);},
+      fire:function(w){ var fixed=drones.filter(function(d){return d.fixed;}).length, maxN=2+Math.floor(w.level/2)+player.amount; if(fixed>=maxN+2)return;
+        drones.push({x:player.x+rand(-30,30),y:player.y+rand(-30,30),ang:0,orbit:0,fixed:true,color:'#ffca7a',range:720,rate:0.28,life:9+w.level*0.8,cd:rand(0,0.25),dmg:dmg(22+w.level*6)}); }
+    }
   }
 };
-var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw'];
+var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret'];
 
 // 被動定義
 var PDEFS={
@@ -1393,9 +1404,9 @@ function update(dt){
 
   // ---- 哨衛無人機（環繞玩家、自動朝最近敵人開火）----
   for(var i=drones.length-1;i>=0;i--){ var dr=drones[i]; dr.life-=dt; dr.ang+=dt*2.2;
-    var tx=player.x+Math.cos(dr.ang)*dr.orbit, ty=player.y+Math.sin(dr.ang)*dr.orbit;
-    dr.x+=(tx-dr.x)*Math.min(1,dt*8); dr.y+=(ty-dr.y)*Math.min(1,dt*8);
-    dr.cd-=dt; if(dr.cd<=0){ var t=nearestEnemy(dr.x,dr.y,520*520); if(t){ dr.cd=0.5; var a=Math.atan2(t.y-dr.y,t.x-dr.x); spawnBullet(dr.x,dr.y,Math.cos(a),Math.sin(a),640,dr.dmg,'#5dffe0',2,4,1.0); } }
+    if(!dr.fixed){ var tx=player.x+Math.cos(dr.ang)*dr.orbit, ty=player.y+Math.sin(dr.ang)*dr.orbit;
+      dr.x+=(tx-dr.x)*Math.min(1,dt*8); dr.y+=(ty-dr.y)*Math.min(1,dt*8); }   // 固定砲塔不移動
+    dr.cd-=dt; if(dr.cd<=0){ var t=nearestEnemy(dr.x,dr.y,(dr.range||520)*(dr.range||520)); if(t){ dr.cd=dr.rate||0.5; var a=Math.atan2(t.y-dr.y,t.x-dr.x); spawnBullet(dr.x,dr.y,Math.cos(a),Math.sin(a),700,dr.dmg,dr.color||'#5dffe0',2,4,1.0); } }
     if(dr.life<=0)drones.splice(i,1); }
 
   // ---- 環刃碰撞 ----

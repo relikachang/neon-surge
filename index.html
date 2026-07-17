@@ -348,8 +348,8 @@ var TAU=Math.PI*2;
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false};
-  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; return m;}}catch(e){} return d; }
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false};
+  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; return m;}}catch(e){} return d; }
 
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
 // 使用者只需在 firebase.google.com 建免費 Realtime Database、規則設 {".read":true,".write":true}，把資料庫網址貼在下面即可上線；留空則自動退回本機榜。
@@ -548,6 +548,9 @@ var STAGES=[
   {id:'meteorite',name:'星隕之境', desc:'隕石轟炸 · 隕石雨首領',   bg:'#0a0805', grid:'rgba(200,140,70,0.14)', eHp:2.5,  eSpd:1.2,  spawn:1.75, bossName:'隕星君王', bossColor:'#ff9a3d', pattern:'meteor',  locked:true, unlock:'tundra'},
   {id:'oblivion',name:'湮滅之域', desc:'終焉虛無 · 追蹤彈幕首領', bg:'#08040c', grid:'rgba(180,80,255,0.14)', eHp:2.7,  eSpd:1.25, spawn:1.8,  bossName:'湮滅者',   bossColor:'#b06bff', pattern:'seeker',  locked:true, unlock:'meteorite'},
   {id:'eventhorizon',name:'事件視界', desc:'黑洞邊界 · 重力場首領', bg:'#050208', grid:'rgba(140,90,255,0.14)', eHp:2.9, eSpd:1.28, spawn:1.85, bossName:'視界主宰', bossColor:'#9d6bff', pattern:'gravity', locked:true, unlock:'oblivion'},
+  {id:'nebula',  name:'幽光星雲', desc:'瘴氣瀰漫 · 脈衝環首領',   bg:'#0a0410', grid:'rgba(120,200,180,0.14)', eHp:3.1,  eSpd:1.32, spawn:1.9,  bossName:'星雲之主', bossColor:'#5dffc0', pattern:'pulsar',  locked:true, unlock:'eventhorizon'},
+  {id:'maelstrom',name:'湮滅風暴', desc:'狂暴亂流 · 螺旋絞殺首領', bg:'#0d0508', grid:'rgba(200,90,120,0.15)', eHp:3.35, eSpd:1.38, spawn:1.95, bossName:'風暴煞星', bossColor:'#ff3d7a', pattern:'spiral',  locked:true, unlock:'nebula'},
+  {id:'genesis', name:'創世終焉', desc:'萬物歸零 · 全模式主宰',   bg:'#040308', grid:'rgba(255,210,120,0.13)', eHp:3.6,  eSpd:1.44, spawn:2.0,  bossName:'終焉主宰', bossColor:'#ffd24a', pattern:'pulsar',  locked:true, unlock:'maelstrom'},
 ];
 var selStage='city';
 function stageUnlocked(s){ return !s.locked || DB.stages[s.id]; }

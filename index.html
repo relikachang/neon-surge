@@ -436,6 +436,7 @@ var ACHIEVEMENTS=[
   {id:'shard1k', ic:'💎',name:'富可敵國',desc:'單局累積 1000 碎片',rw:400,chk:function(){return G.shards>=1000;}},
   {id:'dmg1m',   ic:'💥',name:'百萬傷害',desc:'單局造成 100 萬總傷害',rw:450,chk:function(){return (G.dmgDealt||0)>=1000000;}},
   {id:'shard5k', ic:'💰',name:'金庫',    desc:'單局累積 5000 碎片',rw:600,chk:function(){return G.shards>=5000;}},
+  {id:'rare20',  ic:'🎯',name:'稀有獵手',desc:'單局擊殺 20 隻稀有怪',rw:500,chk:function(){return (G.rareKills||0)>=20;}},
   // ===== 傳說徽章（0.001% 玩家才拿得到）=====
   {id:'act15',   ic:'🌌',name:'【傳說】幕海主宰',desc:'抵達第 15 幕（約 37 分）',rw:2000,chk:function(){return (G.act||1)>=15;}},
   {id:'survive20',ic:'⏳',name:'【傳說】時間盡頭',desc:'單局存活 20 分鐘',rw:2000,chk:function(){return G.time>=1200;}},
@@ -479,6 +480,7 @@ var MUTATORS=[
   {id:'apocalypse',name:'末日日',   desc:'全面地獄 · 敵強量多 · 玩家亦脆弱', eSpd:1.35,eHp:1.6,spawn:1.6,elite:3,pHp:0.8,pDmg:1,pSpd:1},
   {id:'gauntlet', name:'試煉日',    desc:'精英倍增 · 你更強但更脆',   eSpd:1.1, eHp:1.2,spawn:1.2,elite:3,pHp:0.85,pDmg:1.3,pSpd:1},
   {id:'overdrive',name:'超速日',    desc:'萬物飛快 · 敵脆你也脆 · 大量湧現', eSpd:1.7,eHp:0.55,spawn:1.5,elite:1,pHp:0.7,pDmg:1.3,pSpd:1.7},
+  {id:'warfront', name:'血戰日',    desc:'敵我皆狂暴 · 高速高傷 · 精英成群', eSpd:1.4,eHp:1.1,spawn:1.3,elite:2,pHp:0.85,pDmg:1.4,pSpd:1.3},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
@@ -1102,6 +1104,7 @@ var ETYPES={
   conjurer:{r:24,hp:240,sp:42,dmg:16,color:'#7dff9b',xp:24,shape:'hex',rare:true,summonRare:true},   // 召魂者：持續召喚蟲群
   harbinger:{r:22,hp:230,sp:46,dmg:18,color:'#ff5e7a',xp:24,shape:'penta',rare:true,seekerRare:true},   // 災厄先驅：發射追蹤彈
   gargantua:{r:42,hp:680,sp:30,dmg:32,color:'#ff2b5e',xp:40,shape:'hex',rare:true,titan:true},   // 巨獸君主：稀有震波巨獸，擊殺爆首領戰利品
+  revenant:{r:24,hp:250,sp:64,dmg:18,color:'#c86bff',xp:30,shape:'penta',rare:true,deathnova:true},   // 亡魂領主：稀有怪，死亡時炸出整環彈幕，擊殺需保持距離
 };
 // 怪物圖鑑資料
 var MONSTER_INFO={
@@ -1126,6 +1129,7 @@ var MONSTER_INFO={
   conjurer:{n:'召魂者',d:'第 5 分鐘後現身的稀有召喚者，持續召喚蟲群，應優先擊殺。',rare:true},
   harbinger:{n:'災厄先驅',d:'第 7 分鐘後降臨的稀有射手，發射會轉彎追蹤的災厄之彈。',rare:true},
   gargantua:{n:'巨獸君主',d:'第 6 分鐘後偶現的稀有震波巨獸，血量恐怖，擊殺可爆首領級戰利品。',rare:true},
+  revenant:{n:'亡魂領主',d:'第 7 分鐘後降臨的稀有亡魂，死亡時炸出整環彈幕，擊殺時務必拉開距離。',rare:true},
   boss:{n:'首領',d:'各地圖的統治者，具多階段攻擊、狂暴與絕命狂暴。',rare:true},
 };
 function spawnEnemy(type,ex,ey,mul,forceElite){
@@ -1237,6 +1241,7 @@ function killEnemy(e){
     for(var go=0;go<10;go++)spawnPickup(e.x+rand(-40,40),e.y+rand(-40,40),'shardbag'); GAudio.achieve&&GAudio.achieve(); }
   if(e.type==='warden'||e.type==='conjurer'||e.type==='harbinger')G.rareKills=(G.rareKills||0)+1;
   if(e.type==='gargantua'){ G.rareKills=(G.rareKills||0)+1; spawnPickup(e.x,e.y,'bosschest'); for(var gg=0;gg<6;gg++)spawnPickup(e.x+rand(-50,50),e.y+rand(-50,50),'shardbag'); announce('💀 巨獸君主殞落！','#ff2b5e'); flashScreen('255,43,94',0.4); }   // 巨獸君主：爆首領戰利品
+  if(e.type==='revenant'){ G.rareKills=(G.rareKills||0)+1; for(var rn=0;rn<22;rn++){ var rna=rn/22*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(rna),Math.sin(rna),205,e.dmg*0.5); } ringFx(e.x,e.y,100,'#c86bff'); ringFx(e.x,e.y,60,'#fff'); burst(e.x,e.y,'#c86bff',18,240); for(var rg=0;rg<3;rg++)spawnPickup(e.x+rand(-40,40),e.y+rand(-40,40),'shardbag'); announce('☠ 亡魂爆裂！','#c86bff'); shake(8); }   // 亡魂領主：死亡炸出整環彈幕 + 掉落
   var km=G.kills; if(km===100||km===250||km===500||km===1000||km===2000||km===5000){ var kr=Math.floor(km/10); G.shards+=kr; player.frenzyT=Math.max(player.frenzyT,3);
     announce('擊殺 '+km+' 達成！ +◆'+kr,'#ffd54a'); GAudio.achieve&&GAudio.achieve(); }
   burst(e.x,e.y,e.color,e.boss?80:12,e.boss?300:180);
@@ -1550,7 +1555,8 @@ function spawnDirector(dt){
   G.rareT=(G.rareT==null?rand(30,55):G.rareT-dt);
   if(G.rareT<=0){ G.rareT=rand(45,75); var rr=Math.random();
     if(m>=8 && rr<0.36){ var pn=3+Math.floor(m/4); for(var p=0;p<pn;p++)spawnEnemy('phantom',null,null,1+m*0.3); announce('👻 幽影群現身！','#b98cff'); flashScreen('185,140,255',0.22); }
-    else if(m>=7 && rr<0.54){ spawnEnemy('harbinger',null,null,1.4+m*0.3); announce('🔻 災厄先驅降臨！','#ff5e7a'); flashScreen('255,94,122',0.3); shake&&shake(8); GAudio.elite&&GAudio.elite(); }
+    else if(m>=7 && rr<0.45){ spawnEnemy('revenant',null,null,1.4+m*0.3); announce('☠ 亡魂領主降臨！擊殺時保持距離','#c86bff'); flashScreen('200,107,255',0.3); shake&&shake(8); GAudio.elite&&GAudio.elite(); }
+    else if(m>=7 && rr<0.58){ spawnEnemy('harbinger',null,null,1.4+m*0.3); announce('🔻 災厄先驅降臨！','#ff5e7a'); flashScreen('255,94,122',0.3); shake&&shake(8); GAudio.elite&&GAudio.elite(); }
     else if(m>=6 && rr<0.68){ spawnEnemy('warden',null,null,1.4+m*0.3); announce('🛡 監視者降臨！','#ff5bff'); flashScreen('255,91,255',0.3); shake&&shake(8); GAudio.elite&&GAudio.elite(); }
     else if(m>=5 && rr<0.74){ spawnEnemy('conjurer',null,null,1.3+m*0.3); announce('🟢 召魂者現身！優先擊殺','#7dff9b'); flashScreen('125,255,155',0.25); GAudio.elite&&GAudio.elite(); }
     else if(m>=6 && rr<0.86){ spawnEnemy('gargantua',null,null,1.3+m*0.35); announce('💀 巨獸君主降臨！擊殺爆厚賞','#ff2b5e'); flashScreen('255,43,94',0.35); shake&&shake(12); GAudio.boss&&GAudio.boss(); }
@@ -2081,11 +2087,11 @@ function renderCodex(){
       '<div class="cxd">'+d.desc(0)+'</div>'+line+'</div></div>'; }).join('');
   $('codexlist').innerHTML=html;
 }
-function renderBestiary(){ var order=['grunt','swarm','tank','ranged','bomber','splitter','charger','brute','wraith','mortar','titan','stalker','bombard','marksman','shade','phantom','golden','warden','conjurer','harbinger','gargantua','boss'];
+function renderBestiary(){ var order=['grunt','swarm','tank','ranged','bomber','splitter','charger','brute','wraith','mortar','titan','stalker','bombard','marksman','shade','phantom','golden','warden','conjurer','harbinger','revenant','gargantua','boss'];
   var seen=0; var html=order.map(function(id){ var mi=MONSTER_INFO[id]||{n:id,d:''}; var d=(id==='boss'?{color:'#ffd54a',shape:''}:ETYPES[id])||{color:'#888'};
     var found=!!(DB.bestiary&&DB.bestiary[id]); if(found)seen++;
     var star=mi.rare?' <span class="cxtag" style="color:#ffd54a;border-color:#ffd54a">★ 稀有</span>':'';
-    var ic=id==='boss'?'👑':({grunt:'▲',swarm:'◆',tank:'⬢',ranged:'■',bomber:'▽',splitter:'⬠',charger:'➤',brute:'⬣',wraith:'◈',phantom:'◇',golden:'⬡',warden:'⬟',conjurer:'⬢',harbinger:'🔻'}[id]||'●');
+    var ic=id==='boss'?'👑':({grunt:'▲',swarm:'◆',tank:'⬢',ranged:'■',bomber:'▽',splitter:'⬠',charger:'➤',brute:'⬣',wraith:'◈',phantom:'◇',golden:'⬡',warden:'⬟',conjurer:'⬢',harbinger:'🔻',revenant:'☠'}[id]||'●');
     if(!found)return '<div class="cxitem"><div class="cxic" style="color:#3a4568">❔</div>'+
       '<div class="cxmain"><div class="cxn" style="color:#6b7ba0">？？？'+star+'</div>'+
       '<div class="cxd" style="color:#4a5578">尚未擊殺 — 遭遇並擊殺後解鎖圖鑑</div></div></div>';

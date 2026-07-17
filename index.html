@@ -428,6 +428,7 @@ var ACHIEVEMENTS=[
   {id:'maxweapon',ic:'🎖️',name:'滿級大師',desc:'將任一武器練到滿級',rw:200,chk:function(){return player.weapons.some(function(w){return !w.fused&&w.level>=w.def.max-1;});}},
   {id:'pass8',   ic:'📚',name:'博學',    desc:'單局擁有 8 種不同被動',rw:300,chk:function(){return Object.keys(player.passives).filter(function(k){return player.passives[k]>0;}).length>=8;}},
   {id:'wave50',  ic:'🌊',name:'滔天狂濤',desc:'抵達第 50 波',rw:400,chk:function(){return G.wave>=50;}},
+  {id:'wave100', ic:'🌊',name:'滔天巨浪',desc:'抵達第 100 波',rw:700,chk:function(){return G.wave>=100;}},
   {id:'lv50',    ic:'🌠',name:'登峰造極',desc:'單局達到 Lv50',rw:400,chk:function(){return G.level>=50;}},
   {id:'lv70',    ic:'🌟',name:'超凡入聖',desc:'單局達到 Lv70',rw:700,chk:function(){return G.level>=70;}},
   {id:'boss8',   ic:'👑',name:'首領殺手',desc:'單局擊敗 8 首領',rw:400,chk:function(){return (G.bossKills||0)>=8;}},
@@ -1891,12 +1892,18 @@ function render(){
 
   // 傷害數字
   ctx.textAlign='center';
-  for(var i=0;i<dmgnums.length;i++){ var n=dmgnums[i]; ctx.globalAlpha=Math.min(1,n.life*2);
-    var sz=Math.min(36,(n.crit?18:13)+Math.log10(n.val+1)*4.2);   // 傷害越高數字越大
-    ctx.font='900 '+sz.toFixed(0)+'px system-ui';
+  for(var i=0;i<dmgnums.length;i++){ var n=dmgnums[i]; var da=Math.min(1,n.life*2.2); if(da<=0)continue;
+    var sz=Math.min(40,(n.crit?20:13)+Math.log10(n.val+1)*4.4);   // 傷害越高數字越大
+    var pop=1+Math.max(0,(n.life-0.55))/0.15*0.45;   // 剛生成放大彈跳
     var txt=n.hurt?('-'+n.val):(''+n.val);
-    ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,0.55)'; ctx.strokeText(txt,n.x,n.y);
-    ctx.fillStyle=n.hurt?'#ff3b4e':(n.crit?'#ffd54a':(n.val>=150?'#ff5a3a':n.val>=50?'#ff9a3d':'#ffffff')); ctx.fillText(txt,n.x,n.y); }
+    var col=n.hurt?'#ff3b4e':(n.crit?'#ffe14a':(n.val>=150?'#ff5a3a':n.val>=50?'#ff9a3d':'#ffffff'));
+    ctx.save(); ctx.globalAlpha=da; ctx.translate(n.x,n.y); ctx.scale(pop,pop);
+    ctx.font='900 '+sz.toFixed(0)+'px system-ui';
+    if(n.crit){ ctx.shadowColor=col; ctx.shadowBlur=14; }
+    ctx.lineWidth=3.5; ctx.strokeStyle='rgba(0,0,0,0.6)'; ctx.strokeText(txt,0,0);
+    ctx.fillStyle=col; ctx.fillText(txt,0,0);
+    if(n.crit){ ctx.shadowBlur=0; ctx.font='900 '+(sz*0.5).toFixed(0)+'px system-ui'; ctx.fillStyle='#ffffff'; ctx.fillText('✦',sz*0.44,-sz*0.32); }
+    ctx.restore(); }
   ctx.globalAlpha=1;
 
   ctx.restore();
@@ -1942,7 +1949,10 @@ function drawEnemy(e){
   ctx.closePath(); ctx.fill();
   // 全體輪廓描邊（讓造型更立體、有圖案辨識度）
   ctx.globalAlpha=0.85; ctx.lineWidth=e.boss?3:1.5; ctx.strokeStyle=f?'#ffffff':'rgba(255,255,255,0.4)'; ctx.stroke(); ctx.globalAlpha=1;
-  if(e.elite){ ctx.lineWidth=2.8; ctx.strokeStyle=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':e.affix==='reflector'?'#3df0c8':e.affix==='warlord'?'#ffd54a':e.affix==='phaser'?'#c8c8ff':e.affix==='splitburst'?'#ff9a3d':e.affix==='artillery'?'#ff6a3d':e.affix==='healer'?'#5dff9b':'#ffffff'; ctx.stroke(); }   // 精英詞綴描邊
+  if(e.elite){ var affCol=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':e.affix==='reflector'?'#3df0c8':e.affix==='warlord'?'#ffd54a':e.affix==='phaser'?'#c8c8ff':e.affix==='splitburst'?'#ff9a3d':e.affix==='artillery'?'#ff6a3d':e.affix==='healer'?'#5dff9b':'#ffffff';
+    ctx.lineWidth=2.8; ctx.strokeStyle=affCol; ctx.stroke();   // 精英詞綴描邊
+    if(!e.boss){ ctx.globalAlpha=0.4+0.3*Math.sin(G.time*6+e.x*0.03); ctx.lineWidth=2; ctx.strokeStyle=affCol; ctx.setLineDash([6,7]); ctx.lineDashOffset=-G.time*24;
+      ctx.beginPath(); ctx.arc(0,0,r*1.55,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1; } }   // 精英脈動光環（旋轉虛線）
   // 內核亮點（脈動）
   var coreR=Math.max(2,r*(0.24+0.05*Math.sin(G.time*5+e.x*0.05)));
   ctx.shadowColor='#ffffff'; ctx.shadowBlur=e.boss?18:7; ctx.fillStyle=f?'#ffffff':'rgba(255,255,255,0.92)';

@@ -347,7 +347,7 @@ var TAU=Math.PI*2;
 // =====================================================================
 var SAVE='neonSurge_v1';
 var DB=loadDB();
-function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false};
+function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false};
   var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; return m;}}catch(e){} return d; }
 
@@ -531,9 +531,10 @@ var CHARS=[
   {id:'duelist',face:'⛓️',name:'決鬥者', desc:'近身格擋 · 起手能量鞭', start:'lash', locked:true, unlock:'duelist', stat:{speed:1.1,maxHp:1.1}},
   {id:'shredder',face:'🪚',name:'碎裂者', desc:'彈跳切割 · 起手環鋸', start:'saw', locked:true, unlock:'shredder', stat:{crit:0.1,speed:1.05}},
   {id:'fortifier',face:'🗼',name:'守望者', desc:'定點防禦 · 起手部署砲塔', start:'turret', locked:true, unlock:'fortifier', stat:{maxHp:1.15,pickup:1.1}},
+  {id:'gambler',face:'🎲',name:'賭徒', desc:'一擲千金 · 起手榴彈', start:'grenade', locked:true, unlock:'gambler', stat:{crit:0.12,dmg:1.05,maxHp:0.9}},
 ];
 var selChar='ranger';
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片'};
 
 // =====================================================================
 // 地圖 / 關卡
@@ -847,8 +848,9 @@ var PDEFS={
   pfrost:{ic:'🧊',name:'霜寒',color:'#8bd3ff',max:5,desc:function(){return '攻擊 10% 機率減速敵人';},apply:function(){recalc();}},
   pnova:{ic:'💫',name:'新星脈衝',color:'#ffd54a',max:5,desc:function(){return '每 2 秒在身邊釋放範圍衝擊波';},apply:function(){recalc();}},
   pfury:{ic:'🔥',name:'血怒',color:'#ff2b5e',max:5,desc:function(){return '生命越低傷害越高（滿級瀕死 +40%）';},apply:function(){recalc();}},
+  pluck:{ic:'🍀',name:'幸運',color:'#5dff9b',max:5,desc:function(){return '道具掉落率↑ 碎片獲取 +15%';},apply:function(){recalc();}},
 };
-var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury'];
+var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck'];
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -1029,6 +1031,8 @@ function recalc(){
   player.chill=0.1*(p.pfrost||0);   // 霜寒減速機率
   player.nova=(p.pnova||0);   // 新星脈衝等級
   player.fury=0.08*(p.pfury||0);   // 血怒：依失血比例提升傷害
+  player.luckBonus=0.05*(p.pluck||0);   // 幸運：提升道具掉落率
+  player.shardMul=1+0.15*(p.pluck||0);  // 幸運：提升碎片獲取
   if(player.hp>player.maxHp)player.hp=player.maxHp;
 }
 function dmg(base){ var d=base*player.dmgMult*(player.frenzyT>0?1.4:1)*(1+0.015*metaLv('growth')*(G.time/60)); if(player.fury>0)d*=(1+player.fury*(1-player.hp/player.maxHp)); if(Math.random()<player.crit)d*=player.critMult; return d; }
@@ -1251,9 +1255,9 @@ function killEnemy(e){
   // 掉落經驗
   var orbn=e.boss?24:(e.elite?5:1); for(var i=0;i<orbn;i++)spawnOrb(e.x+rand(-e.r,e.r),e.y+rand(-e.r,e.r),e.xp*(e.boss?3:1));
   // 掉落道具
-  var lchance=0.02+G.luck;
+  var lchance=0.02+G.luck+(player.luckBonus||0);
   if(e.boss){ spawnPickup(e.x,e.y,'bosschest'); G.bossKills=(G.bossKills||0)+1; }   // 首領：超級戰利品
-  else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','revivecharm','thunderstorm'])); }   // 精英必掉道具
+  else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','revivecharm','thunderstorm','jackpot'])); }   // 精英必掉道具
   else if(Math.random()<lchance){ spawnPickup(e.x,e.y,pick(['heal','heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','thunderstorm'])); }
   if(e.boss){ announce('首領擊破！','#ffd54a'); G.shards+=Math.floor(20*(1+0.15*metaLv('greed'))*(1+0.2*metaLv('bounty'))); }
 }
@@ -1609,7 +1613,7 @@ function collectPickup(p){
   else if(p.type==='shield'){ player.iframe=Math.max(player.iframe,4); ringFx(player.x,player.y,200,'#22e6ff'); floatText('無敵護盾！','#22e6ff'); }
   else if(p.type==='timefreeze'){ enemies.forEach(function(e){ if(!e.boss)e.frozen=Math.max(e.frozen||0,3); else e.frozen=Math.max(e.frozen||0,1.5); }); ringFx(player.x,player.y,420,'#7dd3ff'); flashScreen('125,211,255',0.32); floatText('時間凍結！','#7dd3ff'); }
   else if(p.type==='xpgem'){ gainXP(G.xpNeed*0.8); ringFx(player.x,player.y,180,'#22e6ff'); floatText('經驗寶石！','#22e6ff'); }
-  else if(p.type==='shardbag'){ var sg=Math.floor((25+Math.floor(G.time/30)*5)*(1+0.2*metaLv('bounty'))); G.shards+=sg; ringFx(player.x,player.y,150,'#ffd54a'); floatText('+◆'+sg+' 碎片','#ffd54a'); }
+  else if(p.type==='shardbag'){ var sg=Math.floor((25+Math.floor(G.time/30)*5)*(1+0.2*metaLv('bounty'))*(player.shardMul||1)); G.shards+=sg; ringFx(player.x,player.y,150,'#ffd54a'); floatText('+◆'+sg+' 碎片','#ffd54a'); }
   else if(p.type==='heart'){ player.base.maxHp+=20; recalc(); player.hp=Math.min(player.maxHp,player.hp+40); ringFx(player.x,player.y,190,'#ff6b8a'); floatText('生命結晶！生命上限 +20','#ff6b8a'); }
   else if(p.type==='quake'){ enemies.forEach(function(e){ if(e.hp>0){ hitEnemy(e,dmg(30),player.x,player.y,0.2); if(!e.boss)e.frozen=Math.max(e.frozen||0,1.6); else e.frozen=Math.max(e.frozen||0,0.8); } }); ringFx(player.x,player.y,520,'#ffce54'); ringFx(player.x,player.y,320,'#fff'); flashScreen('255,206,84',0.4); shake(16); floatText('震盪核心！全場重擊 + 暈眩','#ffce54'); }
   else if(p.type==='clover'){ for(var ci=0;ci<4;ci++)spawnPickup(player.x+rand(-80,80),player.y+rand(-80,80),pick(['heal','xpgem','shardbag','frenzy','magnet','shield'])); ringFx(player.x,player.y,160,'#5dff9b'); floatText('幸運草！天降補給','#5dff9b'); }
@@ -1618,6 +1622,7 @@ function collectPickup(p){
   else if(p.type==='airstrike'){ for(var ai=0;ai<6;ai++){ var at=randEnemyNear(player.x,player.y,620)||{x:player.x+rand(-220,220),y:player.y+rand(-220,220)}; var ar=100,ar2=ar*ar,atx=at.x,aty=at.y; (function(atx,aty){ enemyGrid.query(atx,aty,ar,function(e){ if(e.hp>0&&dist2(e.x,e.y,atx,aty)<ar2)hitEnemy(e,dmg(42),atx,aty,0.3); }); })(atx,aty); ringFx(atx,aty,ar,'#ff5030'); burst(atx,aty,'#ff5030',12,240); } shake(12); flashScreen('255,80,48',0.35); floatText('空襲！轟炸敵群','#ff5030'); }
   else if(p.type==='revivecharm'){ G.charmRevive=true; ringFx(player.x,player.y,200,'#5dff9b'); ringFx(player.x,player.y,120,'#fff'); floatText('復活符！死亡時自動復活一次','#5dff9b'); }
   else if(p.type==='thunderstorm'){ var tsN=12; for(var ti=0;ti<tsN;ti++){ var tg=randEnemyNear(player.x,player.y,900); if(!tg)break; chainLightning(player.x,player.y,tg,5,dmg(40)); } ringFx(player.x,player.y,480,'#a0e8ff'); ringFx(player.x,player.y,300,'#fff'); flashScreen('160,232,255',0.35); shake(11); floatText('雷暴召喚！連鎖轟擊全場','#a0e8ff'); }
+  else if(p.type==='jackpot'){ var jg=Math.floor((120+Math.floor(G.time/20)*8)*(1+0.2*metaLv('bounty'))*(player.shardMul||1)); G.shards+=jg; player.frenzyT=Math.max(player.frenzyT,4); ringFx(player.x,player.y,240,'#ffd54a'); ringFx(player.x,player.y,140,'#fff'); flashScreen('255,213,74',0.35); floatText('🎰 頭獎！+◆'+jg+' 碎片 + 狂化','#ffd54a'); }
   else if(p.type==='chest'){ for(var i=0;i<3;i++)levelUp(); floatText('寶箱！三連升級','#ffd54a'); }
   else if(p.type==='bosschest'){ player.hp=player.maxHp; player.frenzyT=Math.max(player.frenzyT,5); G.shards+=Math.floor(80*(1+0.15*metaLv('greed')));
     for(var i=0;i<5;i++)levelUp(); floatText('首領戰利品！五連升級 + 回滿 + 狂化','#ffd54a'); }
@@ -1930,7 +1935,7 @@ function drawPlayer(){
   if(player.iframe>1){ ctx.strokeStyle='rgba(34,230,255,0.75)'; ctx.lineWidth=3; ctx.shadowColor='#22e6ff'; ctx.shadowBlur=14;
     ctx.beginPath(); ctx.arc(player.x,player.y,player.radius+11,0,TAU); ctx.stroke(); ctx.shadowBlur=0; }
 }
-function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️',revivecharm:'🕊️',thunderstorm:'🌩️'}[p.type];
+function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️',revivecharm:'🕊️',thunderstorm:'🌩️',jackpot:'🎰'}[p.type];
   var yy=p.y+Math.sin(G.time*4+p.x)*4;
   ctx.save(); ctx.shadowColor='#ffd54a'; ctx.shadowBlur=14; ctx.font='24px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText(ic,p.x,yy); ctx.restore(); }
@@ -2009,6 +2014,7 @@ function gameOver(){
   if(G.time>=480&&!DB.chars.duelist){DB.chars.duelist=true;}
   if((G.eliteKills||0)>=30&&!DB.chars.shredder){DB.chars.shredder=true;}
   if((G.bossKills||0)>=6&&!DB.chars.fortifier){DB.chars.fortifier=true;}
+  if((G.shards||0)>=2000&&!DB.chars.gambler){DB.chars.gambler=true;}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; } }

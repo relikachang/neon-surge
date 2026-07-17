@@ -441,6 +441,7 @@ var ACHIEVEMENTS=[
   {id:'kills10k', ic:'🩸',name:'【傳說】霓虹絞肉機',desc:'單局擊殺 10000',rw:2500,chk:function(){return G.kills>=10000;}},
   {id:'golden10', ic:'👑',name:'【傳說】黃金國王',desc:'單局擊殺 10 隻黃金巨獸',rw:2000,chk:function(){return (G.goldKills||0)>=10;}},
   {id:'boss15',   ic:'⚔️',name:'【傳說】弒神無雙',desc:'單局擊敗 15 首領',rw:2500,chk:function(){return (G.bossKills||0)>=15;}},
+  {id:'genesis_clear',ic:'🌠',name:'【傳說】創世征服者',desc:'在「創世終焉」存活 5 分鐘',rw:2500,chk:function(){return G.stage&&G.stage.id==='genesis'&&G.time>=300;}},
   // ===== 隱藏成就（解鎖前顯示 ??? ）=====
   {id:'h_blitz',  ic:'⚡',hidden:true,name:'閃電開局',desc:'開局 45 秒內擊殺 100',rw:400,chk:function(){return G.kills>=100&&G.time<=45;}},
   {id:'h_tycoon', ic:'🤑',hidden:true,name:'暴發戶',  desc:'單局累積 3000 碎片',rw:500,chk:function(){return G.shards>=3000;}},
@@ -801,9 +802,26 @@ var WDEFS={
       fire:function(w){ var fixed=drones.filter(function(d){return d.fixed;}).length, maxN=2+Math.floor(w.level/2)+player.amount; if(fixed>=maxN+2)return;
         drones.push({x:player.x+rand(-30,30),y:player.y+rand(-30,30),ang:0,orbit:0,fixed:true,color:'#ffca7a',range:720,rate:0.28,life:9+w.level*0.8,cd:rand(0,0.25),dmg:dmg(22+w.level*6)}); }
     }
+  },
+  grenade:{ic:'🧨',name:'榴彈',color:'#ff9a3d',tag:'範圍',max:8,
+    desc:function(l){return l===0?'朝敵群拋射榴彈，命中引爆範圍傷害':'傷害↑ 爆炸範圍↑ 每3級+1發';},
+    cd:function(l){return Math.max(0.5,1.1-l*0.07);},
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); if(!t)return; var n=1+Math.floor(w.level/3)+player.amount;
+      for(var i=0;i<n;i++){ var tt=i===0?t:(randEnemyNear(player.x,player.y,640)||t);
+        var ex=tt.x+rand(-20,20),ey=tt.y+rand(-20,20),er=(70+w.level*8)*player.area,er2=er*er,dm=dmg(28+w.level*9);
+        (function(ex,ey,er,er2,dm){ enemyGrid.query(ex,ey,er,function(e){ if(e.hp>0&&dist2(e.x,e.y,ex,ey)<er2)hitEnemy(e,dm,ex,ey,0.3); }); })(ex,ey,er,er2,dm);
+        ringFx(ex,ey,er,'#ff9a3d'); burst(ex,ey,'#ff9a3d',8,200); } },
+    evo:{reqPassive:'parea',ic:'💥',name:'集束炸彈',color:'#ffca4a',desc:'一次投擲大量集束榴彈，火力覆蓋全場',
+      cd:function(l){return Math.max(0.35,0.8-l*0.05);},
+      fire:function(w){ var n=4+Math.floor(w.level/2)+player.amount;
+        for(var i=0;i<n;i++){ var tt=randEnemyNear(player.x,player.y,760)||nearestEnemy(player.x,player.y,9999)||{x:player.x+rand(-200,200),y:player.y+rand(-200,200)};
+          var ex=tt.x+rand(-60,60),ey=tt.y+rand(-60,60),er=(90+w.level*9)*player.area,er2=er*er,dm=dmg(34+w.level*9);
+          (function(ex,ey,er,er2,dm){ enemyGrid.query(ex,ey,er,function(e){ if(e.hp>0&&dist2(e.x,e.y,ex,ey)<er2)hitEnemy(e,dm,ex,ey,0.3); }); })(ex,ey,er,er2,dm);
+          ringFx(ex,ey,er,'#ffca4a'); burst(ex,ey,'#ffca4a',6,180); } shake(6); }
+    }
   }
 };
-var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret'];
+var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade'];
 
 // 被動定義
 var PDEFS={
@@ -939,6 +957,13 @@ var FUSIONS=[
     fire:function(w){ for(var b=0;b<4;b++)spawnBoomerang(b/4*TAU,dmg(16+w.level*5),1.8);
       var t=nearestEnemy(player.x,player.y,560*560); if(!t)return; var hops=6+w.level,hitset={},cur=t; hitset[t._id||(t._id=++eidc)]=1; hitEnemy(t,dmg(16+w.level*5),player.x,player.y,0.2); fxLightning(player.x,player.y,t.x,t.y);
       for(var h=0;h<hops;h++){ var best=null,bd=300*300; enemyGrid.query(cur.x,cur.y,300,function(e){ if(e.hp<=0)return; var id=e._id||(e._id=++eidc); if(hitset[id])return; var dd=dist2(e.x,e.y,cur.x,cur.y); if(dd<bd){bd=dd;best=e;} }); if(!best)break; hitset[best._id]=1; hitEnemy(best,dmg(16+w.level*5),cur.x,cur.y,0.2); fxLightning(cur.x,cur.y,best.x,best.y); cur=best; } }},
+  {a:'grenade',b:'flame',id:'scorch',ic:'🔥',name:'焦土榴彈',color:'#ff6a2b',desc:'榴彈爆炸後留下熾焰焦土，持續灼燒敵群',max:3,
+    cd:function(l){return 0.7;},
+    fire:function(w){ var n=2+Math.floor(w.level/2)+player.amount;
+      for(var i=0;i<n;i++){ var tt=randEnemyNear(player.x,player.y,720)||nearestEnemy(player.x,player.y,9999); if(!tt){ if(i===0)return; break; }
+        var ex=tt.x+rand(-40,40),ey=tt.y+rand(-40,40),er=(84+w.level*9)*player.area,er2=er*er,dm=dmg(30+w.level*9);
+        (function(ex,ey,er,er2,dm){ enemyGrid.query(ex,ey,er,function(e){ if(e.hp>0&&dist2(e.x,e.y,ex,ey)<er2)hitEnemy(e,dm,ex,ey,0.3); }); })(ex,ey,er,er2,dm);
+        ringFx(ex,ey,er,'#ff6a2b'); burst(ex,ey,'#ff6a2b',7,200); spawnCloud(ex,ey,er*0.9,dmg(5+w.level*2),2.6); } shake(6); }},
 ];
 function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)return FUSIONS[i]; return null; }
 

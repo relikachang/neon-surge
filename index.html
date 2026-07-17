@@ -1729,6 +1729,21 @@ function glow(color){ if(glowCache[color])return glowCache[color];
   rg.addColorStop(1,'rgba(0,0,0,0)'); g.globalAlpha=1; g.fillStyle=rg; g.beginPath(); g.arc(32,32,32,0,TAU); g.fill();
   glowCache[color]=c; return c; }
 
+var STARS=(function(){ var a=[]; for(var i=0;i<110;i++)a.push({x:Math.random(),y:Math.random(),z:0.25+Math.random()*0.55,s:Math.random()*1.5+0.4,c:Math.random()<0.22?'#ff9ad8':(Math.random()<0.4?'#9ad8ff':'#cfe0ff'),tw:Math.random()*TAU}); return a; })();
+var NEBULA=(function(){ var a=[]; for(var i=0;i<5;i++)a.push({x:Math.random(),y:Math.random(),z:0.12+Math.random()*0.18,r:150+Math.random()*220,c:['#3a1d6e','#1d3a6e','#6e1d4a','#1d5a5a','#4a1d6e'][i]}); return a; })();
+function drawStars(camx,camy){ ctx.save(); ctx.globalCompositeOperation='lighter';
+  // 遠景星雲光斑（大範圍柔光，增加畫面層次）
+  for(var j=0;j<NEBULA.length;j++){ var nb=NEBULA[j];
+    var nx=camx+(((nb.x*W - camx*nb.z)%W+W)%W), ny=camy+(((nb.y*H - camy*nb.z)%H+H)%H);
+    ctx.globalAlpha=0.16; ctx.drawImage(glow(nb.c),nx-nb.r,ny-nb.r,nb.r*2,nb.r*2); }
+  // 視差星點（近層移動較快、遠層較慢）
+  for(var i=0;i<STARS.length;i++){ var stz=STARS[i];
+    var px=((stz.x*W - camx*stz.z)%W+W)%W, py=((stz.y*H - camy*stz.z)%H+H)%H;
+    var tw=0.55+0.45*Math.sin(G.time*2+stz.tw);
+    ctx.globalAlpha=(0.3+0.55*stz.z)*tw; ctx.fillStyle=stz.c;
+    ctx.beginPath(); ctx.arc(camx+px,camy+py,stz.s,0,TAU); ctx.fill(); }
+  ctx.restore();
+}
 function render(){
   ctx.setTransform(DPR,0,0,DPR,0,0);
   ctx.clearRect(0,0,W,H); ctx.fillStyle=(G&&G.stage?G.stage.bg:'#05070f'); ctx.fillRect(0,0,W,H);
@@ -1736,6 +1751,7 @@ function render(){
   var sx=(shakeAmt>0.2?rand(-shakeAmt,shakeAmt):0), sy=(shakeAmt>0.2?rand(-shakeAmt,shakeAmt):0);
   ctx.save(); ctx.translate(-camx+sx,-camy+sy);
 
+  drawStars(camx,camy);
   drawGrid(camx,camy);
 
   // 經驗球（加色疊加光）
@@ -1870,7 +1886,16 @@ function drawEnemy(e){
   else if(e.shape==='boss'){ for(var i=0;i<8;i++){var a=i/8*TAU,rr=i%2?r:r*0.7;(i?ctx.lineTo:ctx.moveTo).call(ctx,Math.cos(a)*rr,Math.sin(a)*rr);} }
   else { ctx.arc(0,0,r,0,TAU); }
   ctx.closePath(); ctx.fill();
-  if(e.elite){ ctx.lineWidth=2.5; ctx.strokeStyle=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':e.affix==='reflector'?'#3df0c8':e.affix==='warlord'?'#ffd54a':e.affix==='phaser'?'#c8c8ff':e.affix==='splitburst'?'#ff9a3d':e.affix==='artillery'?'#ff6a3d':'#ffffff'; ctx.stroke(); }   // 精英詞綴描邊
+  // 全體輪廓描邊（讓造型更立體、有圖案辨識度）
+  ctx.globalAlpha=0.85; ctx.lineWidth=e.boss?3:1.5; ctx.strokeStyle=f?'#ffffff':'rgba(255,255,255,0.4)'; ctx.stroke(); ctx.globalAlpha=1;
+  if(e.elite){ ctx.lineWidth=2.8; ctx.strokeStyle=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':e.affix==='reflector'?'#3df0c8':e.affix==='warlord'?'#ffd54a':e.affix==='phaser'?'#c8c8ff':e.affix==='splitburst'?'#ff9a3d':e.affix==='artillery'?'#ff6a3d':'#ffffff'; ctx.stroke(); }   // 精英詞綴描邊
+  // 內核亮點（脈動）
+  var coreR=Math.max(2,r*(0.24+0.05*Math.sin(G.time*5+e.x*0.05)));
+  ctx.shadowColor='#ffffff'; ctx.shadowBlur=e.boss?18:7; ctx.fillStyle=f?'#ffffff':'rgba(255,255,255,0.92)';
+  ctx.beginPath(); ctx.arc(0,0,coreR,0,TAU); ctx.fill();
+  // 首領：旋轉裝飾光環
+  if(e.boss){ ctx.globalAlpha=0.7; ctx.lineWidth=2.5; ctx.strokeStyle='rgba(255,255,255,0.55)';
+    for(var dq=0;dq<2;dq++){ ctx.beginPath(); ctx.arc(0,0,r*(1.16+dq*0.14),(e.spin||0)*(dq?-1:1),(e.spin||0)*(dq?-1:1)+4.2); ctx.stroke(); } ctx.globalAlpha=1; }
   ctx.shadowBlur=0; ctx.restore();
   // 血條（受傷過 / boss）
   if(e.hp<e.maxHp){ var w=e.r*2, hpr=Math.max(0,e.hp/e.maxHp); ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(e.x-w/2,e.y-e.r-8,w,3);
@@ -1882,9 +1907,22 @@ function drawPlayer(){
   ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=player.frenzyT>0?0.85:0.6; ctx.drawImage(glow(player.frenzyT>0?'#ff5e5e':'#22e6ff'),-44,-44,88,88);
   ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
   ctx.rotate(player.aimAngle+Math.PI/2);
+  var pr=player.radius, fren=player.frenzyT>0;
+  // 引擎噴焰（隨時間閃動）
+  var fl=pr*(1.0+0.5*Math.abs(Math.sin(G.time*24)));
+  ctx.globalCompositeOperation='lighter';
+  ctx.fillStyle=fren?'#ffb03a':'#3ad8ff'; ctx.shadowColor=fren?'#ff7a2b':'#22e6ff'; ctx.shadowBlur=16;
+  ctx.beginPath(); ctx.moveTo(-pr*0.42,pr*0.9); ctx.lineTo(0,pr*0.9+fl); ctx.lineTo(pr*0.42,pr*0.9); ctx.closePath(); ctx.fill();
+  ctx.globalCompositeOperation='source-over';
+  // 船體
   ctx.fillStyle=player.iframe>0&&((G.time*20)|0)%2?'#ffffff':'#eaffff';
-  ctx.shadowColor='#22e6ff'; ctx.shadowBlur=18;
-  ctx.beginPath(); ctx.moveTo(0,-player.radius-2); ctx.lineTo(player.radius*0.9,player.radius); ctx.lineTo(0,player.radius*0.5); ctx.lineTo(-player.radius*0.9,player.radius); ctx.closePath(); ctx.fill();
+  ctx.shadowColor=fren?'#ff5e5e':'#22e6ff'; ctx.shadowBlur=18;
+  ctx.beginPath(); ctx.moveTo(0,-pr-2); ctx.lineTo(pr*0.9,pr); ctx.lineTo(0,pr*0.5); ctx.lineTo(-pr*0.9,pr); ctx.closePath(); ctx.fill();
+  // 機翼邊線
+  ctx.lineWidth=1.6; ctx.strokeStyle=fren?'#ff8a8a':'#7fe9ff'; ctx.globalAlpha=0.9; ctx.stroke(); ctx.globalAlpha=1;
+  // 座艙核心
+  ctx.shadowColor=fren?'#ffd54a':'#ffffff'; ctx.shadowBlur=12; ctx.fillStyle=fren?'#fff0c0':'#ffffff';
+  ctx.beginPath(); ctx.ellipse(0,-pr*0.1,pr*0.3,pr*0.42,0,0,TAU); ctx.fill();
   ctx.shadowBlur=0; ctx.restore();
   // 拾取範圍（淡）
   ctx.strokeStyle='rgba(34,230,255,0.08)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(player.x,player.y,player.pickup,0,TAU); ctx.stroke();

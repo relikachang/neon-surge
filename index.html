@@ -347,7 +347,7 @@ var TAU=Math.PI*2;
 // =====================================================================
 var SAVE='neonSurge_v1';
 var DB=loadDB();
-function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false};
+function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false};
   var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; return m;}}catch(e){} return d; }
 
@@ -429,6 +429,7 @@ var ACHIEVEMENTS=[
   {id:'pass8',   ic:'📚',name:'博學',    desc:'單局擁有 8 種不同被動',rw:300,chk:function(){return Object.keys(player.passives).filter(function(k){return player.passives[k]>0;}).length>=8;}},
   {id:'wave50',  ic:'🌊',name:'滔天狂濤',desc:'抵達第 50 波',rw:400,chk:function(){return G.wave>=50;}},
   {id:'lv50',    ic:'🌠',name:'登峰造極',desc:'單局達到 Lv50',rw:400,chk:function(){return G.level>=50;}},
+  {id:'lv70',    ic:'🌟',name:'超凡入聖',desc:'單局達到 Lv70',rw:700,chk:function(){return G.level>=70;}},
   {id:'boss8',   ic:'👑',name:'首領殺手',desc:'單局擊敗 8 首領',rw:400,chk:function(){return (G.bossKills||0)>=8;}},
   {id:'elite50', ic:'✨',name:'精英屠夫',desc:'單局擊殺 50 精英',rw:350,chk:function(){return (G.eliteKills||0)>=50;}},
   {id:'elite100',ic:'✨',name:'精英絞殺者',desc:'單局擊殺 100 精英',rw:600,chk:function(){return (G.eliteKills||0)>=100;}},
@@ -538,9 +539,10 @@ var CHARS=[
   {id:'shredder',face:'🪚',name:'碎裂者', desc:'彈跳切割 · 起手環鋸', start:'saw', locked:true, unlock:'shredder', stat:{crit:0.1,speed:1.05}},
   {id:'fortifier',face:'🗼',name:'守望者', desc:'定點防禦 · 起手部署砲塔', start:'turret', locked:true, unlock:'fortifier', stat:{maxHp:1.15,pickup:1.1}},
   {id:'gambler',face:'🎲',name:'賭徒', desc:'一擲千金 · 起手榴彈', start:'grenade', locked:true, unlock:'gambler', stat:{crit:0.12,dmg:1.05,maxHp:0.9}},
+  {id:'electromancer',face:'⚡',name:'雷術士', desc:'萬箭齊發 · 起手電磁線圈', start:'tesla', locked:true, unlock:'electromancer', stat:{dmg:1.05,fireRate:1.05,maxHp:0.95}},
 ];
 var selChar='ranger';
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害'};
 
 // =====================================================================
 // 地圖 / 關卡
@@ -870,8 +872,9 @@ var PDEFS={
   pnova:{ic:'💫',name:'新星脈衝',color:'#ffd54a',max:5,desc:function(){return '每 2 秒在身邊釋放範圍衝擊波';},apply:function(){recalc();}},
   pfury:{ic:'🔥',name:'血怒',color:'#ff2b5e',max:5,desc:function(){return '生命越低傷害越高（滿級瀕死 +40%）';},apply:function(){recalc();}},
   pluck:{ic:'🍀',name:'幸運',color:'#5dff9b',max:5,desc:function(){return '道具掉落率↑ 碎片獲取 +15%';},apply:function(){recalc();}},
+  pglass:{ic:'💎',name:'玻璃炮核心',color:'#ff6bd0',max:5,desc:function(){return '傷害 +16%，但生命上限 -7%';},apply:function(){recalc(); if(player.hp>player.maxHp)player.hp=player.maxHp;}},
 };
-var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck'];
+var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck','pglass'];
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -1037,10 +1040,10 @@ function makeGrid(cell){
 // 有效屬性計算（被動疊加在 base 上）
 function recalc(){
   var b=player.base, p=player.passives;
-  player.dmgMult=b.dmg*(1+0.12*(p.pdmg||0));
+  player.dmgMult=b.dmg*(1+0.12*(p.pdmg||0))*(1+0.16*(p.pglass||0));
   player.fireRate=b.fireRate*(1+0.10*(p.prate||0));
   player.speed=b.speed*(1+0.10*(p.pspeed||0));
-  player.maxHp=b.maxHp+25*(p.php||0);
+  player.maxHp=(b.maxHp+25*(p.php||0))*(1-0.07*(p.pglass||0));
   player.pickup=b.pickup*(1+0.25*(p.ppick||0));
   player.crit=b.crit+0.08*(p.pcrit||0);
   player.critMult=b.critMult+0.25*(p.pcritdmg||0);
@@ -2061,6 +2064,7 @@ function gameOver(){
   if((G.eliteKills||0)>=30&&!DB.chars.shredder){DB.chars.shredder=true;}
   if((G.bossKills||0)>=6&&!DB.chars.fortifier){DB.chars.fortifier=true;}
   if((G.shards||0)>=2000&&!DB.chars.gambler){DB.chars.gambler=true;}
+  if((G.dmgDealt||0)>=500000&&!DB.chars.electromancer){DB.chars.electromancer=true;}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; } }

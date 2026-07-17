@@ -426,6 +426,7 @@ var ACHIEVEMENTS=[
   {id:'fuse2',   ic:'🔗',name:'雙重合成',desc:'單局同時擁有 2 把合成武器',rw:350,chk:function(){return player.weapons.filter(function(w){return w.fused;}).length>=2;}},
   {id:'fuse3',   ic:'🔗',name:'三重合成',desc:'單局同時擁有 3 把合成武器',rw:550,chk:function(){return player.weapons.filter(function(w){return w.fused;}).length>=3;}},
   {id:'maxweapon',ic:'🎖️',name:'滿級大師',desc:'將任一武器練到滿級',rw:200,chk:function(){return player.weapons.some(function(w){return !w.fused&&w.level>=w.def.max-1;});}},
+  {id:'weapons8', ic:'🎖️',name:'軍火大師',desc:'單局同時擁有 8 把武器',rw:400,chk:function(){return player.weapons.length>=8;}},
   {id:'pass8',   ic:'📚',name:'博學',    desc:'單局擁有 8 種不同被動',rw:300,chk:function(){return Object.keys(player.passives).filter(function(k){return player.passives[k]>0;}).length>=8;}},
   {id:'wave50',  ic:'🌊',name:'滔天狂濤',desc:'抵達第 50 波',rw:400,chk:function(){return G.wave>=50;}},
   {id:'wave100', ic:'🌊',name:'滔天巨浪',desc:'抵達第 100 波',rw:700,chk:function(){return G.wave>=100;}},
@@ -844,9 +845,20 @@ var WDEFS={
         hit.sort(function(a,b){return dist2(a.x,a.y,player.x,player.y)-dist2(b.x,b.y,player.x,player.y);});
         for(var i=0;i<num&&i<hit.length;i++){ hitEnemy(hit[i],dmg(18+w.level*6),player.x,player.y,0.1); fxLightning(player.x,player.y,hit[i].x,hit[i].y); } }
     }
+  },
+  starburst:{ic:'🎇',name:'星爆',color:'#ffcf5d',tag:'環射',max:8,
+    desc:function(l){return l===0?'向四面八方射出星爆彈幕':'彈數↑ 傷害↑';},
+    cd:function(l){return Math.max(0.5,1.0-l*0.06);},
+    fire:function(w){ var num=8+w.level*2+player.amount*2; if(w._a==null)w._a=0; w._a+=0.3;
+      for(var i=0;i<num;i++){ var a=i/num*TAU+w._a; spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),480,dmg(9+w.level*3),'#ffcf5d',1,5,0.9); } },
+    evo:{reqPassive:'pamount',ic:'🌟',name:'超新星爆',color:'#fff0a0',desc:'密集雙環星爆，全方位火力覆蓋',
+      cd:function(l){return Math.max(0.35,0.7-l*0.04);},
+      fire:function(w){ var num=14+w.level*2+player.amount*2; if(w._a==null)w._a=0; w._a+=0.4;
+        for(var ring=0;ring<2;ring++){ var off=ring*(Math.PI/num); for(var i=0;i<num;i++){ var a=i/num*TAU+w._a+off; spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),ring?560:480,dmg(12+w.level*4),'#fff0a0',1,5,0.9); } } }
+    }
   }
 };
-var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla'];
+var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst'];
 
 // 被動定義
 var PDEFS={
@@ -997,6 +1009,11 @@ var FUSIONS=[
       enemyGrid.query(player.x,player.y,r,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<r2)hit.push(e); });
       hit.sort(function(a,b){return dist2(a.x,a.y,player.x,player.y)-dist2(b.x,b.y,player.x,player.y);});
       for(var i=0;i<num&&i<hit.length;i++){ var t=hit[i]; hitEnemy(t,dmg(16+w.level*5),player.x,player.y,0.1); t.frozen=Math.max(t.frozen||0,1.0); fxLightning(player.x,player.y,t.x,t.y); } }},
+  {a:'starburst',b:'lightning',id:'stormburst',ic:'⚡',name:'雷爆星環',color:'#aef4ff',desc:'環射星爆彈幕，命中連鎖電擊',max:3,
+    cd:function(l){return 0.6;},
+    fire:function(w){ var num=10+w.level*2; if(w._a==null)w._a=0; w._a+=0.35;
+      for(var i=0;i<num;i++){ var a=i/num*TAU+w._a; spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),500,dmg(10+w.level*3),'#aef4ff',1,5,0.9); }
+      var t=nearestEnemy(player.x,player.y,500*500); if(t)chainLightning(player.x,player.y,t,4+w.level,dmg(12+w.level*4)); }},
 ];
 function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)return FUSIONS[i]; return null; }
 

@@ -324,7 +324,9 @@
   <div id="pausebuild" style="text-align:left;margin-top:16px"></div>
   <button class="btn" id="resumebtn" style="margin-top:18px">繼續</button>
   <button class="btn ghost" id="restartbtn">重新開始</button>
-  <button class="btn ghost" id="quitbtn">放棄本局</button>
+  <button class="btn ghost" id="quitbtn">放棄本局（結算）</button>
+  <button class="btn ghost" id="tomenubtn" style="border-color:rgba(255,94,122,.5);color:#ff9eb0">🏠 退出到主選單</button>
+  <div class="hint">遊戲中按 ESC 可暫停 / 開關此選單</div>
 </div></div>
 
 <!-- 結算 -->
@@ -2443,6 +2445,7 @@ $('pausebtn').onclick=togglePause;
 $('resumebtn').onclick=function(){ togglePause(); };
 $('restartbtn').onclick=function(){ var d=!!(G&&G.daily); $('pause').classList.remove('show'); startGame(d); };
 $('quitbtn').onclick=function(){ G.over=true; gameOver(); $('pause').classList.remove('show'); };
+$('tomenubtn').onclick=function(){ $('pause').classList.remove('show'); G.paused=false; toMenu(); };
 $('againbtn').onclick=function(){ startGame(!!(G&&G.daily)); };
 $('tomenu').onclick=toMenu;
 $('mutebtn').onclick=function(){ var m=GAudio.toggleMute(); this.textContent=m?'🔇':'🔊'; };

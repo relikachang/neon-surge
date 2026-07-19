@@ -446,6 +446,7 @@ var ACHIEVEMENTS=[
   {id:'dmg5m',   ic:'💥',name:'毀滅打擊',desc:'單局造成 500 萬總傷害',rw:800,chk:function(){return (G.dmgDealt||0)>=5000000;}},
   {id:'shard5k', ic:'💰',name:'金庫',    desc:'單局累積 5000 碎片',rw:600,chk:function(){return G.shards>=5000;}},
   {id:'rare20',  ic:'🎯',name:'稀有獵手',desc:'單局擊殺 20 隻稀有怪',rw:500,chk:function(){return (G.rareKills||0)>=20;}},
+  {id:'rare50',  ic:'🎯',name:'稀有殲滅者',desc:'單局擊殺 50 隻稀有怪',rw:800,chk:function(){return (G.rareKills||0)>=50;}},
   // ===== 傳說徽章（0.001% 玩家才拿得到）=====
   {id:'act15',   ic:'🌌',name:'【傳說】幕海主宰',desc:'抵達第 15 幕（約 37 分）',rw:2000,chk:function(){return (G.act||1)>=15;}},
   {id:'survive20',ic:'⏳',name:'【傳說】時間盡頭',desc:'單局存活 20 分鐘',rw:2000,chk:function(){return G.time>=1200;}},
@@ -492,6 +493,7 @@ var MUTATORS=[
   {id:'overdrive',name:'超速日',    desc:'萬物飛快 · 敵脆你也脆 · 大量湧現', eSpd:1.7,eHp:0.55,spawn:1.5,elite:1,pHp:0.7,pDmg:1.3,pSpd:1.7},
   {id:'warfront', name:'血戰日',    desc:'敵我皆狂暴 · 高速高傷 · 精英成群', eSpd:1.4,eHp:1.1,spawn:1.3,elite:2,pHp:0.85,pDmg:1.4,pSpd:1.3},
   {id:'titanwar', name:'泰坦戰日',  desc:'敵人巨肉稀少 · 你火力全開', eSpd:0.7,eHp:2.8,spawn:0.7,elite:1,pHp:1,pDmg:1.5,pSpd:1.1},
+  {id:'ambush',   name:'埋伏日',    desc:'精英橫行 · 高速突襲 · 你更脆', eSpd:1.3,eHp:1.1,spawn:1.2,elite:3,pHp:0.75,pDmg:1.2,pSpd:1.1},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
@@ -1220,7 +1222,7 @@ function spawnEnemy(type,ex,ey,mul,forceElite){
   // 精英變體：更大更肉、發光、掉更多、隨機詞綴（隨時間提高機率，每日變異可加成）
   var elite = forceElite || (mul>1 && Math.random()<Math.min(0.4,(0.015+G.time/1600)*mt.elite));
   var affix=null;
-  if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst','magnetic','trail','lunger','reflector','warlord','phaser','splitburst','artillery','healer','graviton']); if(affix==='haste')sp*=1.6;
+  if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst','magnetic','trail','lunger','reflector','warlord','phaser','splitburst','artillery','healer','graviton','venomous']); if(affix==='haste')sp*=1.6;
     if(G.time-(G._eliteWarn||-9)>4){ G._eliteWarn=G.time; announce('⚠ 精英出現','#ffffff'); GAudio.elite&&GAudio.elite(); } }
   var ang,rr=Math.max(W,H)*0.62;
   if(ex==null){ ang=rand(0,TAU); ex=player.x+Math.cos(ang)*rr; ey=player.y+Math.sin(ang)*rr; }
@@ -1346,6 +1348,8 @@ function killEnemy(e){
   if(e.affix==='volatile'){ ringFx(e.x,e.y,120,'#ff8a3a'); burst(e.x,e.y,'#ff8a3a',16,200); var vr2=120*120;
     enemyGrid.query(e.x,e.y,120,function(o){ if(o!==e&&o.hp>0&&dist2(o.x,o.y,e.x,e.y)<vr2)hitEnemy(o,34,e.x,e.y,0.3); });
     if(dist2(player.x,player.y,e.x,e.y)<vr2)hurtPlayer(e.dmg*0.5); }
+  // 劇毒之軀詞綴：死亡留下大片毒池，持續灼傷站在上面的你
+  if(e.affix==='venomous'&&hazards.length<80){ hazards.push({kind:'lava',x:e.x,y:e.y,r:64,life:3.8,max:3.8,dtk:0}); ringFx(e.x,e.y,64,'#9dff5d'); burst(e.x,e.y,'#9dff5d',12,180); }
   // 掉落經驗
   var orbn=e.boss?24:(e.elite?5:1); for(var i=0;i<orbn;i++)spawnOrb(e.x+rand(-e.r,e.r),e.y+rand(-e.r,e.r),e.xp*(e.boss?3:1));
   // 掉落道具
@@ -2017,7 +2021,7 @@ function drawEnemy(e){
     ctx.stroke();
     ctx.globalAlpha=0.4; ctx.lineWidth=1.6; ctx.beginPath(); ctx.arc(0,0,r*0.52,-gs*1.5,-gs*1.5+4.9); ctx.stroke();
     ctx.globalAlpha=1; }
-  if(e.elite){ var affCol=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':e.affix==='reflector'?'#3df0c8':e.affix==='warlord'?'#ffd54a':e.affix==='phaser'?'#c8c8ff':e.affix==='splitburst'?'#ff9a3d':e.affix==='artillery'?'#ff6a3d':e.affix==='healer'?'#5dff9b':e.affix==='graviton'?'#8b5cf6':'#ffffff';
+  if(e.elite){ var affCol=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':e.affix==='reflector'?'#3df0c8':e.affix==='warlord'?'#ffd54a':e.affix==='phaser'?'#c8c8ff':e.affix==='splitburst'?'#ff9a3d':e.affix==='artillery'?'#ff6a3d':e.affix==='healer'?'#5dff9b':e.affix==='graviton'?'#8b5cf6':e.affix==='venomous'?'#9dff5d':'#ffffff';
     ctx.lineWidth=2.8; ctx.strokeStyle=affCol; ctx.stroke();   // 精英詞綴描邊
     if(!e.boss){ ctx.globalAlpha=0.4+0.3*Math.sin(G.time*6+e.x*0.03); ctx.lineWidth=2; ctx.strokeStyle=affCol; ctx.setLineDash([6,7]); ctx.lineDashOffset=-G.time*24;
       ctx.beginPath(); ctx.arc(0,0,r*1.55,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1; } }   // 精英脈動光環（旋轉虛線）

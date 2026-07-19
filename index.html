@@ -179,6 +179,12 @@
   #over .oreward{color:var(--gold);font-weight:800;font-size:18px;margin-bottom:6px}
 
   .hint{font-size:11px;color:#6b7ba0;text-align:center;margin-top:14px;letter-spacing:1px}
+  .tutlist{text-align:left;margin:6px 0 8px;max-height:56vh;overflow-y:auto}
+  .tutrow{display:flex;gap:12px;align-items:flex-start;padding:10px 4px;border-bottom:1px solid rgba(255,255,255,.07)}
+  .tutrow .tutic{font-size:26px;flex:0 0 30px;text-align:center;filter:drop-shadow(0 0 8px rgba(125,249,255,.5))}
+  .tutrow div{font-size:13px;color:#c7d2ec;line-height:1.5}
+  .tutrow b{display:block;color:#eaf0ff;font-size:14px;margin-bottom:2px}
+  .tutrow b[style]{display:inline}
   #pausebtn{position:absolute;top:56px;right:16px;pointer-events:auto;cursor:pointer;font-size:20px;
     background:rgba(12,18,34,.7);border:1px solid rgba(255,255,255,.12);border-radius:10px;width:40px;height:40px;
     display:flex;align-items:center;justify-content:center;z-index:6}
@@ -229,7 +235,23 @@
     <button class="btn ghost" id="bestiarybtn" style="flex:1">怪物圖鑑 👾</button>
   </div>
   <button class="btn ghost" id="shopbtn">永久強化 ◆</button>
+  <button class="btn ghost" id="tutbtn">新手教學 📘</button>
   <div class="hint">WASD／方向鍵 或 拖曳移動 · 自動開火 · 撿經驗升級三選一 · 活越久越強</div>
+</div></div>
+
+<!-- 新手教學 -->
+<div id="tutorial" class="overlay"><div class="panel">
+  <h2>新手教學 📘</h2>
+  <div class="tutlist">
+    <div class="tutrow"><span class="tutic">🕹️</span><div><b>移動與開火</b>WASD／方向鍵，手機可直接拖曳畫面移動。<b style="color:#7df9ff">武器會自動開火</b>，你只要專心走位躲彈！</div></div>
+    <div class="tutrow"><span class="tutic">💎</span><div><b>撿經驗、升級</b>擊殺敵人掉落青色經驗球，靠近自動吸取。經驗滿了會<b style="color:#ffd54a">升級並三選一</b>：新武器、武器升級或被動強化。</div></div>
+    <div class="tutrow"><span class="tutic">🔗</span><div><b>合成 & 進化</b>兩把來源武器各練到 L5 → 出現<b style="color:#7df9ff">合成卡</b>換強力合體武器；武器滿級 + 對應被動 → 出現<b style="color:#ffd54a">進化卡</b>質變終極武器。</div></div>
+    <div class="tutrow"><span class="tutic">◆</span><div><b>碎片 · 永久強化</b>每局結算獲得碎片，回選單到<b>「永久強化」</b>購買局外加成（傷害／生命／幸運…），越買越強，一路解鎖 <b>21 位角色</b>。</div></div>
+    <div class="tutrow"><span class="tutic">⚠️</span><div><b>保命技巧</b>紅色彈幕與敵人接觸會扣血，<b style="color:#ff5e7a">保持移動</b>是王道。撿到 💣清場 / 🛡️護盾 / 🔥狂化 / ☢️核爆 等道具可救急或爆發。</div></div>
+    <div class="tutrow"><span class="tutic">🏆</span><div><b>目標</b>活越久敵人越強、你也越強。挑戰 <b>成就徽章</b>、每日挑戰、衝上<b>世界排行榜</b>！右上角 🤖 可開<b>掛機自動選技能</b>。</div></div>
+  </div>
+  <button class="btn" id="tutplay">開始遊戲 ▶</button>
+  <button class="btn ghost" id="tutclose">返回選單</button>
 </div></div>
 
 <!-- 升級 -->
@@ -348,9 +370,9 @@ var TAU=Math.PI*2;
 // =====================================================================
 var SAVE='neonSurge_v1';
 var DB=loadDB();
-function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false};
-  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; return m;}}catch(e){} return d; }
+function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false};
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false};
+  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; return m;}}catch(e){} return d; }
 
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
 // 使用者只需在 firebase.google.com 建免費 Realtime Database、規則設 {".read":true,".write":true}，把資料庫網址貼在下面即可上線；留空則自動退回本機榜。
@@ -442,6 +464,7 @@ var ACHIEVEMENTS=[
   {id:'kills3000',ic:'💀',name:'血流成河',desc:'單局擊殺 3000',rw:450,chk:function(){return G.kills>=3000;}},
   {id:'kills5000',ic:'💀',name:'血洗霓虹',desc:'單局擊殺 5000',rw:600,chk:function(){return G.kills>=5000;}},
   {id:'combo300',ic:'🌟',name:'連擊之神',desc:'達成 300 連擊',rw:400,chk:function(){return (G.peakCombo||0)>=300;}},
+  {id:'dps10k',  ic:'⚡',name:'輸出狂魔',desc:'單局 DPS 達 10000',rw:600,chk:function(){return (G.dmgDealt||0)/Math.max(1,G.time)>=10000;}},
   {id:'combo500',ic:'🌟',name:'連擊真神',desc:'達成 500 連擊',rw:600,chk:function(){return (G.peakCombo||0)>=500;}},
   {id:'shard1k', ic:'💎',name:'富可敵國',desc:'單局累積 1000 碎片',rw:400,chk:function(){return G.shards>=1000;}},
   {id:'golden5',  ic:'💰',name:'淘金者',  desc:'單局擊殺 5 隻黃金巨獸',rw:400,chk:function(){return (G.goldKills||0)>=5;}},
@@ -556,9 +579,10 @@ var CHARS=[
   {id:'gambler',face:'🎲',name:'賭徒', desc:'一擲千金 · 起手榴彈', start:'grenade', locked:true, unlock:'gambler', stat:{crit:0.12,dmg:1.05,maxHp:0.9}},
   {id:'electromancer',face:'⚡',name:'雷術士', desc:'萬箭齊發 · 起手電磁線圈', start:'tesla', locked:true, unlock:'electromancer', stat:{dmg:1.05,fireRate:1.05,maxHp:0.95}},
   {id:'judicator',face:'🔱',name:'審判者', desc:'貫穿裁決 · 起手光矛', start:'lance', locked:true, unlock:'judicator', stat:{dmg:1.08,crit:0.08,maxHp:0.95}},
+  {id:'novacaster',face:'🎇',name:'星爆使', desc:'環射爆發 · 起手星爆', start:'starburst', locked:true, unlock:'novacaster', stat:{dmg:1.05,fireRate:1.05,maxHp:1.0}},
 ];
 var selChar='ranger';
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波'};
 
 // =====================================================================
 // 地圖 / 關卡
@@ -924,8 +948,9 @@ var PDEFS={
   pglass:{ic:'💎',name:'玻璃炮核心',color:'#ff6bd0',max:5,desc:function(){return '傷害 +16%，但生命上限 -7%';},apply:function(){recalc(); if(player.hp>player.maxHp)player.hp=player.maxHp;}},
   pfreeze:{ic:'🧊',name:'冰封力場',color:'#8bd3ff',max:5,desc:function(){return '每 3 秒凍結周圍敵人';},apply:function(){recalc();}},
   poverpower:{ic:'⬆️',name:'壓制',color:'#ff8a3a',max:5,desc:function(){return '對高於半血的敵人 +10% 傷害';},apply:function(){recalc();}},
+  pveteran:{ic:'🎖️',name:'百戰',color:'#ffd54a',max:5,desc:function(){return '每擊殺 100 傷害+1.5%（上限20層）';},apply:function(){recalc();}},
 };
-var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck','pglass','pfreeze','poverpower'];
+var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck','pglass','pfreeze','poverpower','pveteran'];
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -1131,12 +1156,13 @@ function recalc(){
   player.nova=(p.pnova||0);   // 新星脈衝等級
   player.freezeAura=(p.pfreeze||0);   // 冰封力場等級
   player.overpower=(p.poverpower||0);   // 壓制：對高血敵人增傷
+  player.veteran=(p.pveteran||0);   // 百戰：擊殺數越多傷害越高
   player.fury=0.08*(p.pfury||0);   // 血怒：依失血比例提升傷害
   player.luckBonus=0.05*(p.pluck||0);   // 幸運：提升道具掉落率
   player.shardMul=1+0.15*(p.pluck||0);  // 幸運：提升碎片獲取
   if(player.hp>player.maxHp)player.hp=player.maxHp;
 }
-function dmg(base){ var d=base*player.dmgMult*(player.frenzyT>0?1.4:1)*(1+0.015*metaLv('growth')*(G.time/60)); if(player.fury>0)d*=(1+player.fury*(1-player.hp/player.maxHp)); if(Math.random()<player.crit)d*=player.critMult; return d; }
+function dmg(base){ var d=base*player.dmgMult*(player.frenzyT>0?1.4:1)*(1+0.015*metaLv('growth')*(G.time/60)); if(player.fury>0)d*=(1+player.fury*(1-player.hp/player.maxHp)); if(player.veteran>0)d*=(1+0.015*player.veteran*Math.min(20,Math.floor(G.kills/100))); if(Math.random()<player.crit)d*=player.critMult; return d; }
 
 function weaponById(id){ return player.weapons.find(function(w){return w.id===id;}); }
 function addWeapon(id){ if(weaponById(id))return;
@@ -2197,6 +2223,7 @@ function gameOver(){
   if((G.shards||0)>=2000&&!DB.chars.gambler){DB.chars.gambler=true;}
   if((G.dmgDealt||0)>=500000&&!DB.chars.electromancer){DB.chars.electromancer=true;}
   if(G.time>=600&&!DB.chars.judicator){DB.chars.judicator=true;}
+  if((G.wave||0)>=40&&!DB.chars.novacaster){DB.chars.novacaster=true;}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; } }
@@ -2409,6 +2436,9 @@ $('bestiarybtn').onclick=function(){ renderBestiary(); $('menu').classList.remov
 $('bestiaryclose').onclick=function(){ $('bestiary').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('shopbtn').onclick=function(){ renderShop(); $('menu').classList.remove('show'); $('shop').classList.add('show'); };
 $('shopclose').onclick=function(){ $('shop').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
+$('tutbtn').onclick=function(){ $('menu').classList.remove('show'); $('tutorial').classList.add('show'); };
+$('tutclose').onclick=function(){ $('tutorial').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
+$('tutplay').onclick=function(){ $('tutorial').classList.remove('show'); DB.seenTutorial=true; saveDB(); startGame(false); };
 $('pausebtn').onclick=togglePause;
 $('resumebtn').onclick=function(){ togglePause(); };
 $('restartbtn').onclick=function(){ var d=!!(G&&G.daily); $('pause').classList.remove('show'); startGame(d); };
@@ -2423,6 +2453,8 @@ refreshAutoBtn();
 
 // 啟動
 renderMenu();
+// 首次遊玩自動彈出新手教學
+if(!DB.seenTutorial){ DB.seenTutorial=true; saveDB(); $('menu').classList.remove('show'); $('tutorial').classList.add('show'); }
 
 // 測試用 debug 介面（不影響正常遊玩）
 window.__neon={

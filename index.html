@@ -483,6 +483,7 @@ var ACHIEVEMENTS=[
   {id:'kills20k', ic:'☠️',name:'【傳說】湮滅使徒',desc:'單局擊殺 20000',rw:3500,chk:function(){return G.kills>=20000;}},
   {id:'golden10', ic:'👑',name:'【傳說】黃金國王',desc:'單局擊殺 10 隻黃金巨獸',rw:2000,chk:function(){return (G.goldKills||0)>=10;}},
   {id:'boss15',   ic:'⚔️',name:'【傳說】弒神無雙',desc:'單局擊敗 15 首領',rw:2500,chk:function(){return (G.bossKills||0)>=15;}},
+  {id:'combo1000',ic:'🌟',name:'【傳說】連擊永動機',desc:'達成 1000 連擊',rw:2500,chk:function(){return (G.peakCombo||0)>=1000;}},
   {id:'survive30',ic:'♾️',name:'【傳說】永恆之戰',desc:'單局存活 30 分鐘',rw:3000,chk:function(){return G.time>=1800;}},
   {id:'genesis_clear',ic:'🌠',name:'【傳說】創世征服者',desc:'在「創世終焉」存活 5 分鐘',rw:2500,chk:function(){return G.stage&&G.stage.id==='genesis'&&G.time>=300;}},
   // ===== 隱藏成就（解鎖前顯示 ??? ）=====
@@ -526,6 +527,7 @@ var MUTATORS=[
   {id:'titanwar', name:'泰坦戰日',  desc:'敵人巨肉稀少 · 你火力全開', eSpd:0.7,eHp:2.8,spawn:0.7,elite:1,pHp:1,pDmg:1.5,pSpd:1.1},
   {id:'ambush',   name:'埋伏日',    desc:'精英橫行 · 高速突襲 · 你更脆', eSpd:1.3,eHp:1.1,spawn:1.2,elite:3,pHp:0.75,pDmg:1.2,pSpd:1.1},
   {id:'chaosstorm',name:'混沌風暴日',desc:'一切失控 · 敵快量多 · 精英倍增', eSpd:1.3,eHp:1.15,spawn:1.5,elite:2,pHp:0.9,pDmg:1.1,pSpd:1.15},
+  {id:'hellfire',  name:'煉獄日',    desc:'敵人兇猛 · 高傷高韌 · 你也更猛', eSpd:1.15,eHp:1.4,spawn:1.1,elite:2,pHp:1,pDmg:1.3,pSpd:1},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
@@ -2053,6 +2055,11 @@ function render(){
   var vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.36,W/2,H/2,Math.max(W,H)*0.74);
   vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.45)');
   ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+  // 關卡專屬色調：邊緣染上該關卡首領色，讓每張地圖氛圍各異
+  if(G&&G.stage&&G.stage.bossColor){ var bc=G.stage.bossColor, br=parseInt(bc.slice(1,3),16),bg2=parseInt(bc.slice(3,5),16),bb=parseInt(bc.slice(5,7),16);
+    var vg2=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.5,W/2,H/2,Math.max(W,H)*0.82);
+    vg2.addColorStop(0,'rgba(0,0,0,0)'); vg2.addColorStop(1,'rgba('+br+','+bg2+','+bb+',0.12)');
+    ctx.fillStyle=vg2; ctx.fillRect(0,0,W,H); }
 
   // 傷害紅屏
   if(hurtFlash>0){ ctx.fillStyle='rgba(255,40,60,'+(hurtFlash*0.35)+')'; ctx.fillRect(0,0,W,H); }

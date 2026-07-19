@@ -434,6 +434,7 @@ var ACHIEVEMENTS=[
   {id:'lv50',    ic:'🌠',name:'登峰造極',desc:'單局達到 Lv50',rw:400,chk:function(){return G.level>=50;}},
   {id:'lv70',    ic:'🌟',name:'超凡入聖',desc:'單局達到 Lv70',rw:700,chk:function(){return G.level>=70;}},
   {id:'boss8',   ic:'👑',name:'首領殺手',desc:'單局擊敗 8 首領',rw:400,chk:function(){return (G.bossKills||0)>=8;}},
+  {id:'boss10',  ic:'👑',name:'弒君屠戮',desc:'單局擊敗 10 首領',rw:500,chk:function(){return (G.bossKills||0)>=10;}},
   {id:'elite50', ic:'✨',name:'精英屠夫',desc:'單局擊殺 50 精英',rw:350,chk:function(){return (G.eliteKills||0)>=50;}},
   {id:'elite100',ic:'✨',name:'精英絞殺者',desc:'單局擊殺 100 精英',rw:600,chk:function(){return (G.eliteKills||0)>=100;}},
   {id:'act10',   ic:'♾️',name:'永無止境',desc:'抵達第 10 幕',rw:800,chk:function(){return (G.act||1)>=10;}},
@@ -1177,6 +1178,7 @@ var ETYPES={
   marksman:{r:16,hp:96,sp:44,dmg:22,color:'#ffd24a',xp:7,shape:'sq',ranged:true,sniper:true},   // 狙擊手：預警後射出高速貫穿狙擊彈，懲罰站樁
   smasher:{r:28,hp:210,sp:44,dmg:24,color:'#ff7a3d',xp:8,shape:'hex',smasher:true},   // 碎擊者：週期在自身周圍震地，懲罰貼身近戰
   weaver:{r:20,hp:170,sp:46,dmg:20,color:'#5dffc0',xp:8,shape:'penta',weaver:true},   // 織網者：持續吐出旋轉螺旋彈網，鋪滿戰場
+  phaseknight:{r:18,hp:150,sp:70,dmg:22,color:'#c8c8ff',xp:8,shape:'dia',phaseknight:true},   // 相位騎士：瞬移到你身邊、短暫無敵並突刺
   // 稀有怪物（特定條件才會出現）
   phantom:{r:15,hp:54,sp:124,dmg:16,color:'#b98cff',xp:8,shape:'dia',rare:true},   // 幽影：8 分後成群高速幽靈
   golden:{r:20,hp:120,sp:56,dmg:8,color:'#ffd54a',xp:18,shape:'hex',rare:true,flee:true},   // 黃金巨獸：會逃跑的寶獸
@@ -1205,6 +1207,7 @@ var MONSTER_INFO={
   marksman:{n:'狙擊手',d:'深後期登場的精準射手，預警後射出高速狙擊彈，逼你離開直線。'},
   smasher:{n:'碎擊者',d:'深後期登場的重錘兵，週期在自身周圍震地爆擊，貼身近戰極其危險。'},
   weaver:{n:'織網者',d:'深後期登場的織網者，持續吐出旋轉螺旋彈網，逐漸鋪滿整片戰場。'},
+  phaseknight:{n:'相位騎士',d:'深後期登場的相位戰士，瞬移到你身邊、進入短暫無敵後高速突刺。'},
   phantom:{n:'幽影',d:'第 8 分鐘後浮現的高速幽靈，成群出沒、經驗豐厚。',rare:true},
   golden:{n:'黃金巨獸',d:'膽小會逃跑的稀有寶獸，追上擊殺可獲大量碎片與道具。',rare:true},
   warden:{n:'監視者',d:'第 6 分鐘後偶爾降臨的稀有精英射手，血厚傷高。',rare:true},
@@ -1230,7 +1233,7 @@ function spawnEnemy(type,ex,ey,mul,forceElite){
   if(ex==null){ ang=rand(0,TAU); ex=player.x+Math.cos(ang)*rr; ey=player.y+Math.sin(ang)*rr; }
   enemies.push({x:ex,y:ey,type:type,r:r,hp:hp,maxHp:hp,sp:sp,dmg:dm,color:d.color,
     xp:xp,shape:d.shape,ranged:d.ranged,explode:d.explode,split:d.split,charger:d.charger,elite:elite,affix:affix,
-    titan:d.titan,stalker:d.stalker,bombard:d.bombard,sniper:d.sniper,smasher:d.smasher,weaver:d.weaver,shade:d.shade,homer:d.homer,flee:d.flee,summonRare:d.summonRare,seekerRare:d.seekerRare,
+    titan:d.titan,stalker:d.stalker,bombard:d.bombard,sniper:d.sniper,smasher:d.smasher,weaver:d.weaver,phaseknight:d.phaseknight,shade:d.shade,homer:d.homer,flee:d.flee,summonRare:d.summonRare,seekerRare:d.seekerRare,
     flash:0,shoot:rand(1,3),chargeT:rand(2,4),dash:0,dvx:0,dvy:0,knx:0,kny:0,boss:false,slow:0,frozen:0});
 }
 function spawnBoss(){
@@ -1241,7 +1244,7 @@ function spawnBoss(){
     hp:1400*mul,maxHp:1400*mul,sp:46*st.eSpd,dmg:26,color:st.bossColor,xp:60,shape:'boss',flash:0,shoot:1.4,knx:0,kny:0,boss:true,
     pattern:st.pattern,spin:0,dash:0,dvx:0,dvy:0,tp:0,name:st.bossName,slow:0,frozen:0,summonT:9};
   // 高幕首領隨機採用進階攻擊模式，增加多樣性與挑戰
-  if(G&&G.act>=3&&Math.random()<0.6){ e.pattern=pick(['spiral','twin','aimburst','cross','wall','seeker','meteor','gravity','pulsar','sweeper','converge','petal']); }
+  if(G&&G.act>=3&&Math.random()<0.6){ e.pattern=pick(['spiral','twin','aimburst','cross','wall','seeker','meteor','gravity','pulsar','sweeper','converge','petal','homingnova']); }
   enemies.push(e); announce('⚠ '+st.bossName+' 降臨',st.bossColor);
   var brgb=parseInt(st.bossColor.slice(1,3),16)+','+parseInt(st.bossColor.slice(3,5),16)+','+parseInt(st.bossColor.slice(5,7),16);
   flashScreen(brgb,0.4); shake(12);
@@ -1268,6 +1271,8 @@ function bossAttack(e,dx,dy){
     for(var k=-2;k<=2;k++){ var a=ba+k*0.42; spawnEnemyBullet(e.x,e.y,Math.cos(a),Math.sin(a),150,e.dmg*0.5,1.7); } }
   else if(e.pattern==='meteor'){ for(var mk=0;mk<3;mk++){ if(hazards.length<80)hazards.push({kind:'strike',x:player.x+rand(-190,190),y:player.y+rand(-190,190),r:66,life:2,max:2,warn:1.05,fired:false,dtk:0}); } }   // 隕石雨：在玩家周圍降下預警轟炸，逼你持續轉移
   else if(e.pattern==='gravity'){ e.spin+=0.35; if(hazards.length<80)hazards.push({kind:'pull',x:player.x+rand(-130,130),y:player.y+rand(-130,130),r:130,life:2.8,max:2.8,dtk:0}); for(var k=0;k<8;k++){ var ga=k/8*TAU+e.spin; spawnEnemyBullet(e.x,e.y,Math.cos(ga),Math.sin(ga),195,e.dmg*0.5); } }   // 重力場：製造吸引帶把玩家拉入旋轉彈幕
+  else if(e.pattern==='homingnova'){ e.tp++;   // 追命新星：環狀射出會轉彎追蹤玩家的彈幕，逼你持續甩尾
+    var hcnt=10; for(var hk=0;hk<hcnt;hk++){ var hna=hk/hcnt*TAU+e.tp*0.3; spawnEnemyBullet(e.x,e.y,Math.cos(hna),Math.sin(hna),150,e.dmg*0.5,1.2); } }
   else if(e.pattern==='petal'){ e.spin=(e.spin||0)+0.4;   // 花瓣彈幕：五瓣旋轉花形彈幕伴隨擺動，優雅但難纏
     var petals=5; for(var pk=0;pk<petals;pk++){ var pa=e.spin+pk/petals*TAU; for(var ps=0;ps<3;ps++){ var psa=pa+Math.sin(e.spin*2)*0.3+(ps-1)*0.12; spawnEnemyBullet(e.x,e.y,Math.cos(psa),Math.sin(psa),200,e.dmg*0.5); } } }
   else if(e.pattern==='converge'){ e.tp++;   // 匯聚彈幕：在玩家周圍一圈生成彈幕後一齊向內收攏，逼你及時衝出包圍網
@@ -1536,6 +1541,7 @@ function update(dt){
     if(e.sniper){ e.snT=(e.snT==null?rand(1.8,2.6):e.snT-dt); if(e.snT<=0){ e.snT=rand(2.6,3.4); var sna=Math.atan2(dy,dx); ringFx(e.x,e.y,e.r*2.2,'#ffd24a'); spawnEnemyBullet(e.x,e.y,Math.cos(sna),Math.sin(sna),470,e.dmg*0.8); } }   // 狙擊手：預警後射出高速狙擊彈
     if(e.smasher){ e.smT=(e.smT==null?rand(2,3):e.smT-dt); if(e.smT<=0){ e.smT=rand(3,4); if(hazards.length<80)hazards.push({kind:'strike',x:e.x,y:e.y,r:118,life:1.4,max:1.4,warn:0.9,fired:false,dtk:0}); ringFx(e.x,e.y,80,'#ff7a3d'); } }   // 碎擊者：週期在自身周圍震地爆擊
     if(e.weaver){ e.wvA=(e.wvA||0)+dt*2.2; e.wvT=(e.wvT==null?0.3:e.wvT-dt); if(e.wvT<=0){ e.wvT=0.36; for(var wv=0;wv<3;wv++){ var wva=e.wvA+wv*(TAU/3); spawnEnemyBullet(e.x,e.y,Math.cos(wva),Math.sin(wva),160,e.dmg*0.4); } } }   // 織網者：持續吐出旋轉螺旋彈網
+    if(e.phaseknight&&e.dash<=0){ e.pkT=(e.pkT==null?rand(2,3):e.pkT-dt); if(e.pkT<=0){ e.pkT=rand(3,4); var pka=rand(0,TAU); e.x=player.x+Math.cos(pka)*150; e.y=player.y+Math.sin(pka)*150; e.phaseEnd=G.time+0.8; ringFx(e.x,e.y,46,'#c8c8ff'); var pda=Math.atan2(player.y-e.y,player.x-e.x); e.dash=0.35; e.dvx=Math.cos(pda)*600; e.dvy=Math.sin(pda)*600; } }   // 相位騎士：瞬移+短暫無敵+突刺
     if(e.shade){ e.sdT=(e.sdT==null?rand(2.5,3.5):e.sdT-dt); if(e.sdT<=0){ e.sdT=rand(3,4.5); var sda2=rand(0,TAU); e.x=player.x+Math.cos(sda2)*180; e.y=player.y+Math.sin(sda2)*180; ringFx(e.x,e.y,50,'#b98cff'); for(var sd=0;sd<6;sd++){ var sdb=sd/6*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(sdb),Math.sin(sdb),190,e.dmg*0.5); } } }   // 幻影領主：瞬移+放射爆彈
     if(e.ranged||e.boss||e.affix==='shooter'){ e.shoot-=dt; if(e.shoot<=0){ e.shoot=(e.boss?1.1:rand(1.8,3))*(e.frenzied?0.38:e.enraged?0.55:1);
       if(e.boss){ bossAttack(e,dx,dy); }
@@ -1707,7 +1713,7 @@ function chooseType(m){ var r=Math.random();
   if(m<1.6)return r<0.32?'grunt':r<0.52?'swarm':r<0.66?'ranged':r<0.78?'bomber':r<0.9?'charger':'splitter';
   if(m<3.5)return r<0.24?'grunt':r<0.42?'swarm':r<0.56?'ranged':r<0.68?'bomber':r<0.8?'charger':r<0.9?'splitter':'tank';
   if(m<6)return r<0.15?'grunt':r<0.28?'swarm':r<0.39?'ranged':r<0.49?'bomber':r<0.58?'charger':r<0.67?'splitter':r<0.76?'tank':r<0.85?'brute':r<0.93?'wraith':'mortar';   // 後期(3.5分後)出現蠻兵/厲魂/砲兵
-  return r<0.11?'grunt':r<0.19?'swarm':r<0.28?'ranged':r<0.37?'charger':r<0.45?'splitter':r<0.53?'tank':r<0.61?'brute':r<0.68?'wraith':r<0.75?'mortar':r<0.82?'titan':r<0.87?'stalker':r<0.91?'bombard':r<0.94?'marksman':r<0.965?'smasher':r<0.985?'weaver':'shade';   // 深後期(6分後)出現泰坦/潛襲者/重砲手/狙擊手/碎擊者/織網者/幻影領主
+  return r<0.11?'grunt':r<0.19?'swarm':r<0.28?'ranged':r<0.37?'charger':r<0.45?'splitter':r<0.53?'tank':r<0.61?'brute':r<0.68?'wraith':r<0.75?'mortar':r<0.82?'titan':r<0.87?'stalker':r<0.91?'bombard':r<0.93?'marksman':r<0.955?'smasher':r<0.975?'weaver':r<0.99?'phaseknight':'shade';   // 深後期(6分後)出現泰坦/潛襲者/重砲手/狙擊手/碎擊者/織網者/相位騎士/幻影領主
 }
 
 // ---- 經驗 / 升級 ----
@@ -2229,7 +2235,7 @@ function renderCodex(){
       '<div class="cxd">'+d.desc(0)+'</div>'+line+'</div></div>'; }).join('');
   $('codexlist').innerHTML=html;
 }
-function renderBestiary(){ var order=['grunt','swarm','tank','ranged','bomber','splitter','charger','brute','wraith','mortar','titan','stalker','bombard','marksman','smasher','weaver','shade','phantom','golden','warden','conjurer','harbinger','revenant','gargantua','boss'];
+function renderBestiary(){ var order=['grunt','swarm','tank','ranged','bomber','splitter','charger','brute','wraith','mortar','titan','stalker','bombard','marksman','smasher','weaver','phaseknight','shade','phantom','golden','warden','conjurer','harbinger','revenant','gargantua','boss'];
   var seen=0; var html=order.map(function(id){ var mi=MONSTER_INFO[id]||{n:id,d:''}; var d=(id==='boss'?{color:'#ffd54a',shape:''}:ETYPES[id])||{color:'#888'};
     var found=!!(DB.bestiary&&DB.bestiary[id]); if(found)seen++;
     var star=mi.rare?' <span class="cxtag" style="color:#ffd54a;border-color:#ffd54a">★ 稀有</span>':'';

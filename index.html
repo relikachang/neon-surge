@@ -1940,6 +1940,11 @@ function render(){
 
   ctx.restore();
 
+  // 關卡氛圍暈影（邊緣變暗，聚焦戰場、增加沉浸感）
+  var vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.36,W/2,H/2,Math.max(W,H)*0.74);
+  vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.45)');
+  ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+
   // 傷害紅屏
   if(hurtFlash>0){ ctx.fillStyle='rgba(255,40,60,'+(hurtFlash*0.35)+')'; ctx.fillRect(0,0,W,H); }
   if(flashA>0){ ctx.fillStyle='rgba('+flashRGB+','+Math.min(0.5,flashA*0.5)+')'; ctx.fillRect(0,0,W,H); }
@@ -2032,13 +2037,23 @@ function drawPlayer(){
   ctx.shadowBlur=0; ctx.restore();
   // 拾取範圍（淡）
   ctx.strokeStyle='rgba(34,230,255,0.08)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(player.x,player.y,player.pickup,0,TAU); ctx.stroke();
+  // 玩家能量環（旋轉虛線，增添造型）
+  ctx.save(); ctx.globalAlpha=0.5; ctx.strokeStyle=fren?'rgba(255,138,90,0.6)':'rgba(93,255,224,0.55)'; ctx.lineWidth=2; ctx.setLineDash([5,9]); ctx.lineDashOffset=G.time*30;
+  ctx.beginPath(); ctx.arc(player.x,player.y,pr+7,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
   // 護盾環（iframe>1 代表護盾道具，而非中彈短暫無敵）
   if(player.iframe>1){ ctx.strokeStyle='rgba(34,230,255,0.75)'; ctx.lineWidth=3; ctx.shadowColor='#22e6ff'; ctx.shadowBlur=14;
     ctx.beginPath(); ctx.arc(player.x,player.y,player.radius+11,0,TAU); ctx.stroke(); ctx.shadowBlur=0; }
 }
 function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️',revivecharm:'🕊️',thunderstorm:'🌩️',jackpot:'🎰',nuke:'☢️'}[p.type];
   var yy=p.y+Math.sin(G.time*4+p.x)*4;
-  ctx.save(); ctx.shadowColor='#ffd54a'; ctx.shadowBlur=14; ctx.font='24px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  var pulse=0.5+0.5*Math.sin(G.time*5+p.x*0.1);
+  ctx.save();
+  // 脈動光環（加色疊加）
+  ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.25+pulse*0.35; ctx.drawImage(glow('#ffd54a'),p.x-26,yy-26,52,52);
+  ctx.globalCompositeOperation='source-over';
+  // 地面小陰影
+  ctx.globalAlpha=0.22; ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(p.x,p.y+16,10,3,0,0,TAU); ctx.fill(); ctx.globalAlpha=1;
+  ctx.shadowColor='#ffd54a'; ctx.shadowBlur=14; ctx.font='24px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText(ic,p.x,yy); ctx.restore(); }
 
 // =====================================================================

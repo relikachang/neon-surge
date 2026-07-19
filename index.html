@@ -347,7 +347,7 @@ var TAU=Math.PI*2;
 // =====================================================================
 var SAVE='neonSurge_v1';
 var DB=loadDB();
-function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false};
+function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false};
   var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; return m;}}catch(e){} return d; }
 
@@ -441,6 +441,7 @@ var ACHIEVEMENTS=[
   {id:'combo300',ic:'🌟',name:'連擊之神',desc:'達成 300 連擊',rw:400,chk:function(){return (G.peakCombo||0)>=300;}},
   {id:'combo500',ic:'🌟',name:'連擊真神',desc:'達成 500 連擊',rw:600,chk:function(){return (G.peakCombo||0)>=500;}},
   {id:'shard1k', ic:'💎',name:'富可敵國',desc:'單局累積 1000 碎片',rw:400,chk:function(){return G.shards>=1000;}},
+  {id:'golden5',  ic:'💰',name:'淘金者',  desc:'單局擊殺 5 隻黃金巨獸',rw:400,chk:function(){return (G.goldKills||0)>=5;}},
   {id:'dmg1m',   ic:'💥',name:'百萬傷害',desc:'單局造成 100 萬總傷害',rw:450,chk:function(){return (G.dmgDealt||0)>=1000000;}},
   {id:'dmg5m',   ic:'💥',name:'毀滅打擊',desc:'單局造成 500 萬總傷害',rw:800,chk:function(){return (G.dmgDealt||0)>=5000000;}},
   {id:'shard5k', ic:'💰',name:'金庫',    desc:'單局累積 5000 碎片',rw:600,chk:function(){return G.shards>=5000;}},
@@ -547,9 +548,10 @@ var CHARS=[
   {id:'fortifier',face:'🗼',name:'守望者', desc:'定點防禦 · 起手部署砲塔', start:'turret', locked:true, unlock:'fortifier', stat:{maxHp:1.15,pickup:1.1}},
   {id:'gambler',face:'🎲',name:'賭徒', desc:'一擲千金 · 起手榴彈', start:'grenade', locked:true, unlock:'gambler', stat:{crit:0.12,dmg:1.05,maxHp:0.9}},
   {id:'electromancer',face:'⚡',name:'雷術士', desc:'萬箭齊發 · 起手電磁線圈', start:'tesla', locked:true, unlock:'electromancer', stat:{dmg:1.05,fireRate:1.05,maxHp:0.95}},
+  {id:'judicator',face:'🔱',name:'審判者', desc:'貫穿裁決 · 起手光矛', start:'lance', locked:true, unlock:'judicator', stat:{dmg:1.08,crit:0.08,maxHp:0.95}},
 ];
 var selChar='ranger';
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分'};
 
 // =====================================================================
 // 地圖 / 關卡
@@ -903,8 +905,9 @@ var PDEFS={
   pluck:{ic:'🍀',name:'幸運',color:'#5dff9b',max:5,desc:function(){return '道具掉落率↑ 碎片獲取 +15%';},apply:function(){recalc();}},
   pglass:{ic:'💎',name:'玻璃炮核心',color:'#ff6bd0',max:5,desc:function(){return '傷害 +16%，但生命上限 -7%';},apply:function(){recalc(); if(player.hp>player.maxHp)player.hp=player.maxHp;}},
   pfreeze:{ic:'🧊',name:'冰封力場',color:'#8bd3ff',max:5,desc:function(){return '每 3 秒凍結周圍敵人';},apply:function(){recalc();}},
+  poverpower:{ic:'⬆️',name:'壓制',color:'#ff8a3a',max:5,desc:function(){return '對高於半血的敵人 +10% 傷害';},apply:function(){recalc();}},
 };
-var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck','pglass','pfreeze'];
+var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck','pglass','pfreeze','poverpower'];
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -1103,6 +1106,7 @@ function recalc(){
   player.chill=0.1*(p.pfrost||0);   // 霜寒減速機率
   player.nova=(p.pnova||0);   // 新星脈衝等級
   player.freezeAura=(p.pfreeze||0);   // 冰封力場等級
+  player.overpower=(p.poverpower||0);   // 壓制：對高血敵人增傷
   player.fury=0.08*(p.pfury||0);   // 血怒：依失血比例提升傷害
   player.luckBonus=0.05*(p.pluck||0);   // 幸運：提升道具掉落率
   player.shardMul=1+0.15*(p.pluck||0);  // 幸運：提升碎片獲取
@@ -1297,6 +1301,7 @@ function fxLightning(x1,y1,x2,y2){ lightningSeg.push({x1:x1,y1:y1,x2:x2,y2:y2,li
 function hitEnemy(e,amount,fromx,fromy,knock){
   if(e.hp<=0)return; if(e.phaseEnd&&e.phaseEnd>G.time){ e.flash=0.08; return; }   // 相位詞綴：無敵窗內免疫傷害
   if(e.affix==='shielded')amount*=0.5;   // 護盾詞綴：減傷 50%
+  if(player.overpower>0&&e.hp>e.maxHp*0.5)amount*=(1+0.10*player.overpower);   // 壓制被動：對高血敵人增傷
   G.dmgDealt=(G.dmgDealt||0)+Math.min(amount,e.hp); e.hp-=amount; e.flash=0.08;
   if(player.chill>0&&!e.boss&&Math.random()<player.chill)e.slow=Math.max(e.slow||0,0.9);   // 霜寒被動：機率減速
   dmgNum(e.x,e.y-e.r,amount,amount>= (18*player.dmgMult) && player.crit>0);
@@ -2150,6 +2155,7 @@ function gameOver(){
   if((G.bossKills||0)>=6&&!DB.chars.fortifier){DB.chars.fortifier=true;}
   if((G.shards||0)>=2000&&!DB.chars.gambler){DB.chars.gambler=true;}
   if((G.dmgDealt||0)>=500000&&!DB.chars.electromancer){DB.chars.electromancer=true;}
+  if(G.time>=600&&!DB.chars.judicator){DB.chars.judicator=true;}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; } }

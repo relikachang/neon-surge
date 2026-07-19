@@ -79,8 +79,9 @@
   #bosshpfill{height:100%;width:100%;box-shadow:0 0 12px currentColor;transition:width .15s}
   #bossbar.enraged #bosshpbg{border-color:#ff2b5e;animation:enragePulse .5s infinite}
   @keyframes enragePulse{50%{box-shadow:0 0 16px #ff2b5e}}
-  #combo{position:absolute;top:104px;left:50%;transform:translateX(-50%);font-size:20px;font-weight:900;
-    color:var(--gold);text-shadow:0 0 14px rgba(255,213,74,.7);opacity:0;transition:opacity .2s}
+  #combo{position:absolute;top:104px;left:50%;transform:translateX(-50%) scale(1);transform-origin:center top;font-size:20px;font-weight:900;
+    color:var(--gold);text-shadow:0 0 14px rgba(255,213,74,.7);opacity:0;transition:opacity .2s,transform .12s,color .2s}
+  #combo.pop{transform:translateX(-50%) scale(1.28)}
   #announce2{position:absolute;top:36%;left:50%;transform:translateX(-50%);font-size:min(8vw,52px);font-weight:900;
     letter-spacing:3px;text-align:center;opacity:0;pointer-events:none;text-shadow:0 0 30px currentColor}
 
@@ -442,6 +443,7 @@ var ACHIEVEMENTS=[
   {id:'combo500',ic:'🌟',name:'連擊真神',desc:'達成 500 連擊',rw:600,chk:function(){return (G.peakCombo||0)>=500;}},
   {id:'shard1k', ic:'💎',name:'富可敵國',desc:'單局累積 1000 碎片',rw:400,chk:function(){return G.shards>=1000;}},
   {id:'golden5',  ic:'💰',name:'淘金者',  desc:'單局擊殺 5 隻黃金巨獸',rw:400,chk:function(){return (G.goldKills||0)>=5;}},
+  {id:'shard10k', ic:'💎',name:'富甲天下',desc:'單局累積 10000 碎片',rw:1000,chk:function(){return G.shards>=10000;}},
   {id:'dmg1m',   ic:'💥',name:'百萬傷害',desc:'單局造成 100 萬總傷害',rw:450,chk:function(){return (G.dmgDealt||0)>=1000000;}},
   {id:'dmg5m',   ic:'💥',name:'毀滅打擊',desc:'單局造成 500 萬總傷害',rw:800,chk:function(){return (G.dmgDealt||0)>=5000000;}},
   {id:'shard5k', ic:'💰',name:'金庫',    desc:'單局累積 5000 碎片',rw:600,chk:function(){return G.shards>=5000;}},
@@ -1360,7 +1362,10 @@ function killEnemy(e){
   if(e.boss){ announce('首領擊破！','#ffd54a'); G.shards+=Math.floor(20*(1+0.15*metaLv('greed'))*(1+0.2*metaLv('bounty'))); }
 }
 function addCombo(){ G.combo++; G.comboTimer=2.2*(1+0.15*metaLv('combo')); if(G.combo>G.peakCombo)G.peakCombo=G.combo;
-  if(G.combo>=5){ var c=$('combo'); c.textContent='連擊 x'+G.combo+'  XP+'+Math.round(Math.min(1,G.combo*0.01)*100)+'%'; c.style.opacity='1'; }
+  if(G.combo>=5){ var c=$('combo'); c.textContent='連擊 x'+G.combo+'  XP+'+Math.round(Math.min(1,G.combo*0.01)*100)+'%'; c.style.opacity='1';
+    var cc=G.combo>=200?'#ff2bd0':G.combo>=100?'#ff5a3a':G.combo>=50?'#ff9a3d':G.combo>=25?'#ffd54a':'#ffe89a';   // 連擊分級變色
+    c.style.color=cc; c.style.textShadow='0 0 16px '+cc;
+    c.classList.add('pop'); clearTimeout(addCombo._pt); addCombo._pt=setTimeout(function(){c.classList.remove('pop');},120); }   // 每次增擊彈跳
   if(G.combo>=10)GAudio.comboBlip&&GAudio.comboBlip(G.combo);   // 高連擊：音高遞增回饋
   if(G.combo===25||G.combo===50||G.combo===100||G.combo===200){ // 連擊里程碑：狂化 + 碎片獎勵
     player.frenzyT=Math.max(player.frenzyT,3); var cs=(G.combo/5)|0; G.shards+=cs;
@@ -1919,7 +1924,10 @@ function render(){
   for(var i=0;i<enemies.length;i++){ drawEnemy(enemies[i]); }
   // 敵子彈
   ctx.globalCompositeOperation='lighter';
-  for(var i=0;i<ebullets.length;i++){ var b=ebullets[i]; ctx.globalAlpha=1; ctx.drawImage(glow('#ff5e7a'),b.x-9,b.y-9,18,18); }
+  for(var i=0;i<ebullets.length;i++){ var b=ebullets[i]; var eg=glow('#ff5e7a');
+    ctx.globalAlpha=0.3; ctx.drawImage(eg,b.x-b.vx*0.016-7,b.y-b.vy*0.016-7,14,14);   // 微拖尾
+    ctx.globalAlpha=1; ctx.drawImage(eg,b.x-9,b.y-9,18,18);
+    ctx.drawImage(glow('#ffffff'),b.x-3.5,b.y-3.5,7,7); }   // 白色核心
   // 我方子彈（含速度方向拖尾）
   for(var i=0;i<bullets.length;i++){ var b=bullets[i]; var img=glow(b.color);
     var ts=b.r*1.7; ctx.globalAlpha=0.32; ctx.drawImage(img,b.x-b.vx*0.020-ts,b.y-b.vy*0.020-ts,ts*2,ts*2);

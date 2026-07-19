@@ -455,6 +455,7 @@ var ACHIEVEMENTS=[
   {id:'act15',   ic:'🌌',name:'【傳說】幕海主宰',desc:'抵達第 15 幕（約 37 分）',rw:2000,chk:function(){return (G.act||1)>=15;}},
   {id:'survive20',ic:'⏳',name:'【傳說】時間盡頭',desc:'單局存活 20 分鐘',rw:2000,chk:function(){return G.time>=1200;}},
   {id:'kills10k', ic:'🩸',name:'【傳說】霓虹絞肉機',desc:'單局擊殺 10000',rw:2500,chk:function(){return G.kills>=10000;}},
+  {id:'kills20k', ic:'☠️',name:'【傳說】湮滅使徒',desc:'單局擊殺 20000',rw:3500,chk:function(){return G.kills>=20000;}},
   {id:'golden10', ic:'👑',name:'【傳說】黃金國王',desc:'單局擊殺 10 隻黃金巨獸',rw:2000,chk:function(){return (G.goldKills||0)>=10;}},
   {id:'boss15',   ic:'⚔️',name:'【傳說】弒神無雙',desc:'單局擊敗 15 首領',rw:2500,chk:function(){return (G.bossKills||0)>=15;}},
   {id:'survive30',ic:'♾️',name:'【傳說】永恆之戰',desc:'單局存活 30 分鐘',rw:3000,chk:function(){return G.time>=1800;}},
@@ -1737,7 +1738,9 @@ function chooseType(m){ var r=Math.random();
 // ---- 經驗 / 升級 ----
 function gainXP(v){ var cb=1+Math.min(1,(G.combo||0)*0.01); G.xp+=v*player.xpMult*cb; while(G.xp>=G.xpNeed){ G.xp-=G.xpNeed; levelUp(); } }
 function levelUp(){ G.level++; G.xpNeed=Math.floor(5+G.level*3+G.level*G.level*0.6);
-  player.hp=Math.min(player.maxHp,player.hp+6); GAudio.level(); checkAch(); openLevelUp(); }
+  player.hp=Math.min(player.maxHp,player.hp+6);
+  for(var lr=0;lr<3;lr++)ringFx(player.x,player.y,50+lr*46,'#ffd54a'); burst(player.x,player.y,'#ffe89a',20,240); flashScreen('255,213,74',0.18);   // 升級瞬間金環爆發
+  GAudio.level(); checkAch(); openLevelUp(); }
 
 function collectPickup(p){
   if(p.type==='heal'){ player.hp=Math.min(player.maxHp,player.hp+player.maxHp*0.25); floatText('+生命','#5dff9b'); }
@@ -1896,8 +1899,10 @@ function render(){
 
   // 經驗球（加色疊加光）
   ctx.globalCompositeOperation='lighter';
-  for(var i=0;i<orbs.length;i++){ var o=orbs[i]; var img=glow('#22e6ff'); ctx.globalAlpha=0.9;
-    ctx.drawImage(img,o.x-8,o.y-8,16,16); }
+  var orbImg=glow('#22e6ff'), orbCore=glow('#dffbff');
+  for(var i=0;i<orbs.length;i++){ var o=orbs[i]; var op=8+1.6*Math.sin(G.time*6+o.x*0.05+o.y*0.05);   // 脈動大小
+    ctx.globalAlpha=0.85; ctx.drawImage(orbImg,o.x-op,o.y-op,op*2,op*2);
+    ctx.globalAlpha=0.9; ctx.drawImage(orbCore,o.x-2.6,o.y-2.6,5.2,5.2); }   // 亮核
   // 特效環
   for(var i=0;i<fxRings.length;i++){ var r=fxRings[i]; ctx.globalAlpha=r.life/r.max*0.6; ctx.strokeStyle=r.color; ctx.lineWidth=4;
     ctx.beginPath(); ctx.arc(r.x,r.y,r.r,0,TAU); ctx.stroke(); }

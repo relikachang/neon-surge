@@ -1981,14 +1981,24 @@ function drawEnemy(e){
   ctx.closePath(); ctx.fill();
   // 全體輪廓描邊（讓造型更立體、有圖案辨識度）
   ctx.globalAlpha=0.85; ctx.lineWidth=e.boss?3:1.5; ctx.strokeStyle=f?'#ffffff':'rgba(255,255,255,0.4)'; ctx.stroke(); ctx.globalAlpha=1;
+  // 內部旋轉幾何圖案（放射骨架 + 內圈弧），讓造型更豐富；小型雜兵略過以省效能
+  if(!f && r>=11){ var gs=G.time*0.8+e.x*0.02;
+    var spokes=e.boss?8:(e.shape==='hex'?6:e.shape==='penta'?5:e.shape==='tri'?3:4);
+    ctx.globalAlpha=0.45; ctx.lineWidth=1.3; ctx.strokeStyle='rgba(255,255,255,0.55)'; ctx.beginPath();
+    for(var sp=0;sp<spokes;sp++){ var sa=gs+sp/spokes*TAU; ctx.moveTo(Math.cos(sa)*r*0.30,Math.sin(sa)*r*0.30); ctx.lineTo(Math.cos(sa)*r*0.82,Math.sin(sa)*r*0.82); }
+    ctx.stroke();
+    ctx.globalAlpha=0.4; ctx.lineWidth=1.6; ctx.beginPath(); ctx.arc(0,0,r*0.52,-gs*1.5,-gs*1.5+4.9); ctx.stroke();
+    ctx.globalAlpha=1; }
   if(e.elite){ var affCol=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':e.affix==='reflector'?'#3df0c8':e.affix==='warlord'?'#ffd54a':e.affix==='phaser'?'#c8c8ff':e.affix==='splitburst'?'#ff9a3d':e.affix==='artillery'?'#ff6a3d':e.affix==='healer'?'#5dff9b':e.affix==='graviton'?'#8b5cf6':'#ffffff';
     ctx.lineWidth=2.8; ctx.strokeStyle=affCol; ctx.stroke();   // 精英詞綴描邊
     if(!e.boss){ ctx.globalAlpha=0.4+0.3*Math.sin(G.time*6+e.x*0.03); ctx.lineWidth=2; ctx.strokeStyle=affCol; ctx.setLineDash([6,7]); ctx.lineDashOffset=-G.time*24;
       ctx.beginPath(); ctx.arc(0,0,r*1.55,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1; } }   // 精英脈動光環（旋轉虛線）
-  // 內核亮點（脈動）
-  var coreR=Math.max(2,r*(0.24+0.05*Math.sin(G.time*5+e.x*0.05)));
-  ctx.shadowColor='#ffffff'; ctx.shadowBlur=e.boss?18:7; ctx.fillStyle=f?'#ffffff':'rgba(255,255,255,0.92)';
+  // 眼睛核心（白眼白 + 追向玩家的彩色瞳孔，脈動）
+  var coreR=Math.max(2,r*(0.26+0.05*Math.sin(G.time*5+e.x*0.05)));
+  ctx.shadowColor='#ffffff'; ctx.shadowBlur=e.boss?18:7; ctx.fillStyle=f?'#ffffff':'rgba(255,255,255,0.94)';
   ctx.beginPath(); ctx.arc(0,0,coreR,0,TAU); ctx.fill();
+  if(r>=11){ var pang=Math.atan2(player.y-e.y,player.x-e.x)-(e.shape==='arrow'?Math.atan2(player.y-e.y,player.x-e.x):0); var pr=coreR*0.45, px=Math.cos(pang)*coreR*0.4, py=Math.sin(pang)*coreR*0.4;
+    ctx.shadowBlur=0; ctx.fillStyle=f?'#ff5a5a':e.color; ctx.beginPath(); ctx.arc(px,py,pr,0,TAU); ctx.fill(); }   // 瞳孔盯著玩家
   // 首領：旋轉裝飾光環
   if(e.boss){ ctx.globalAlpha=0.7; ctx.lineWidth=2.5; ctx.strokeStyle='rgba(255,255,255,0.55)';
     for(var dq=0;dq<2;dq++){ ctx.beginPath(); ctx.arc(0,0,r*(1.16+dq*0.14),(e.spin||0)*(dq?-1:1),(e.spin||0)*(dq?-1:1)+4.2); ctx.stroke(); } ctx.globalAlpha=1; }

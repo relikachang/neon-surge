@@ -467,6 +467,7 @@ var ACHIEVEMENTS=[
   {id:'survive15',ic:'🕰️',name:'持久戰',  desc:'單局存活 15 分鐘',rw:600,chk:function(){return G.time>=900;}},
   {id:'act12',   ic:'🎭',name:'幕影深淵',desc:'抵達第 12 幕',rw:700,chk:function(){return (G.act||1)>=12;}},
   {id:'act14',   ic:'♾️',name:'幕海征途',desc:'抵達第 14 幕',rw:1200,chk:function(){return (G.act||1)>=14;}},
+  {id:'act16',   ic:'🌌',name:'幕之盡頭',desc:'抵達第 16 幕',rw:1500,chk:function(){return (G.act||1)>=16;}},
   {id:'kills8000',ic:'💥',name:'絕滅',    desc:'單局擊殺 8000',rw:600,chk:function(){return G.kills>=8000;}},
   {id:'combo250',ic:'⭐',name:'連擊宗師',desc:'達成 250 連擊',rw:350,chk:function(){return (G.peakCombo||0)>=250;}},
   {id:'evolve3', ic:'⚡',name:'進化狂潮',desc:'單局進化 3 把武器',rw:300,chk:function(){return player.weapons.filter(function(w){return w.evolved;}).length>=3;}},
@@ -1004,9 +1005,18 @@ var WDEFS={
       cd:function(l){return Math.max(0.22,0.5-l*0.03);},
       fire:function(w){ var num=8+w.level; if(w._a==null)w._a=0; w._a+=0.25; for(var i=0;i<num;i++){ var a=w._a+i/num*TAU; fireBeam(a,dmg(12+w.level*4),(480+w.level*26)*player.area,11*player.area,'#c8f0ff'); } }
     }
+  },
+  shockwave:{ic:'🌊',name:'震盪波',color:'#7dd3ff',tag:'環繞',max:8,
+    desc:function(l){return l===0?'週期釋放環身衝擊波，強力擊退':'傷害↑ 範圍↑';},
+    cd:function(l){return Math.max(0.5,0.9-l*0.05);},
+    fire:function(w){ var r=(110+w.level*20)*player.area,r2=r*r,d=dmg(14+w.level*5); enemyGrid.query(player.x,player.y,r,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<r2)hitEnemy(e,d,player.x,player.y,0.4); }); ringFx(player.x,player.y,r,'#7dd3ff'); },
+    evo:{reqPassive:'parea',ic:'💠',name:'共振風暴',color:'#a0f0ff',desc:'雙重共振衝擊波，強力擊退並震懾全場',
+      cd:function(l){return Math.max(0.35,0.7-l*0.04);},
+      fire:function(w){ for(var ring=0;ring<2;ring++){ var r=(130+w.level*22+ring*60)*player.area,r2=r*r,d=dmg(18+w.level*6); (function(r,r2,d){ enemyGrid.query(player.x,player.y,r,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<r2)hitEnemy(e,d,player.x,player.y,0.6); }); })(r,r2,d); ringFx(player.x,player.y,r,'#a0f0ff'); } shake(3); }
+    }
   }
 };
-var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam'];
+var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave'];
 
 // 被動定義
 var PDEFS={
@@ -1187,6 +1197,9 @@ var FUSIONS=[
     fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var ang=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle; var num=4+Math.floor(w.level/2);
       for(var i=0;i<num;i++){ var a=ang+(i-(num-1)/2)*0.24; fireBeam(a,dmg(12+w.level*4),(460+w.level*24)*player.area,11*player.area,'#a0e8ff'); }
       var r=(150+w.level*12)*player.area,r2=r*r; enemyGrid.query(player.x,player.y,r,function(o){ if(o.hp>0&&!o.boss&&dist2(o.x,o.y,player.x,player.y)<r2)o.frozen=Math.max(o.frozen||0,0.8); }); ringFx(player.x,player.y,r,'#a0e8ff'); }},
+  {a:'shockwave',b:'frost',id:'cryoshock',ic:'❄️',name:'凍震波',color:'#a0e8ff',desc:'環身衝擊波擊退並凍結全場',max:3,
+    cd:function(l){return 0.6;},
+    fire:function(w){ var r=(140+w.level*20)*player.area,r2=r*r,d=dmg(16+w.level*5); enemyGrid.query(player.x,player.y,r,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<r2){ hitEnemy(e,d,player.x,player.y,0.6); if(!e.boss)e.frozen=Math.max(e.frozen||0,1.0); } }); ringFx(player.x,player.y,r,'#a0e8ff'); }},
 ];
 function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)return FUSIONS[i]; return null; }
 

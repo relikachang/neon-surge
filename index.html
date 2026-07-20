@@ -466,6 +466,7 @@ var ACHIEVEMENTS=[
   {id:'eventhorizon3',ic:'🌑',name:'視界穿越',desc:'事件視界存活 3 分',rw:550,chk:function(){return G.stage&&G.stage.id==='eventhorizon'&&G.time>=180;}},
   {id:'survive15',ic:'🕰️',name:'持久戰',  desc:'單局存活 15 分鐘',rw:600,chk:function(){return G.time>=900;}},
   {id:'act12',   ic:'🎭',name:'幕影深淵',desc:'抵達第 12 幕',rw:700,chk:function(){return (G.act||1)>=12;}},
+  {id:'act14',   ic:'♾️',name:'幕海征途',desc:'抵達第 14 幕',rw:1200,chk:function(){return (G.act||1)>=14;}},
   {id:'kills8000',ic:'💥',name:'絕滅',    desc:'單局擊殺 8000',rw:600,chk:function(){return G.kills>=8000;}},
   {id:'combo250',ic:'⭐',name:'連擊宗師',desc:'達成 250 連擊',rw:350,chk:function(){return (G.peakCombo||0)>=250;}},
   {id:'evolve3', ic:'⚡',name:'進化狂潮',desc:'單局進化 3 把武器',rw:300,chk:function(){return player.weapons.filter(function(w){return w.evolved;}).length>=3;}},
@@ -553,6 +554,7 @@ var MUTATORS=[
   {id:'ambush',   name:'埋伏日',    desc:'精英橫行 · 高速突襲 · 你更脆', eSpd:1.3,eHp:1.1,spawn:1.2,elite:3,pHp:0.75,pDmg:1.2,pSpd:1.1},
   {id:'chaosstorm',name:'混沌風暴日',desc:'一切失控 · 敵快量多 · 精英倍增', eSpd:1.3,eHp:1.15,spawn:1.5,elite:2,pHp:0.9,pDmg:1.1,pSpd:1.15},
   {id:'hellfire',  name:'煉獄日',    desc:'敵人兇猛 · 高傷高韌 · 你也更猛', eSpd:1.15,eHp:1.4,spawn:1.1,elite:2,pHp:1,pDmg:1.3,pSpd:1},
+  {id:'vanguard',  name:'先鋒日',    desc:'精英開路 · 敵韌 · 你更強', eSpd:1.05,eHp:1.35,spawn:0.95,elite:3,pHp:1,pDmg:1.25,pSpd:1},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
@@ -2211,6 +2213,10 @@ function drawEnemy(e){
   // 首領：旋轉裝飾光環
   if(e.boss){ ctx.globalAlpha=0.7; ctx.lineWidth=2.5; ctx.strokeStyle='rgba(255,255,255,0.55)';
     for(var dq=0;dq<2;dq++){ ctx.beginPath(); ctx.arc(0,0,r*(1.16+dq*0.14),(e.spin||0)*(dq?-1:1),(e.spin||0)*(dq?-1:1)+4.2); ctx.stroke(); } ctx.globalAlpha=1; }
+  // 狀態視覺：凍結(冰藍覆蓋+冰晶)、減速(青色薄膜)，讓控場效果一目了然
+  if(e.frozen>0){ ctx.shadowBlur=0; ctx.globalAlpha=0.42; ctx.fillStyle='#a0e8ff'; ctx.beginPath(); ctx.arc(0,0,r*1.05,0,TAU); ctx.fill();
+    ctx.globalAlpha=0.9; ctx.strokeStyle='#dff4ff'; ctx.lineWidth=1.6; for(var iz=0;iz<3;iz++){ var za=iz/3*TAU+(e.x*0.1); ctx.beginPath(); ctx.moveTo(Math.cos(za)*r*0.4,Math.sin(za)*r*0.4); ctx.lineTo(Math.cos(za)*r*1.1,Math.sin(za)*r*1.1); ctx.stroke(); } ctx.globalAlpha=1; }
+  else if(e.slow>0){ ctx.shadowBlur=0; ctx.globalAlpha=0.22; ctx.fillStyle='#7dd3ff'; ctx.beginPath(); ctx.arc(0,0,r*1.02,0,TAU); ctx.fill(); ctx.globalAlpha=1; }
   ctx.shadowBlur=0; ctx.restore();
   // 血條（受傷過 / boss）
   if(e.hp<e.maxHp){ var w=e.r*2, hpr=Math.max(0,e.hp/e.maxHp); ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(e.x-w/2,e.y-e.r-8,w,3);

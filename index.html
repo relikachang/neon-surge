@@ -481,6 +481,7 @@ var ACHIEVEMENTS=[
   {id:'evolve5', ic:'🌟',name:'質變君王',desc:'單局同時擁有 5 把進化武器',rw:700,chk:function(){return player.weapons.filter(function(w){return w.evolved;}).length>=5;}},
   {id:'fuse2',   ic:'🔗',name:'雙重合成',desc:'單局同時擁有 2 把合成武器',rw:350,chk:function(){return player.weapons.filter(function(w){return w.fused;}).length>=2;}},
   {id:'fuse3',   ic:'🔗',name:'三重合成',desc:'單局同時擁有 3 把合成武器',rw:550,chk:function(){return player.weapons.filter(function(w){return w.fused;}).length>=3;}},
+  {id:'fuse4',   ic:'🔗',name:'四重合成',desc:'單局同時擁有 4 把合成武器',rw:700,chk:function(){return player.weapons.filter(function(w){return w.fused;}).length>=4;}},
   {id:'maxweapon',ic:'🎖️',name:'滿級大師',desc:'將任一武器練到滿級',rw:200,chk:function(){return player.weapons.some(function(w){return !w.fused&&w.level>=w.def.max-1;});}},
   {id:'weapons8', ic:'🎖️',name:'軍火大師',desc:'單局同時擁有 8 把武器',rw:400,chk:function(){return player.weapons.length>=8;}},
   {id:'pass8',   ic:'📚',name:'博學',    desc:'單局擁有 8 種不同被動',rw:300,chk:function(){return Object.keys(player.passives).filter(function(k){return player.passives[k]>0;}).length>=8;}},
@@ -1027,9 +1028,22 @@ var WDEFS={
       cd:function(l){return Math.max(0.35,0.7-l*0.04);},
       fire:function(w){ for(var ring=0;ring<2;ring++){ var r=(130+w.level*22+ring*60)*player.area,r2=r*r,d=dmg(18+w.level*6); (function(r,r2,d){ enemyGrid.query(player.x,player.y,r,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<r2)hitEnemy(e,d,player.x,player.y,0.6); }); })(r,r2,d); ringFx(player.x,player.y,r,'#a0f0ff'); } shake(3); }
     }
+  },
+  flak:{ic:'💥',name:'防空炮',color:'#ffb347',tag:'散爆',max:8,
+    desc:function(l){return l===0?'朝敵群射出散開的空爆彈':'彈數↑ 傷害↑';},
+    cd:function(l){return Math.max(0.35,0.7-l*0.04);},
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var ang=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle; var num=3+Math.floor(w.level/2)+player.amount;
+      for(var i=0;i<num;i++){ var a=ang+rand(-0.5,0.5), ds=rand(160,300), ex=player.x+Math.cos(a)*ds, ey=player.y+Math.sin(a)*ds, er=(50+w.level*5)*player.area,er2=er*er,dm=dmg(12+w.level*4);
+        (function(ex,ey,er,er2,dm){ enemyGrid.query(ex,ey,er,function(o){ if(o.hp>0&&dist2(o.x,o.y,ex,ey)<er2)hitEnemy(o,dm,ex,ey,0.2); }); })(ex,ey,er,er2,dm); ringFx(ex,ey,er,'#ffb347'); burst(ex,ey,'#ffb347',5,140); } },
+    evo:{reqPassive:'pamount',ic:'🎆',name:'彈幕轟炸',color:'#ffd54a',desc:'密集空爆彈幕覆蓋前方扇形',
+      cd:function(l){return Math.max(0.22,0.5-l*0.03);},
+      fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var ang=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle; var num=6+w.level+player.amount;
+        for(var i=0;i<num;i++){ var a=ang+rand(-0.7,0.7), ds=rand(140,340), ex=player.x+Math.cos(a)*ds, ey=player.y+Math.sin(a)*ds, er=(58+w.level*6)*player.area,er2=er*er,dm=dmg(16+w.level*5);
+          (function(ex,ey,er,er2,dm){ enemyGrid.query(ex,ey,er,function(o){ if(o.hp>0&&dist2(o.x,o.y,ex,ey)<er2)hitEnemy(o,dm,ex,ey,0.2); }); })(ex,ey,er,er2,dm); ringFx(ex,ey,er,'#ffd54a'); burst(ex,ey,'#ffd54a',4,120); } shake(3); }
+    }
   }
 };
-var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave'];
+var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak'];
 
 // 被動定義
 var PDEFS={
@@ -1214,6 +1228,11 @@ var FUSIONS=[
   {a:'shockwave',b:'frost',id:'cryoshock',ic:'❄️',name:'凍震波',color:'#a0e8ff',desc:'環身衝擊波擊退並凍結全場',max:3,
     cd:function(l){return 0.6;},
     fire:function(w){ var r=(140+w.level*20)*player.area,r2=r*r,d=dmg(16+w.level*5); enemyGrid.query(player.x,player.y,r,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<r2){ hitEnemy(e,d,player.x,player.y,0.6); if(!e.boss)e.frozen=Math.max(e.frozen||0,1.0); } }); ringFx(player.x,player.y,r,'#a0e8ff'); }},
+  {a:'flak',b:'frost',id:'frostflak',ic:'❄️',name:'冰爆彈幕',color:'#a0e8ff',desc:'散開的冰爆凍結命中的敵人',max:3,
+    cd:function(l){return 0.5;},
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var ang=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle; var num=4+Math.floor(w.level/2);
+      for(var i=0;i<num;i++){ var a=ang+rand(-0.6,0.6), ds=rand(150,320), ex=player.x+Math.cos(a)*ds, ey=player.y+Math.sin(a)*ds, er=(56+w.level*5)*player.area,er2=er*er,dm=dmg(14+w.level*4);
+        (function(ex,ey,er,er2,dm){ enemyGrid.query(ex,ey,er,function(o){ if(o.hp>0&&dist2(o.x,o.y,ex,ey)<er2){ hitEnemy(o,dm,ex,ey,0.2); if(!o.boss)o.frozen=Math.max(o.frozen||0,1.0); } }); })(ex,ey,er,er2,dm); ringFx(ex,ey,er,'#a0e8ff'); burst(ex,ey,'#a0e8ff',4,120); } }},
 ];
 function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)return FUSIONS[i]; return null; }
 

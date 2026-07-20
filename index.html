@@ -393,7 +393,7 @@ var TAU=Math.PI*2;
 // =====================================================================
 var SAVE='neonSurge_v1';
 var DB=loadDB();
-function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false};
+function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false};
   var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
@@ -506,6 +506,7 @@ var ACHIEVEMENTS=[
   // ===== 傳說徽章（0.001% 玩家才拿得到）=====
   {id:'act15',   ic:'🌌',name:'【傳說】幕海主宰',desc:'抵達第 15 幕（約 37 分）',rw:2000,chk:function(){return (G.act||1)>=15;}},
   {id:'survive20',ic:'⏳',name:'【傳說】時間盡頭',desc:'單局存活 20 分鐘',rw:2000,chk:function(){return G.time>=1200;}},
+  {id:'kills15k', ic:'🩸',name:'血色狂潮',desc:'單局擊殺 15000',rw:900,chk:function(){return G.kills>=15000;}},
   {id:'kills10k', ic:'🩸',name:'【傳說】霓虹絞肉機',desc:'單局擊殺 10000',rw:2500,chk:function(){return G.kills>=10000;}},
   {id:'kills20k', ic:'☠️',name:'【傳說】湮滅使徒',desc:'單局擊殺 20000',rw:3500,chk:function(){return G.kills>=20000;}},
   {id:'dmg10m',   ic:'💥',name:'【傳說】毀天滅地',desc:'單局造成 1000 萬總傷害',rw:2000,chk:function(){return (G.dmgDealt||0)>=10000000;}},
@@ -650,9 +651,10 @@ var CHARS=[
   {id:'judicator',face:'🔱',name:'審判者', desc:'貫穿裁決 · 起手光矛', start:'lance', locked:true, unlock:'judicator', stat:{dmg:1.08,crit:0.08,maxHp:0.95}},
   {id:'novacaster',face:'🎇',name:'星爆使', desc:'環射爆發 · 起手星爆', start:'starburst', locked:true, unlock:'novacaster', stat:{dmg:1.05,fireRate:1.05,maxHp:1.0}},
   {id:'prismancer',face:'🔺',name:'稜光使', desc:'折射光束 · 起手稜光炮', start:'prismbeam', locked:true, unlock:'prismancer', stat:{dmg:1.05,fireRate:1.08,maxHp:0.95}},
+  {id:'shockmancer',face:'🌊',name:'震盪使', desc:'環身衝擊 · 起手震盪波', start:'shockwave', locked:true, unlock:'shockmancer', stat:{maxHp:1.1,pickup:1.1}},
 ];
 var selChar='ranger';
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分'};
 
 // =====================================================================
 // 地圖 / 關卡
@@ -1049,8 +1051,9 @@ var PDEFS={
   pveteran:{ic:'🎖️',name:'百戰',color:'#ffd54a',max:5,desc:function(){return '每擊殺 100 傷害+1.5%（上限20層）';},apply:function(){recalc();}},
   pdrone:{ic:'🛰️',name:'召喚核心',color:'#5dffe0',max:5,desc:function(){return '每 5 秒召喚一台環繞無人機助陣';},apply:function(){recalc();}},
   pcleave:{ic:'🌀',name:'劈斬',color:'#ff8a3a',max:5,desc:function(){return '擊殺敵人時對周圍造成濺射傷害';},apply:function(){recalc();}},
+  pretaliate:{ic:'💥',name:'反擊波',color:'#ff6a3d',max:5,desc:function(){return '受傷時震開周圍敵人並造成傷害';},apply:function(){recalc();}},
 };
-var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck','pglass','pfreeze','poverpower','pveteran','pdrone','pcleave'];
+var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck','pglass','pfreeze','poverpower','pveteran','pdrone','pcleave','pretaliate'];
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -1272,6 +1275,7 @@ function recalc(){
   player.veteran=(p.pveteran||0);   // 百戰：擊殺數越多傷害越高
   player.droneP=(p.pdrone||0);   // 召喚核心：週期召喚無人機
   player.cleave=(p.pcleave||0);   // 劈斬：擊殺時濺射傷害
+  player.retaliate=(p.pretaliate||0);   // 反擊波：受傷時震開周圍敵人
   player.fury=0.08*(p.pfury||0);   // 血怒：依失血比例提升傷害
   player.luckBonus=0.05*(p.pluck||0);   // 幸運：提升道具掉落率
   player.shardMul=1+0.15*(p.pluck||0);  // 幸運：提升碎片獲取
@@ -1549,6 +1553,7 @@ function hurtPlayer(amount){
   if(player.blockReady){ player.blockReady=false; player.blockT=0; player.iframe=0.6; ringFx(player.x,player.y,40,'#5dd3ff'); floatText('護盾抵擋！','#5dd3ff'); return; }   // 能量護盾：抵擋一次攻擊
   amount*=(1-player.armor);
   player.hp-=amount; player.iframe=0.6; shake(6);
+  if(player.retaliate>0){ var rtr=(90+player.retaliate*20)*player.area,rtr2=rtr*rtr,rtd=dmg(20+player.retaliate*10); enemyGrid.query(player.x,player.y,rtr,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<rtr2)hitEnemy(e,rtd,player.x,player.y,0.7); }); ringFx(player.x,player.y,rtr,'#ff6a3d'); }   // 反擊波：受傷震開周圍(iframe已設,不會無限遞迴)
   if(amount>=0.5)dmgNum(player.x,player.y-26,amount,false,true);   // 玩家中彈：明顯紅色 -N
   flashHurt(); GAudio.hurt();
   if(player.hp<=0){
@@ -2361,6 +2366,7 @@ function gameOver(){
   if(G.time>=600&&!DB.chars.judicator){DB.chars.judicator=true;}
   if((G.wave||0)>=40&&!DB.chars.novacaster){DB.chars.novacaster=true;}
   if((G.act||1)>=6&&!DB.chars.prismancer){DB.chars.prismancer=true;}
+  if(G.time>=420&&!DB.chars.shockmancer){DB.chars.shockmancer=true;}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; } }

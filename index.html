@@ -238,6 +238,7 @@
     <button class="btn ghost" id="bestiarybtn" style="flex:1">怪物圖鑑 👾</button>
   </div>
   <button class="btn ghost" id="shopbtn">永久強化 ◆</button>
+  <button class="btn ghost" id="boostbtn">局前補給 🎁</button>
   <button class="btn ghost" id="tutbtn">新手教學 📘</button>
   <div class="hint">WASD／方向鍵 或 拖曳移動 · 自動開火 · 撿經驗升級三選一 · 活越久越強</div>
 </div></div>
@@ -277,6 +278,15 @@
   <div class="shardline">碎片 ◆ <span id="shopshards">0</span></div>
   <div id="shoplist"></div>
   <button class="btn ghost" id="shopclose" style="margin-top:16px">返回</button>
+</div></div>
+
+<!-- 局前補給（一次性增益） -->
+<div id="boostshop" class="overlay"><div class="panel">
+  <h2>局前補給 🎁</h2>
+  <div style="color:#8ea0c8;font-size:12px;margin:-6px 0 8px">花碎片買一次性增益，僅「下一局」生效</div>
+  <div class="shardline">碎片 ◆ <span id="boostshards">0</span></div>
+  <div id="boostlist"></div>
+  <button class="btn ghost" id="boostclose" style="margin-top:16px">返回</button>
 </div></div>
 
 <!-- 靜音切換 -->
@@ -384,8 +394,8 @@ var TAU=Math.PI*2;
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}}};
-  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; return m;}}catch(e){} return d; }
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{}};
+  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
 // 使用者只需在 firebase.google.com 建免費 Realtime Database、規則設 {".read":true,".write":true}，把資料庫網址貼在下面即可上線；留空則自動退回本機榜。
@@ -557,6 +567,21 @@ var MISSIONS=[
   {id:'mfuse', ic:'🔗', desc:'單局完成 1 次武器合成', rw:150, chk:function(){return player.weapons.some(function(w){return w.fused;});}},
   {id:'mwave', ic:'🌊', desc:'單局抵達第 25 波',     rw:150, chk:function(){return G.wave>=25;}},
   {id:'mgold', ic:'💰', desc:'單局擊殺 1 隻黃金巨獸', rw:150, chk:function(){return (G.goldKills||0)>=1;}},
+  {id:'mevolve',ic:'⚡', desc:'單局進化 1 把武器',     rw:180, chk:function(){return player.weapons.some(function(w){return w.evolved;});}},
+  {id:'mrare', ic:'🎯', desc:'單局擊殺 5 隻稀有怪',   rw:200, chk:function(){return (G.rareKills||0)>=5;}},
+  {id:'mact',  ic:'☰',  desc:'單局抵達第 5 幕',       rw:200, chk:function(){return (G.act||1)>=5;}},
+  {id:'mdmg',  ic:'💥', desc:'單局造成 30 萬傷害',    rw:180, chk:function(){return (G.dmgDealt||0)>=300000;}},
+  {id:'mkill2',ic:'💀', desc:'單局擊殺 2000 敵人',    rw:220, chk:function(){return G.kills>=2000;}},
+  {id:'mtime10',ic:'⏳', desc:'單局存活 10 分鐘',      rw:220, chk:function(){return G.time>=600;}},
+  {id:'mlv40', ic:'🌟', desc:'單局達到 Lv40',         rw:200, chk:function(){return G.level>=40;}},
+];
+// 局前補給：花碎片買一次性增益，只在下一局生效（消耗性碎片用途）
+var BOOSTS=[
+  {id:'bfrenzy',  ic:'🔥', name:'開局狂化',   desc:'開局 15 秒狂化（射速+傷害）', cost:200, apply:function(){ player.frenzyT=15; }},
+  {id:'bshield',  ic:'🛡️', name:'鐵壁開場',   desc:'開局 8 秒無敵護盾',           cost:200, apply:function(){ player.iframe=Math.max(player.iframe,8); }},
+  {id:'bsquad',   ic:'🛰️', name:'援護小隊',   desc:'開局獲得 4 台環繞無人機',      cost:250, apply:function(){ for(var i=0;i<4;i++)drones.push({x:player.x,y:player.y,ang:i/4*TAU,orbit:82,life:1e9,cd:rand(0,0.3),dmg:dmg(16)}); }},
+  {id:'bironhp',  ic:'❤️', name:'鋼鐵之軀',   desc:'本局生命上限 +50%',            cost:300, apply:function(){ player.base.maxHp*=1.5; recalc(); player.hp=player.maxHp; }},
+  {id:'bartifact',ic:'🎲', name:'隨機神器',   desc:'開局隨機獲得一把武器（L3）',   cost:350, apply:function(){ var avail=WORDER.filter(function(id){return !weaponById(id);}); if(avail.length){ var id=pick(avail); addWeapon(id); var w=weaponById(id); if(w)w.level=2; } }},
 ];
 function todaysMissions(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0;
   var pool=MISSIONS.slice(), out=[]; for(var j=0;j<3;j++){ var p=(h+j*7)%pool.length; out.push(pool[p]); pool.splice(p,1); } return out; }
@@ -1187,6 +1212,8 @@ function newRun(daily){
   recalc(); player.hp=player.maxHp;
   player.iframe=1.5*metaLv('startshield');   // 啟動護盾：開局無敵
   var gd=metaLv('guardian'); for(var gi=0;gi<gd;gi++)drones.push({x:player.x,y:player.y,ang:gi/Math.max(1,gd)*TAU,orbit:82,life:1e9,cd:rand(0,0.3),dmg:dmg(14)});   // 守護核心：開局環繞護衛無人機
+  // 局前補給：套用已購買的一次性增益後清空
+  if(DB.boost){ var used=false; BOOSTS.forEach(function(b){ if(DB.boost[b.id]){ used=true; try{ b.apply(); }catch(e){} } }); if(used){ DB.boost={}; saveDB(); } }
   enemyGrid=makeGrid(96);
 }
 
@@ -2462,6 +2489,18 @@ function renderShop(){
     list.appendChild(el);
   });
 }
+function renderBoostShop(){
+  $('boostshards').textContent=DB.shards;
+  var list=$('boostlist'); list.innerHTML='';
+  BOOSTS.forEach(function(b){ var bought=DB.boost&&DB.boost[b.id], afford=DB.shards>=b.cost;
+    var el=document.createElement('div'); el.className='shopitem';
+    el.innerHTML='<div class="si">'+b.ic+'</div><div class="sm"><div class="sn">'+b.name+'</div><div class="sd">'+b.desc+'</div></div>'+
+      '<button '+(bought?'class="max" disabled':(afford?'':'disabled'))+'>'+(bought?'已購':('◆ '+b.cost))+'</button>';
+    var btn=el.querySelector('button');
+    if(!bought){ btn.onclick=function(){ if(DB.shards>=b.cost){ DB.shards-=b.cost; DB.boost=DB.boost||{}; DB.boost[b.id]=true; saveDB(); renderBoostShop(); } }; }
+    list.appendChild(el);
+  });
+}
 
 // =====================================================================
 // 音效（WebAudio）
@@ -2519,6 +2558,8 @@ $('bestiarybtn').onclick=function(){ renderBestiary(); $('menu').classList.remov
 $('bestiaryclose').onclick=function(){ $('bestiary').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('shopbtn').onclick=function(){ renderShop(); $('menu').classList.remove('show'); $('shop').classList.add('show'); };
 $('shopclose').onclick=function(){ $('shop').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
+$('boostbtn').onclick=function(){ renderBoostShop(); $('menu').classList.remove('show'); $('boostshop').classList.add('show'); };
+$('boostclose').onclick=function(){ $('boostshop').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('tutbtn').onclick=function(){ $('menu').classList.remove('show'); $('tutorial').classList.add('show'); };
 $('tutclose').onclick=function(){ $('tutorial').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('tutplay').onclick=function(){ $('tutorial').classList.remove('show'); DB.seenTutorial=true; saveDB(); startGame(false); };

@@ -393,7 +393,7 @@ var TAU=Math.PI*2;
 // =====================================================================
 var SAVE='neonSurge_v1';
 var DB=loadDB();
-function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false};
+function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false};
   var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
@@ -469,6 +469,7 @@ var ACHIEVEMENTS=[
   {id:'kills8000',ic:'💥',name:'絕滅',    desc:'單局擊殺 8000',rw:600,chk:function(){return G.kills>=8000;}},
   {id:'combo250',ic:'⭐',name:'連擊宗師',desc:'達成 250 連擊',rw:350,chk:function(){return (G.peakCombo||0)>=250;}},
   {id:'evolve3', ic:'⚡',name:'進化狂潮',desc:'單局進化 3 把武器',rw:300,chk:function(){return player.weapons.filter(function(w){return w.evolved;}).length>=3;}},
+  {id:'evolve4', ic:'⚡',name:'進化君主',desc:'單局同時擁有 4 把進化武器',rw:500,chk:function(){return player.weapons.filter(function(w){return w.evolved;}).length>=4;}},
   {id:'evolve5', ic:'🌟',name:'質變君王',desc:'單局同時擁有 5 把進化武器',rw:700,chk:function(){return player.weapons.filter(function(w){return w.evolved;}).length>=5;}},
   {id:'fuse2',   ic:'🔗',name:'雙重合成',desc:'單局同時擁有 2 把合成武器',rw:350,chk:function(){return player.weapons.filter(function(w){return w.fused;}).length>=2;}},
   {id:'fuse3',   ic:'🔗',name:'三重合成',desc:'單局同時擁有 3 把合成武器',rw:550,chk:function(){return player.weapons.filter(function(w){return w.fused;}).length>=3;}},
@@ -644,9 +645,10 @@ var CHARS=[
   {id:'electromancer',face:'⚡',name:'雷術士', desc:'萬箭齊發 · 起手電磁線圈', start:'tesla', locked:true, unlock:'electromancer', stat:{dmg:1.05,fireRate:1.05,maxHp:0.95}},
   {id:'judicator',face:'🔱',name:'審判者', desc:'貫穿裁決 · 起手光矛', start:'lance', locked:true, unlock:'judicator', stat:{dmg:1.08,crit:0.08,maxHp:0.95}},
   {id:'novacaster',face:'🎇',name:'星爆使', desc:'環射爆發 · 起手星爆', start:'starburst', locked:true, unlock:'novacaster', stat:{dmg:1.05,fireRate:1.05,maxHp:1.0}},
+  {id:'prismancer',face:'🔺',name:'稜光使', desc:'折射光束 · 起手稜光炮', start:'prismbeam', locked:true, unlock:'prismancer', stat:{dmg:1.05,fireRate:1.08,maxHp:0.95}},
 ];
 var selChar='ranger';
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕'};
 
 // =====================================================================
 // 地圖 / 關卡
@@ -1033,8 +1035,9 @@ var PDEFS={
   poverpower:{ic:'⬆️',name:'壓制',color:'#ff8a3a',max:5,desc:function(){return '對高於半血的敵人 +10% 傷害';},apply:function(){recalc();}},
   pveteran:{ic:'🎖️',name:'百戰',color:'#ffd54a',max:5,desc:function(){return '每擊殺 100 傷害+1.5%（上限20層）';},apply:function(){recalc();}},
   pdrone:{ic:'🛰️',name:'召喚核心',color:'#5dffe0',max:5,desc:function(){return '每 5 秒召喚一台環繞無人機助陣';},apply:function(){recalc();}},
+  pcleave:{ic:'🌀',name:'劈斬',color:'#ff8a3a',max:5,desc:function(){return '擊殺敵人時對周圍造成濺射傷害';},apply:function(){recalc();}},
 };
-var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck','pglass','pfreeze','poverpower','pveteran','pdrone'];
+var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck','pglass','pfreeze','poverpower','pveteran','pdrone','pcleave'];
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -1252,6 +1255,7 @@ function recalc(){
   player.overpower=(p.poverpower||0);   // 壓制：對高血敵人增傷
   player.veteran=(p.pveteran||0);   // 百戰：擊殺數越多傷害越高
   player.droneP=(p.pdrone||0);   // 召喚核心：週期召喚無人機
+  player.cleave=(p.pcleave||0);   // 劈斬：擊殺時濺射傷害
   player.fury=0.08*(p.pfury||0);   // 血怒：依失血比例提升傷害
   player.luckBonus=0.05*(p.pluck||0);   // 幸運：提升道具掉落率
   player.shardMul=1+0.15*(p.pluck||0);  // 幸運：提升碎片獲取
@@ -1466,6 +1470,7 @@ function hitEnemy(e,amount,fromx,fromy,knock){
 function killEnemy(e){
   e.dead=true; G.kills++; if(e.elite){G.eliteKills=(G.eliteKills||0)+1; GAudio.elite&&GAudio.elite();} addCombo();
   if(player.lifesteal>0&&player.hp<player.maxHp){ player.hp=Math.min(player.maxHp,player.hp+player.lifesteal); }   // 吸血被動：擊殺回血
+  if(player.cleave>0&&(G._clv||0)<4){ G._clv=(G._clv||0)+1; var clr=(50+player.cleave*14)*player.area, clr2=clr*clr, cvd=dmg(8+player.cleave*5); enemyGrid.query(e.x,e.y,clr,function(o){ if(o.hp>0&&o!==e&&dist2(o.x,o.y,e.x,e.y)<clr2)hitEnemy(o,cvd,e.x,e.y,0.1); }); ringFx(e.x,e.y,clr,'#ff8a3a'); G._clv--; }   // 劈斬：擊殺濺射(深度上限4防爆棧)
   if(player.chain>0&&!e.boss&&(G._chd||0)<3&&Math.random()<player.chain){ G._chd=(G._chd||0)+1; var chr=90*player.area, chr2=chr*chr, cx=e.x, cy=e.y;   // 連鎖爆破：擊殺引發範圍爆炸(深度上限3防止無限遞迴)
     ringFx(cx,cy,chr,'#ffb347'); burst(cx,cy,'#ffb347',10,200); enemyGrid.query(cx,cy,chr,function(o){ if(o!==e&&o.hp>0&&dist2(o.x,o.y,cx,cy)<chr2)hitEnemy(o,dmg(22),cx,cy,0.25); }); G._chd--; }
   if(e.type&&!DB.bestiary[e.type]){ DB.bestiary[e.type]=true; saveDB(); }   // 怪物圖鑑：首次擊殺即解鎖
@@ -2333,6 +2338,7 @@ function gameOver(){
   if((G.dmgDealt||0)>=500000&&!DB.chars.electromancer){DB.chars.electromancer=true;}
   if(G.time>=600&&!DB.chars.judicator){DB.chars.judicator=true;}
   if((G.wave||0)>=40&&!DB.chars.novacaster){DB.chars.novacaster=true;}
+  if((G.act||1)>=6&&!DB.chars.prismancer){DB.chars.prismancer=true;}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; } }

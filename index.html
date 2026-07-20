@@ -225,7 +225,10 @@
   <div class="sellabel">選擇地圖</div>
   <div class="charsel" id="stagesel"></div>
   <button class="btn" id="playbtn">開始遊戲</button>
-  <button class="btn ghost" id="dailybtn">每日挑戰</button>
+  <div style="display:flex;gap:10px">
+    <button class="btn ghost" id="dailybtn" style="flex:1">每日挑戰</button>
+    <button class="btn ghost" id="missionbtn" style="flex:1">每日任務 📋</button>
+  </div>
   <div style="display:flex;gap:10px">
     <button class="btn ghost" id="boardbtn" style="flex:1">排行榜 🏆</button>
     <button class="btn ghost" id="achbtn" style="flex:1">成就 🏅</button>
@@ -252,6 +255,14 @@
   </div>
   <button class="btn" id="tutplay">開始遊戲 ▶</button>
   <button class="btn ghost" id="tutclose">返回選單</button>
+</div></div>
+
+<!-- 每日任務 -->
+<div id="missions" class="overlay"><div class="panel">
+  <h2>每日任務 📋</h2>
+  <div class="lsub">每天更新 · 遊戲結算時自動達成領獎</div>
+  <div id="missionlist" class="tutlist"></div>
+  <button class="btn ghost" id="missionclose" style="margin-top:6px">返回選單</button>
 </div></div>
 
 <!-- 升級 -->
@@ -373,8 +384,8 @@ var TAU=Math.PI*2;
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false};
-  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; return m;}}catch(e){} return d; }
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}}};
+  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; return m;}}catch(e){} return d; }
 
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
 // 使用者只需在 firebase.google.com 建免費 Realtime Database、規則設 {".read":true,".write":true}，把資料庫網址貼在下面即可上線；留空則自動退回本機榜。
@@ -534,6 +545,24 @@ var MUTATORS=[
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
+// ===== 每日任務 =====
+var MISSIONS=[
+  {id:'mkill', ic:'💀', desc:'單局擊殺 800 敵人',   rw:150, chk:function(){return G.kills>=800;}},
+  {id:'mboss', ic:'👑', desc:'單局擊敗 3 首領',     rw:150, chk:function(){return (G.bossKills||0)>=3;}},
+  {id:'melite',ic:'✨', desc:'單局擊殺 30 精英',     rw:150, chk:function(){return (G.eliteKills||0)>=30;}},
+  {id:'mtime', ic:'⏱️', desc:'單局存活 5 分鐘',      rw:150, chk:function(){return G.time>=300;}},
+  {id:'mlevel',ic:'🌠', desc:'單局達到 Lv25',       rw:150, chk:function(){return G.level>=25;}},
+  {id:'mcombo',ic:'🔥', desc:'達成 100 連擊',        rw:150, chk:function(){return (G.peakCombo||0)>=100;}},
+  {id:'mshard',ic:'◆',  desc:'單局累積 500 碎片',    rw:150, chk:function(){return G.shards>=500;}},
+  {id:'mfuse', ic:'🔗', desc:'單局完成 1 次武器合成', rw:150, chk:function(){return player.weapons.some(function(w){return w.fused;});}},
+  {id:'mwave', ic:'🌊', desc:'單局抵達第 25 波',     rw:150, chk:function(){return G.wave>=25;}},
+  {id:'mgold', ic:'💰', desc:'單局擊殺 1 隻黃金巨獸', rw:150, chk:function(){return (G.goldKills||0)>=1;}},
+];
+function todaysMissions(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0;
+  var pool=MISSIONS.slice(), out=[]; for(var j=0;j<3;j++){ var p=(h+j*7)%pool.length; out.push(pool[p]); pool.splice(p,1); } return out; }
+function checkMissions(){ if(!G)return; var today=dayKey(); if(!DB.missions||DB.missions.date!==today)DB.missions={date:today,done:{}};
+  var all=true; todaysMissions().forEach(function(m){ if(!DB.missions.done[m.id]){ try{ if(m.chk()){ DB.missions.done[m.id]=true; DB.shards+=m.rw; saveDB(); achToast({ic:m.ic,name:'每日任務完成'},m.rw); } }catch(e){} } if(!DB.missions.done[m.id])all=false; });
+  if(all && !DB.missions.done.__bonus){ DB.missions.done.__bonus=true; DB.shards+=300; saveDB(); achToast({ic:'📋',name:'每日任務全清！'},300); } }
 function saveDB(){ localStorage.setItem(SAVE,JSON.stringify(DB)); }
 
 // 永久強化定義
@@ -2288,6 +2317,7 @@ function gameOver(){
   // 每日挑戰最佳
   if(G.daily){ var dk=dayKey(); if(DB.daily.date!==dk||G.time>DB.daily.time)DB.daily={date:dk,time:Math.round(G.time),kills:G.kills}; }
   checkAch();
+  checkMissions();
   saveDB();
   $('o-time').textContent=fmtTime(G.time); $('o-kills').textContent=G.kills;
   $('o-level').textContent=G.level; $('o-wave').textContent=G.wave;
@@ -2315,7 +2345,7 @@ function renderPauseBuild(){
     '<div class="blabel">被動</div><div class="brow">'+ph+'</div>'+
     '<div class="blabel">角色 · 地圖</div><div class="brow"><span class="bchip">'+(CHARS.find(function(c){return c.id===selChar;})||{}).name+'</span><span class="bchip">'+G.stage.name+'</span>'+(G.daily?'<span class="bchip" style="border-color:#ffd54a">🗓️ '+G.mut.name+'</span>':'')+'</div>'; }
 
-function hideAll(){ ['menu','levelup','shop','pause','over','board','ach','codex','bestiary','profile'].forEach(function(id){$(id).classList.remove('show');}); }
+function hideAll(){ ['menu','levelup','shop','pause','over','board','ach','codex','bestiary','profile','tutorial','missions'].forEach(function(id){$(id).classList.remove('show');}); }
 function renderAch(){ var got=0, lgTotal=0, lgGot=0, hidGot=0, hidTotal=0; var html=ACHIEVEMENTS.map(function(a){ var u=DB.achievements[a.id]; if(u)got++;
   var lg=a.name.indexOf('【傳說】')>=0; if(lg){lgTotal++; if(u)lgGot++;}
   if(a.hidden){ hidTotal++; if(u)hidGot++; }
@@ -2492,6 +2522,14 @@ $('shopclose').onclick=function(){ $('shop').classList.remove('show'); $('menu')
 $('tutbtn').onclick=function(){ $('menu').classList.remove('show'); $('tutorial').classList.add('show'); };
 $('tutclose').onclick=function(){ $('tutorial').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('tutplay').onclick=function(){ $('tutorial').classList.remove('show'); DB.seenTutorial=true; saveDB(); startGame(false); };
+function renderMissions(){ var today=dayKey(); var done=(DB.missions&&DB.missions.date===today)?DB.missions.done:{};
+  var html=todaysMissions().map(function(m){ var ok=!!done[m.id];
+    return '<div class="tutrow" style="'+(ok?'opacity:.65':'')+'"><span class="tutic">'+(ok?'✅':m.ic)+'</span><div><b>'+(ok?'已完成':'進行中')+' · +◆'+m.rw+'</b>'+m.desc+'</div></div>'; }).join('');
+  var alldone=todaysMissions().every(function(m){return done[m.id];});
+  html+='<div class="tutrow" style="'+(alldone?'opacity:.65':'')+'"><span class="tutic">'+(alldone?'🏆':'📋')+'</span><div><b>全清獎勵 · +◆300</b>'+(alldone?'已領取':'完成上方全部 3 項任務')+'</div></div>';
+  $('missionlist').innerHTML=html; }
+$('missionbtn').onclick=function(){ renderMissions(); $('menu').classList.remove('show'); $('missions').classList.add('show'); };
+$('missionclose').onclick=function(){ $('missions').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('pausebtn').onclick=togglePause;
 $('resumebtn').onclick=function(){ togglePause(); };
 $('restartbtn').onclick=function(){ var d=!!(G&&G.daily); $('pause').classList.remove('show'); startGame(d); };

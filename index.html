@@ -1283,12 +1283,12 @@ var MONSTER_INFO={
 function spawnEnemy(type,ex,ey,mul,forceElite){
   var d=ETYPES[type]; mul=mul||1;
   var st=G.stage||STAGES[0], mt=G.mut||IDENTITY_MUT;
-  var endless=1+G.time/360;   // 無盡難度：敵人傷害隨時間增長(6分鐘 +100%)
-  var lateHp=1+Math.pow(Math.max(0,G.time-150)/60,1.5)*0.25;   // 後期(2.5分後)敵人血量指數陡增，避免無腦輾壓
+  var endless=1+G.time/240+Math.pow(Math.max(0,G.time-360)/60,1.5)*0.15;   // 無盡難度：敵傷隨時間增長，6分後加速陡增
+  var lateHp=1+Math.pow(Math.max(0,G.time-150)/60,1.6)*0.5+Math.pow(Math.max(0,G.time-420)/60,2)*0.5;   // 後期(2.5分)血量陡增，深後期(7分)爆炸性成長
   var am=(G.actMul||1);   // 無盡幕難度倍率
   var hp=d.hp*mul*st.eHp*mt.eHp*lateHp*am, sp=d.sp*st.eSpd*mt.eSpd, r=d.r, xp=d.xp, dm=d.dmg*endless*am;
   // 精英變體：更大更肉、發光、掉更多、隨機詞綴（隨時間提高機率，每日變異可加成）
-  var elite = forceElite || (mul>1 && Math.random()<Math.min(0.4,(0.015+G.time/1600)*mt.elite));
+  var elite = forceElite || (mul>1 && Math.random()<Math.min(0.62,(0.015+G.time/1100)*mt.elite));
   var affix=null;
   if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst','magnetic','trail','lunger','reflector','warlord','phaser','splitburst','artillery','healer','graviton','venomous','detonator']); if(affix==='haste')sp*=1.6;
     if(G.time-(G._eliteWarn||-9)>4){ G._eliteWarn=G.time; announce('⚠ 精英出現','#ffffff'); GAudio.elite&&GAudio.elite(); } }
@@ -1302,7 +1302,7 @@ function spawnEnemy(type,ex,ey,mul,forceElite){
 function spawnBoss(){
   var st=G.stage||STAGES[0];
   var ang=rand(0,TAU),rr=Math.max(W,H)*0.6;
-  var mul=((1+G.time/70)+Math.pow(Math.max(0,G.time-180)/60,1.4)*0.6)*st.eHp;  // 後期(3分後)首領血量陡增
+  var mul=((1+G.time/55)+Math.pow(Math.max(0,G.time-180)/60,1.6)*1.2)*st.eHp*(G.actMul||1);  // 後期(3分後)首領血量陡增，隨幕倍率再放大
   var e={x:player.x+Math.cos(ang)*rr,y:player.y+Math.sin(ang)*rr,type:'boss',r:46,
     hp:1400*mul,maxHp:1400*mul,sp:46*st.eSpd,dmg:26,color:st.bossColor,xp:60,shape:'boss',flash:0,shoot:1.4,knx:0,kny:0,boss:true,
     pattern:st.pattern,spin:0,dash:0,dvx:0,dvy:0,tp:0,name:st.bossName,slow:0,frozen:0,summonT:9};
@@ -1707,18 +1707,18 @@ function updateBlades(dt){ var w=weaponById('blades'); if(!w)return;
 // ---- 生成節奏 ----
 function spawnDirector(dt){
   var m=G.time/60; // 分鐘
-  var rate=Math.max(m>6?0.12:0.18,0.85-m*0.085)/((G.stage?G.stage.spawn:1)*(G.mut?G.mut.spawn:1)); // 生成間隔（地圖+每日加成，6分後更密集）
+  var rate=Math.max(m>6?0.07:0.16,0.85-m*0.10)/((G.stage?G.stage.spawn:1)*(G.mut?G.mut.spawn:1)); // 生成間隔（地圖+每日加成，後期大幅更密集）
   G.spawnTimer-=dt;
-  if(G.spawnTimer<=0 && enemies.length<280){ G.spawnTimer=rate;
-    var mul=1+m*0.42; var batch=1+Math.floor(m*(m>6?0.95:0.7));  // 後期每波更多敵人
+  if(G.spawnTimer<=0 && enemies.length<380){ G.spawnTimer=rate;
+    var mul=1+m*0.55; var batch=1+Math.floor(m*(m>6?1.5:0.8));  // 後期每波更多敵人
     for(var i=0;i<batch;i++){ spawnEnemy(chooseType(m),null,null,mul); }
   }
   // 精英/坦克群
   G.eliteTimer-=dt; if(G.eliteTimer<=0){ G.eliteTimer=rand(14,20);
     if(m>0.4){ var mul=1.5+m*0.7, n=randi(2,4); for(var i=0;i<n;i++)spawnEnemy('tank',null,null,mul); } }
   // 後期精英波（4 分後每 ~70 秒一次，強制生成一群精英，隨時間變多變強）
-  if(G.time>240){ G.surgeT=(G.surgeT==null?rand(20,40):G.surgeT-dt); if(G.surgeT<=0){ G.surgeT=rand(60,80);
-    var en=3+Math.floor((G.time-240)/90), emul=2.2+m*0.6;
+  if(G.time>240){ G.surgeT=(G.surgeT==null?rand(20,40):G.surgeT-dt); if(G.surgeT<=0){ G.surgeT=rand(42,60);
+    var en=4+Math.floor((G.time-240)/55), emul=2.6+m*0.85;
     announce('☢ 精英波來襲 ×'+en+'！','#ff2b5e'); flashScreen('255,43,94',0.35); shake&&shake(10); GAudio.elite&&GAudio.elite();
     for(var s=0;s<en;s++)spawnEnemy(chooseType(m),null,null,emul,true); } }
   // 稀有怪物（特定條件才會現身）
@@ -1734,7 +1734,7 @@ function spawnDirector(dt){
   // 波數（每 20 秒）
   // 無盡幕系統：每 150 秒進入新一幕，難度階梯上升 + 幕首領 + 幕間補給（呼應「遊戲節局」）
   var actNow=1+Math.floor(G.time/150);
-  if(actNow>G.act){ G.act=actNow; G.actMul=1+(G.act-1)*0.15;
+  if(actNow>G.act){ G.act=actNow; G.actMul=1+(G.act-1)*0.28;
     announce('☰ 第 '+G.act+' 幕開始 · 強敵湧現！','#ff2b5e'); flashScreen('255,43,94',0.42); shake&&shake(13); GAudio.boss&&GAudio.boss();
     spawnBoss(); G.nextBossAt=G.time+120;   // 幕首領登場，並重置常規首領計時
     spawnPickup(player.x+rand(-70,70),player.y+rand(-70,70),'heal'); }   // 幕間補給

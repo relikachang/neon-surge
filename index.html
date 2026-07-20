@@ -1783,7 +1783,7 @@ function chooseType(m){ var r=Math.random();
 
 // ---- 經驗 / 升級 ----
 function gainXP(v){ var cb=1+Math.min(1,(G.combo||0)*0.01); G.xp+=v*player.xpMult*cb; while(G.xp>=G.xpNeed){ G.xp-=G.xpNeed; levelUp(); } }
-function levelUp(){ G.level++; G.xpNeed=Math.floor(5+G.level*3+G.level*G.level*0.6);
+function levelUp(){ G.level++; G.xpNeed=Math.floor(5+G.level*3+G.level*G.level*0.6+Math.pow(Math.max(0,G.level-15),2.3)*0.85);   // 後期(15級後)升級所需經驗漸增，放慢升級節奏
   player.hp=Math.min(player.maxHp,player.hp+6);
   for(var lr=0;lr<3;lr++)ringFx(player.x,player.y,50+lr*46,'#ffd54a'); burst(player.x,player.y,'#ffe89a',20,240); flashScreen('255,213,74',0.18);   // 升級瞬間金環爆發
   GAudio.level(); checkAch(); openLevelUp(); }

@@ -471,6 +471,7 @@ var ACHIEVEMENTS=[
   {id:'shard1k', ic:'💎',name:'富可敵國',desc:'單局累積 1000 碎片',rw:400,chk:function(){return G.shards>=1000;}},
   {id:'golden5',  ic:'💰',name:'淘金者',  desc:'單局擊殺 5 隻黃金巨獸',rw:400,chk:function(){return (G.goldKills||0)>=5;}},
   {id:'shard10k', ic:'💎',name:'富甲天下',desc:'單局累積 10000 碎片',rw:1000,chk:function(){return G.shards>=10000;}},
+  {id:'shard20k', ic:'💎',name:'金山銀山',desc:'單局累積 20000 碎片',rw:1500,chk:function(){return G.shards>=20000;}},
   {id:'dmg1m',   ic:'💥',name:'百萬傷害',desc:'單局造成 100 萬總傷害',rw:450,chk:function(){return (G.dmgDealt||0)>=1000000;}},
   {id:'dmg5m',   ic:'💥',name:'毀滅打擊',desc:'單局造成 500 萬總傷害',rw:800,chk:function(){return (G.dmgDealt||0)>=5000000;}},
   {id:'shard5k', ic:'💰',name:'金庫',    desc:'單局累積 5000 碎片',rw:600,chk:function(){return G.shards>=5000;}},
@@ -557,6 +558,7 @@ var META=[
   {id:'overcharge',ic:'🔩',name:'超載核心', desc:'額外初始傷害(高階)', per:'+6%', max:8, cost:function(l){return 200+l*160;}},
   {id:'critdmg', ic:'💢', name:'致命核心', desc:'初始暴擊傷害', per:'+10%', max:5, cost:function(l){return 90+l*80;}},
   {id:'guardian',ic:'🛰️',name:'守護核心', desc:'開局獲得環繞護衛無人機', per:'+1台', max:3, cost:function(l){return 250+l*220;}},
+  {id:'lifesteal',ic:'🩸',name:'吸血核心', desc:'初始擊殺回血', per:'+0.2', max:5, cost:function(l){return 90+l*75;}},
   {id:'omni',    ic:'🌌', name:'萬能核心 · 殿堂', desc:'傷害/生命/攻速/移速全面提升（碎片無底洞）', per:'+3%全能', max:20, cost:function(l){return 8000*(l+1)*(l+1);}},
 ];
 function metaLv(id){return DB.meta[id]||0;}
@@ -965,8 +967,9 @@ var PDEFS={
   pfreeze:{ic:'🧊',name:'冰封力場',color:'#8bd3ff',max:5,desc:function(){return '每 3 秒凍結周圍敵人';},apply:function(){recalc();}},
   poverpower:{ic:'⬆️',name:'壓制',color:'#ff8a3a',max:5,desc:function(){return '對高於半血的敵人 +10% 傷害';},apply:function(){recalc();}},
   pveteran:{ic:'🎖️',name:'百戰',color:'#ffd54a',max:5,desc:function(){return '每擊殺 100 傷害+1.5%（上限20層）';},apply:function(){recalc();}},
+  pdrone:{ic:'🛰️',name:'召喚核心',color:'#5dffe0',max:5,desc:function(){return '每 5 秒召喚一台環繞無人機助陣';},apply:function(){recalc();}},
 };
-var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck','pglass','pfreeze','poverpower','pveteran'];
+var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck','pglass','pfreeze','poverpower','pveteran','pdrone'];
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -1166,7 +1169,7 @@ function recalc(){
   player.amount=(p.pamount||0);          // 額外投射物
   player.pierceBonus=(p.ppierce||0);     // 額外貫穿
   player.dodge=Math.min(0.5,0.08*(p.pdodge||0));   // 閃避機率(上限50%)
-  player.lifesteal=0.4*(p.pvamp||0);   // 擊殺回血量
+  player.lifesteal=0.4*(p.pvamp||0)+0.2*metaLv('lifesteal');   // 擊殺回血量（含局外吸血核心）
   player.execute=0.008*(p.pexec||0);   // 處決門檻(生命比例)
   player.blockInterval=(p.pshield>0)?Math.max(2.5,8-(p.pshield-1)*1.1):0;   // 護盾再生間隔(秒)
   player.thorns=14*(p.pthorns||0);   // 荊棘反傷
@@ -1176,6 +1179,7 @@ function recalc(){
   player.freezeAura=(p.pfreeze||0);   // 冰封力場等級
   player.overpower=(p.poverpower||0);   // 壓制：對高血敵人增傷
   player.veteran=(p.pveteran||0);   // 百戰：擊殺數越多傷害越高
+  player.droneP=(p.pdrone||0);   // 召喚核心：週期召喚無人機
   player.fury=0.08*(p.pfury||0);   // 血怒：依失血比例提升傷害
   player.luckBonus=0.05*(p.pluck||0);   // 幸運：提升道具掉落率
   player.shardMul=1+0.15*(p.pluck||0);  // 幸運：提升碎片獲取
@@ -1522,6 +1526,7 @@ function update(dt){
     enemyGrid.query(player.x,player.y,nvr,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<nvr2)hitEnemy(e,nvd,player.x,player.y,0.3); }); ringFx(player.x,player.y,nvr,'#ffd54a'); } }
   if(player.freezeAura>0){ player.freezeT=(player.freezeT||0)-dt; if(player.freezeT<=0){ player.freezeT=3; var fzr=(130+player.freezeAura*24)*player.area, fzr2=fzr*fzr, fzd=1.0+player.freezeAura*0.2;   // 冰封力場：週期凍結周圍敵人
     enemyGrid.query(player.x,player.y,fzr,function(e){ if(e.hp>0&&!e.boss&&dist2(e.x,e.y,player.x,player.y)<fzr2)e.frozen=Math.max(e.frozen||0,fzd); }); ringFx(player.x,player.y,fzr,'#8bd3ff'); ringFx(player.x,player.y,fzr*0.6,'#dff4ff'); } }
+  if(player.droneP>0){ player.droneT=(player.droneT||0)-dt; if(player.droneT<=0){ player.droneT=5; var orbn=drones.filter(function(d){return !d.fixed;}).length; if(orbn<player.droneP+1+player.amount){ drones.push({x:player.x,y:player.y,ang:rand(0,TAU),orbit:82,life:6.5,cd:rand(0,0.3),dmg:dmg(14+player.droneP*5)}); ringFx(player.x,player.y,60,'#5dffe0'); } } }   // 召喚核心：週期召喚環繞無人機
 
   // ---- 生成敵人 ----
   spawnDirector(dt);

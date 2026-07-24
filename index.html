@@ -570,6 +570,7 @@ var MUTATORS=[
   {id:'hellfire',  name:'煉獄日',    desc:'敵人兇猛 · 高傷高韌 · 你也更猛', eSpd:1.15,eHp:1.4,spawn:1.1,elite:2,pHp:1,pDmg:1.3,pSpd:1},
   {id:'vanguard',  name:'先鋒日',    desc:'精英開路 · 敵韌 · 你更強', eSpd:1.05,eHp:1.35,spawn:0.95,elite:3,pHp:1,pDmg:1.25,pSpd:1},
   {id:'nightmare', name:'夢魘日',    desc:'萬敵皆兇 · 精英倍增 · 量多', eSpd:1.2,eHp:1.3,spawn:1.35,elite:2,pHp:0.9,pDmg:1.2,pSpd:1.05},
+  {id:'duel',      name:'決鬥日',    desc:'敵人稀少但超肉超快 · 你火力全開', eSpd:1.4,eHp:2.5,spawn:0.5,elite:2,pHp:1,pDmg:1.6,pSpd:1.2},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
@@ -1043,9 +1044,21 @@ var WDEFS={
         for(var i=0;i<num;i++){ var a=ang+rand(-0.7,0.7), ds=rand(140,340), ex=player.x+Math.cos(a)*ds, ey=player.y+Math.sin(a)*ds, er=(58+w.level*6)*player.area,er2=er*er,dm=dmg(16+w.level*5);
           (function(ex,ey,er,er2,dm){ enemyGrid.query(ex,ey,er,function(o){ if(o.hp>0&&dist2(o.x,o.y,ex,ey)<er2)hitEnemy(o,dm,ex,ey,0.2); }); })(ex,ey,er,er2,dm); ringFx(ex,ey,er,'#ffd54a'); burst(ex,ey,'#ffd54a',4,120); } shake(3); }
     }
+  },
+  scythe:{ic:'🌙',name:'鐮月斬',color:'#b8f0ff',tag:'扇形',max:8,
+    desc:function(l){return l===0?'朝敵群揮出扇形月刃光束':'刃數↑ 弧度↑ 傷害↑';},
+    cd:function(l){return Math.max(0.5,1.1-l*0.07);},
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var ang=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle;
+      var nb=3+Math.floor(w.level/2)+player.amount, spread=0.85+w.level*0.05, len=(150+w.level*15)*player.area, d=dmg(15+w.level*7);
+      for(var i=0;i<nb;i++){ var a=ang+(i-(nb-1)/2)/Math.max(1,nb-1)*spread*2; fireBeam(a,d,len,10,'#b8f0ff'); } },
+    evo:{reqPassive:'parea',ic:'🌕',name:'滅月',color:'#e6faff',desc:'環身揮出 360° 死亡月環，撕裂周身一切',
+      cd:function(l){return Math.max(0.4,0.8-l*0.04);},
+      fire:function(w){ var n=12, len=(200+w.level*16)*player.area, d=dmg(28+w.level*9);
+        for(var i=0;i<n;i++){ var a=i/n*TAU+G.time*0.6; fireBeam(a,d,len,12,'#e6faff'); } ringFx(player.x,player.y,len*0.55,'#e6faff'); }
+    }
   }
 };
-var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak'];
+var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe'];
 
 // 被動定義
 var PDEFS={
@@ -1255,7 +1268,7 @@ function newRun(daily){
      spawnTimer:0, bossTimer:0, eliteTimer:0, over:false, paused:false,
      nextBossAt:90, usedRevive:false, luck:0.06*metaLv('luck'), stage:st, mut:mut, daily:!!daily,
      dmgDealt:0, peakCombo:0, bossKills:0, eliteKills:0, act:1, actMul:1 };
-  player={ x:0,y:0, radius:15, hp:0, maxHp:0, speed:0, iframe:0, aimAngle:0, frenzyT:0,
+  player={ x:0,y:0, radius:15, hp:0, maxHp:0, speed:0, iframe:0, aimAngle:0, frenzyT:0, overdriveT:0,
     weapons:[], passives:{}, base:{} };
   // 基礎屬性（含永久強化 + 角色 + 每日變異）
   var omni=1+0.03*metaLv('omni');   // 萬能核心：全能加成
@@ -1317,7 +1330,7 @@ function recalc(){
   player.shardMul=1+0.15*(p.pluck||0);  // 幸運：提升碎片獲取
   if(player.hp>player.maxHp)player.hp=player.maxHp;
 }
-function dmg(base){ var d=base*player.dmgMult*(player.frenzyT>0?1.4:1)*(1+0.015*metaLv('growth')*(G.time/60)); if(player.fury>0)d*=(1+player.fury*(1-player.hp/player.maxHp)); if(player.veteran>0)d*=(1+0.015*player.veteran*Math.min(20,Math.floor(G.kills/100))); if(player.momentum>0)d*=(1+0.001*player.momentum*Math.min(200,G.combo||0)); if(Math.random()<player.crit)d*=player.critMult; return d; }
+function dmg(base){ var d=base*player.dmgMult*(player.frenzyT>0?1.4:1)*(1+0.015*metaLv('growth')*(G.time/60)); if(player.fury>0)d*=(1+player.fury*(1-player.hp/player.maxHp)); if(player.veteran>0)d*=(1+0.015*player.veteran*Math.min(20,Math.floor(G.kills/100))); if(player.momentum>0)d*=(1+0.001*player.momentum*Math.min(200,G.combo||0)); if(player.overdriveT>0||Math.random()<player.crit)d*=player.critMult; return d; }
 
 function weaponById(id){ return player.weapons.find(function(w){return w.id===id;}); }
 function addWeapon(id){ if(weaponById(id))return;
@@ -1582,8 +1595,8 @@ function killEnemy(e){
   // 掉落道具
   var lchance=0.02+G.luck+(player.luckBonus||0);
   if(e.boss){ spawnPickup(e.x,e.y,'bosschest'); G.bossKills=(G.bossKills||0)+1; }   // 首領：超級戰利品
-  else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','revivecharm','thunderstorm','jackpot','nuke','fullheal','repel','stasis'])); }   // 精英必掉道具
-  else if(Math.random()<lchance){ spawnPickup(e.x,e.y,pick(['heal','heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','thunderstorm'])); }
+  else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','revivecharm','thunderstorm','jackpot','nuke','fullheal','repel','stasis','overdrive'])); }   // 精英必掉道具
+  else if(Math.random()<lchance){ spawnPickup(e.x,e.y,pick(['heal','heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','thunderstorm','overdrive'])); }
   if(e.boss){ announce('首領擊破！','#ffd54a'); G.shards+=Math.floor(20*(1+0.15*metaLv('greed'))*(1+0.2*metaLv('bounty'))); }
 }
 function addCombo(){ G.combo++; G.comboTimer=2.2*(1+0.15*metaLv('combo')); if(G.combo>G.peakCombo)G.peakCombo=G.combo;
@@ -1667,6 +1680,7 @@ function update(dt){
   if(ml>0.05){ var sandMul=(G.sandT>0)?0.62:1; player.x+=mx*player.speed*sandMul*dt; player.y+=my*player.speed*sandMul*dt; player.aimAngle=Math.atan2(my,mx); }
   if(player.iframe>0)player.iframe-=dt;
   if(player.frenzyT>0)player.frenzyT-=dt;
+  if(player.overdriveT>0)player.overdriveT-=dt;
   if(player.regen>0&&player.hp<player.maxHp)player.hp=Math.min(player.maxHp,player.hp+player.regen*dt);
   if(player.blockInterval>0&&!player.blockReady){ player.blockT=(player.blockT||0)+dt; if(player.blockT>=player.blockInterval){ player.blockReady=true; player.blockT=0; } }   // 能量護盾再生
   if(player.nova>0){ player.novaT=(player.novaT||0)-dt; if(player.novaT<=0){ player.novaT=2; var nvr=(120+player.nova*22)*player.area, nvr2=nvr*nvr, nvd=dmg(14+player.nova*8);   // 新星脈衝：週期範圍衝擊波
@@ -1688,7 +1702,7 @@ function update(dt){
   for(var wi=0;wi<player.weapons.length;wi++){ var w=player.weapons[wi];
     if(w.def.orbit)continue;
     var src=w.evolved?w.def.evo:w.def;
-    w.cd-=dt*player.fireRate*(player.frenzyT>0?1.6:1); if(w.cd<=0){ w.cd=src.cd(w.level)*(w.asc?0.6:1);
+    w.cd-=dt*player.fireRate*(player.frenzyT>0?1.6:1)*(player.overdriveT>0?1.5:1); if(w.cd<=0){ w.cd=src.cd(w.level)*(w.asc?0.6:1);
       if(w.asc){ var _d=player.dmgMult,_a=player.amount,_ar=player.area; player.dmgMult*=2.2; player.amount+=2; player.area*=1.4;
         src.fire(w); player.dmgMult=_d; player.amount=_a; player.area=_ar; }
       else src.fire(w); } }
@@ -1957,6 +1971,7 @@ function collectPickup(p){
   else if(p.type==='bomb'){ clearNearby(); shake(12); ringFx(player.x,player.y,320,'#ffd54a'); floatText('清場！','#ffd54a'); }
   else if(p.type==='magnet'){ orbs.forEach(function(o){ var a=Math.atan2(player.y-o.y,player.x-o.x); o.vx=Math.cos(a)*900; o.vy=Math.sin(a)*900; }); floatText('磁吸','#7c5bff'); }
   else if(p.type==='frenzy'){ player.frenzyT=6; ringFx(player.x,player.y,200,'#ff5e5e'); floatText('狂化！射速+傷害','#ff5e5e'); }
+  else if(p.type==='overdrive'){ player.overdriveT=8; ringFx(player.x,player.y,220,'#ffe14a'); ringFx(player.x,player.y,130,'#fff'); flashScreen('255,225,74',0.3); floatText('⚙️ 過載核心！8 秒射速爆增 + 全部暴擊','#ffe14a'); }
   else if(p.type==='shield'){ player.iframe=Math.max(player.iframe,4); ringFx(player.x,player.y,200,'#22e6ff'); floatText('無敵護盾！','#22e6ff'); }
   else if(p.type==='timefreeze'){ enemies.forEach(function(e){ if(!e.boss)e.frozen=Math.max(e.frozen||0,3); else e.frozen=Math.max(e.frozen||0,1.5); }); ringFx(player.x,player.y,420,'#7dd3ff'); flashScreen('125,211,255',0.32); floatText('時間凍結！','#7dd3ff'); }
   else if(p.type==='xpgem'){ gainXP(G.xpNeed*0.8); ringFx(player.x,player.y,180,'#22e6ff'); floatText('經驗寶石！','#22e6ff'); }
@@ -2335,7 +2350,7 @@ function drawPlayer(){
   if(player.iframe>1){ ctx.strokeStyle='rgba(34,230,255,0.75)'; ctx.lineWidth=3; ctx.shadowColor='#22e6ff'; ctx.shadowBlur=14;
     ctx.beginPath(); ctx.arc(player.x,player.y,player.radius+11,0,TAU); ctx.stroke(); ctx.shadowBlur=0; }
 }
-function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️',revivecharm:'🕊️',thunderstorm:'🌩️',jackpot:'🎰',nuke:'☢️',fullheal:'💚',repel:'💨',stasis:'⏳'}[p.type];
+function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️',revivecharm:'🕊️',thunderstorm:'🌩️',jackpot:'🎰',nuke:'☢️',fullheal:'💚',repel:'💨',stasis:'⏳',overdrive:'⚙️'}[p.type];
   var yy=p.y+Math.sin(G.time*4+p.x)*4;
   var pulse=0.5+0.5*Math.sin(G.time*5+p.x*0.1);
   ctx.save();

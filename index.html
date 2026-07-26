@@ -601,6 +601,9 @@ var BOOSTS=[
   {id:'bsquad',   ic:'🛰️', name:'援護小隊',   desc:'開局獲得 4 台環繞無人機',      cost:250, apply:function(){ for(var i=0;i<4;i++)drones.push({x:player.x,y:player.y,ang:i/4*TAU,orbit:82,life:1e9,cd:rand(0,0.3),dmg:dmg(16)}); }},
   {id:'bironhp',  ic:'❤️', name:'鋼鐵之軀',   desc:'本局生命上限 +50%',            cost:300, apply:function(){ player.base.maxHp*=1.5; recalc(); player.hp=player.maxHp; }},
   {id:'bartifact',ic:'🎲', name:'隨機神器',   desc:'開局隨機獲得一把武器（L3）',   cost:350, apply:function(){ var avail=WORDER.filter(function(id){return !weaponById(id);}); if(avail.length){ var id=pick(avail); addWeapon(id); var w=weaponById(id); if(w)w.level=2; } }},
+  {id:'bgoldrush',ic:'💰', name:'掏金符',     desc:'本局碎片獲取 ×2（越打越賺）',  cost:300, apply:function(){ player.shardMul=(player.shardMul||1)*2; }},
+  {id:'bboots',   ic:'👟', name:'疾風之靴',   desc:'本局移速 +30%',                cost:250, apply:function(){ player.speed*=1.3; }},
+  {id:'bcrit',    ic:'🎯', name:'精準核心',   desc:'本局暴擊率 +20%',              cost:300, apply:function(){ player.crit=Math.min(1,player.crit+0.2); }},
 ];
 function todaysMissions(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0;
   var pool=MISSIONS.slice(), out=[]; for(var j=0;j<3;j++){ var p=(h+j*7)%pool.length; out.push(pool[p]); pool.splice(p,1); } return out; }
@@ -634,6 +637,8 @@ var META=[
   {id:'guardian',ic:'🛰️',name:'守護核心', desc:'開局獲得環繞護衛無人機', per:'+1台', max:3, cost:function(l){return 250+l*220;}},
   {id:'lifesteal',ic:'🩸',name:'吸血核心', desc:'初始擊殺回血', per:'+0.2', max:5, cost:function(l){return 90+l*75;}},
   {id:'dodge',   ic:'💨', name:'迴避核心', desc:'初始閃避率', per:'+2%', max:5, cost:function(l){return 90+l*80;}},
+  {id:'startpierce',ic:'⏩',name:'貫穿核心', desc:'初始子彈額外貫穿', per:'+1', max:3, cost:function(l){return 150+l*130;}},
+  {id:'bossbane', ic:'🐉', name:'屠龍核心', desc:'對首領造成的傷害', per:'+8%', max:5, cost:function(l){return 130+l*110;}},
   {id:'omni',    ic:'🌌', name:'萬能核心 · 殿堂', desc:'傷害/生命/攻速/移速全面提升（碎片無底洞）', per:'+3%全能', max:20, cost:function(l){return 8000*(l+1)*(l+1);}},
 ];
 function metaLv(id){return DB.meta[id]||0;}
@@ -1308,7 +1313,8 @@ function recalc(){
   player.xpMult=b.xpMult*(1+0.15*(p.pxp||0));
   player.area=1+0.16*(p.parea||0)+0.05*metaLv('area');      // 範圍/巨大化(含局外強化)
   player.amount=(p.pamount||0);          // 額外投射物
-  player.pierceBonus=(p.ppierce||0);     // 額外貫穿
+  player.pierceBonus=(p.ppierce||0)+metaLv('startpierce');     // 額外貫穿(含局外貫穿核心)
+  player.bossDmg=1+0.08*metaLv('bossbane');     // 屠龍核心：對首領增傷
   player.dodge=Math.min(0.6,0.08*(p.pdodge||0)+0.02*metaLv('dodge'));   // 閃避機率(含局外迴避核心,上限60%)
   player.lifesteal=0.4*(p.pvamp||0)+0.2*metaLv('lifesteal');   // 擊殺回血量（含局外吸血核心）
   player.execute=0.008*(p.pexec||0);   // 處決門檻(生命比例)
@@ -1539,6 +1545,7 @@ function fxLightning(x1,y1,x2,y2){ lightningSeg.push({x1:x1,y1:y1,x2:x2,y2:y2,li
 function hitEnemy(e,amount,fromx,fromy,knock){
   if(e.hp<=0)return; if(e.phaseEnd&&e.phaseEnd>G.time){ e.flash=0.08; return; }   // 相位詞綴：無敵窗內免疫傷害
   if(e.affix==='shielded')amount*=0.5;   // 護盾詞綴：減傷 50%
+  if(e.boss&&player.bossDmg>1)amount*=player.bossDmg;   // 屠龍核心：對首領增傷
   if(player.overpower>0&&e.hp>e.maxHp*0.5)amount*=(1+0.10*player.overpower);   // 壓制被動：對高血敵人增傷
   G.dmgDealt=(G.dmgDealt||0)+Math.min(amount,e.hp); e.hp-=amount; e.flash=0.08;
   if(player.chill>0&&!e.boss&&Math.random()<player.chill)e.slow=Math.max(e.slow||0,0.9);   // 霜寒被動：機率減速

@@ -399,7 +399,7 @@ var TAU=Math.PI*2;
 // =====================================================================
 var SAVE='neonSurge_v1';
 var DB=loadDB();
-function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false};
+function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false};
   var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
@@ -573,6 +573,7 @@ var MUTATORS=[
   {id:'vanguard',  name:'先鋒日',    desc:'精英開路 · 敵韌 · 你更強', eSpd:1.05,eHp:1.35,spawn:0.95,elite:3,pHp:1,pDmg:1.25,pSpd:1},
   {id:'nightmare', name:'夢魘日',    desc:'萬敵皆兇 · 精英倍增 · 量多', eSpd:1.2,eHp:1.3,spawn:1.35,elite:2,pHp:0.9,pDmg:1.2,pSpd:1.05},
   {id:'duel',      name:'決鬥日',    desc:'敵人稀少但超肉超快 · 你火力全開', eSpd:1.4,eHp:2.5,spawn:0.5,elite:2,pHp:1,pDmg:1.6,pSpd:1.2},
+  {id:'locust',    name:'蝗災日',    desc:'鋪天蓋地的脆弱蟲潮 · 你也更脆', eSpd:1.3,eHp:0.35,spawn:2.0,elite:1,pHp:0.7,pDmg:1.2,pSpd:1.15},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
@@ -674,9 +675,10 @@ var CHARS=[
   {id:'prismancer',face:'🔺',name:'稜光使', desc:'折射光束 · 起手稜光炮', start:'prismbeam', locked:true, unlock:'prismancer', stat:{dmg:1.05,fireRate:1.08,maxHp:0.95}},
   {id:'shockmancer',face:'🌊',name:'震盪使', desc:'環身衝擊 · 起手震盪波', start:'shockwave', locked:true, unlock:'shockmancer', stat:{maxHp:1.1,pickup:1.1}},
   {id:'bombardier',face:'💥',name:'轟炸使', desc:'散爆彈幕 · 起手防空炮', start:'flak', locked:true, unlock:'bombardier', stat:{dmg:1.05,fireRate:1.05}},
+  {id:'cometeer',face:'☄️',name:'彗星使', desc:'貫穿燃燒 · 起手彗星炮', start:'comet', locked:true, unlock:'cometeer', stat:{dmg:1.1,fireRate:0.95}},
 ];
 var selChar='ranger';
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕'};
 
 // =====================================================================
 // 地圖 / 關卡
@@ -1063,9 +1065,22 @@ var WDEFS={
       fire:function(w){ var n=12, len=(200+w.level*16)*player.area, d=dmg(28+w.level*9);
         for(var i=0;i<n;i++){ var a=i/n*TAU+G.time*0.6; fireBeam(a,d,len,12,'#e6faff'); } ringFx(player.x,player.y,len*0.55,'#e6faff'); }
     }
+  },
+  comet:{ic:'☄️',name:'彗星炮',color:'#ff9a5d',tag:'貫穿',max:8,
+    desc:function(l){return l===0?'發射貫穿全場的巨型燃燒彗星，並在敵群留下火雲':'傷害↑ 彗星數↑';},
+    cd:function(l){return Math.max(0.7,1.6-l*0.11);},
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var a=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle; var n=1+Math.floor(w.level/3);
+      for(var i=0;i<n;i++){ var aa=a+(i-(n-1)/2)*0.14; spawnBullet(player.x,player.y,Math.cos(aa),Math.sin(aa),340,dmg(30+w.level*10),'#ff9a5d',99,11,2.2); }
+      if(t)spawnCloud(t.x,t.y,(58+w.level*7)*player.area,dmg(4+w.level*2),1.8); },
+    evo:{reqPassive:'pburn',ic:'🔥',name:'烈日彗星',color:'#ffd54a',desc:'降下巨型烈日彗星貫穿全場，沿途炸出連綿烈焰火海',
+      cd:function(l){return Math.max(0.5,1.1-l*0.06);},
+      fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var a=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle; var n=2+Math.floor(w.level/2);
+        for(var i=0;i<n;i++){ var aa=a+(i-(n-1)/2)*0.16; spawnBullet(player.x,player.y,Math.cos(aa),Math.sin(aa),380,dmg(44+w.level*12),'#ffd54a',99,14,2.4); }
+        for(var c=0;c<2;c++){ var ct=randEnemyNear(player.x,player.y,700); if(!ct)break; spawnCloud(ct.x,ct.y,(76+w.level*8)*player.area,dmg(7+w.level*3),2.4); burst(ct.x,ct.y,'#ffd54a',8,220); } shake(4); }
+    }
   }
 };
-var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe'];
+var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet'];
 
 // 被動定義
 var PDEFS={
@@ -2493,6 +2508,7 @@ function gameOver(){
   if((G.act||1)>=6&&!DB.chars.prismancer){DB.chars.prismancer=true;}
   if(G.time>=420&&!DB.chars.shockmancer){DB.chars.shockmancer=true;}
   if((G.eliteKills||0)>=40&&!DB.chars.bombardier){DB.chars.bombardier=true;}
+  if((G.act||1)>=8&&!DB.chars.cometeer){DB.chars.cometeer=true;}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; } }

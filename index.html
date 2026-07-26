@@ -399,7 +399,7 @@ var TAU=Math.PI*2;
 // =====================================================================
 var SAVE='neonSurge_v1';
 var DB=loadDB();
-function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false};
+function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false};
   var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
@@ -610,6 +610,7 @@ var BOOSTS=[
   {id:'bgoldrush',ic:'💰', name:'掏金符',     desc:'本局碎片獲取 ×2（越打越賺）',  cost:300, apply:function(){ player.shardMul=(player.shardMul||1)*2; }},
   {id:'bboots',   ic:'👟', name:'疾風之靴',   desc:'本局移速 +30%',                cost:250, apply:function(){ player.speed*=1.3; }},
   {id:'bcrit',    ic:'🎯', name:'精準核心',   desc:'本局暴擊率 +20%',              cost:300, apply:function(){ player.crit=Math.min(1,player.crit+0.2); }},
+  {id:'bpierce',  ic:'➡️', name:'貫穿起手',   desc:'本局所有子彈額外貫穿 +2',       cost:250, apply:function(){ player.pierceBonus=(player.pierceBonus||0)+2; }},
 ];
 function todaysMissions(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0;
   var pool=MISSIONS.slice(), out=[]; for(var j=0;j<3;j++){ var p=(h+j*7)%pool.length; out.push(pool[p]); pool.splice(p,1); } return out; }
@@ -680,9 +681,10 @@ var CHARS=[
   {id:'shockmancer',face:'🌊',name:'震盪使', desc:'環身衝擊 · 起手震盪波', start:'shockwave', locked:true, unlock:'shockmancer', stat:{maxHp:1.1,pickup:1.1}},
   {id:'bombardier',face:'💥',name:'轟炸使', desc:'散爆彈幕 · 起手防空炮', start:'flak', locked:true, unlock:'bombardier', stat:{dmg:1.05,fireRate:1.05}},
   {id:'cometeer',face:'☄️',name:'彗星使', desc:'貫穿燃燒 · 起手彗星炮', start:'comet', locked:true, unlock:'cometeer', stat:{dmg:1.1,fireRate:0.95}},
+  {id:'lunar',   face:'🌙',name:'月刃使', desc:'扇形月刃 · 起手鐮月斬', start:'scythe', locked:true, unlock:'lunar', stat:{crit:0.08,speed:1.06}},
 ];
 var selChar='ranger';
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕',lunar:'單局擊殺1200敵人'};
 
 // =====================================================================
 // 地圖 / 關卡
@@ -1301,6 +1303,11 @@ var FUSIONS=[
     fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var a=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle; var n=1+Math.floor(w.level/3);
       for(var i=0;i<n;i++){ var aa=a+(i-(n-1)/2)*0.16; spawnBullet(player.x,player.y,Math.cos(aa),Math.sin(aa),360,dmg(30+w.level*10),'#b6ff5d',99,12,2.2); }
       var ct=randEnemyNear(player.x,player.y,700)||t; if(ct){ spawnCloud(ct.x,ct.y,(80+w.level*9)*player.area,dmg(7+w.level*3),2.8); burst(ct.x,ct.y,'#b6ff5d',7,200); } }},
+  {a:'hornet',b:'lightning',id:'stormswarm',ic:'⚡',name:'雷霆蜂群',color:'#c9e6ff',desc:'成群追蹤雷蜂鋪天蓋地，命中即在敵群間炸開連鎖閃電',max:3,
+    cd:function(l){return Math.max(0.2,0.5-l*0.04);},
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var base=t?Math.atan2(t.y-player.y,t.x-player.x):rand(0,TAU); var n=4+w.level+player.amount;
+      for(var i=0;i<n;i++){ var a=base+rand(-1.1,1.1); bullets.push({x:player.x,y:player.y,vx:Math.cos(a)*350,vy:Math.sin(a)*350,dmg:dmg(12+w.level*4),color:'#c9e6ff',pierce:1,r:4,life:2.6,hitset:{},homing:720,trail:0}); }
+      if(t)chainLightning(player.x,player.y,t,3+w.level,dmg(10+w.level*4)); }},
 ];
 function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)return FUSIONS[i]; return null; }
 
@@ -2558,6 +2565,7 @@ function gameOver(){
   if(G.time>=420&&!DB.chars.shockmancer){DB.chars.shockmancer=true;}
   if((G.eliteKills||0)>=40&&!DB.chars.bombardier){DB.chars.bombardier=true;}
   if((G.act||1)>=8&&!DB.chars.cometeer){DB.chars.cometeer=true;}
+  if(G.kills>=1200&&!DB.chars.lunar){DB.chars.lunar=true;}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; } }

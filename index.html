@@ -537,6 +537,7 @@ var ACHIEVEMENTS=[
   {id:'h_codex25', ic:'🔬',hidden:true,name:'萬物圖鑑',desc:'圖鑑解鎖 25 種怪物',rw:800,chk:function(){return Object.keys(DB.bestiary||{}).length>=25;}},
   {id:'h_deepact', ic:'🌀',hidden:true,name:'深淵行者',desc:'單局抵達第 10 幕',rw:900,chk:function(){return (G.act||1)>=10;}},
   {id:'h_paradox', ic:'🌌',hidden:true,name:'悖論行者',desc:'踏入悖論深淵',rw:1000,chk:function(){return G.stage&&G.stage.id==='paradox';}},
+  {id:'h_hoarder', ic:'🎒',hidden:true,name:'軍火收藏家',desc:'單局同時擁有 8 種武器',rw:700,chk:function(){return player.weapons.length>=8;}},
 ];
 function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); }
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';
@@ -1132,8 +1133,9 @@ var PDEFS={
   pmomentum:{ic:'🔥',name:'動能',color:'#ffd54a',max:5,desc:function(){return '連擊越高傷害越高（滿級 200 連擊 +100%）';},apply:function(){recalc();}},
   pshock:{ic:'⚡',name:'感電力場',color:'#c58bff',max:5,desc:function(){return '每 1.4 秒對周圍敵人放出連鎖電弧';},apply:function(){recalc();}},
   pburn:{ic:'🔥',name:'灼燒',color:'#ff6a2b',max:5,desc:function(){return '攻擊有機率點燃敵人，持續造成灼燒傷害';},apply:function(){recalc();}},
+  pcoldblood:{ic:'🧊',name:'寒血',color:'#8bd3ff',max:5,desc:function(){return '對減速或凍結中的敵人 +14% 傷害';},apply:function(){recalc();}},
 };
-var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck','pglass','pfreeze','poverpower','pveteran','pdrone','pcleave','pretaliate','pmomentum','pshock','pburn'];
+var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck','pglass','pfreeze','poverpower','pveteran','pdrone','pcleave','pretaliate','pmomentum','pshock','pburn','pcoldblood'];
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -1376,6 +1378,7 @@ function recalc(){
   player.momentum=(p.pmomentum||0);   // 動能：連擊越高傷害越高
   player.shock=(p.pshock||0);   // 感電力場：週期連鎖電弧
   player.burn=(p.pburn||0);   // 灼燒：攻擊機率點燃，持續傷害
+  player.coldblood=(p.pcoldblood||0);   // 寒血：對減速/凍結敵人增傷
   player.fury=0.08*(p.pfury||0);   // 血怒：依失血比例提升傷害
   player.luckBonus=0.05*(p.pluck||0);   // 幸運：提升道具掉落率
   player.shardMul=1+0.15*(p.pluck||0);  // 幸運：提升碎片獲取
@@ -1501,7 +1504,7 @@ function spawnEnemy(type,ex,ey,mul,forceElite){
   // 精英變體：更大更肉、發光、掉更多、隨機詞綴（隨時間提高機率，每日變異可加成）
   var elite = forceElite || (mul>1 && Math.random()<Math.min(0.62,(0.015+G.time/1100)*mt.elite));
   var affix=null;
-  if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst','magnetic','trail','lunger','reflector','warlord','phaser','splitburst','artillery','healer','graviton','venomous','detonator','repulsor','frostmancer']); if(affix==='haste')sp*=1.6;
+  if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst','magnetic','trail','lunger','reflector','warlord','phaser','splitburst','artillery','healer','graviton','venomous','detonator','repulsor','frostmancer','disruptor']); if(affix==='haste')sp*=1.6;
     if(G.time-(G._eliteWarn||-9)>4){ G._eliteWarn=G.time; announce('⚠ 精英出現','#ffffff'); GAudio.elite&&GAudio.elite(); } }
   var ang,rr=Math.max(W,H)*0.62;
   if(ex==null){ ang=rand(0,TAU); ex=player.x+Math.cos(ang)*rr; ey=player.y+Math.sin(ang)*rr; }
@@ -1599,6 +1602,7 @@ function hitEnemy(e,amount,fromx,fromy,knock){
   if(e.hp<=0)return; if(e.phaseEnd&&e.phaseEnd>G.time){ e.flash=0.08; return; }   // 相位詞綴：無敵窗內免疫傷害
   if(e.affix==='shielded')amount*=0.5;   // 護盾詞綴：減傷 50%
   if(e.boss&&player.bossDmg>1)amount*=player.bossDmg;   // 屠龍核心：對首領增傷
+  if(player.coldblood>0&&((e.frozen||0)>0||(e.slow||0)>0))amount*=(1+0.14*player.coldblood);   // 寒血被動：對減速/凍結敵人增傷
   if(player.overpower>0&&e.hp>e.maxHp*0.5)amount*=(1+0.10*player.overpower);   // 壓制被動：對高血敵人增傷
   G.dmgDealt=(G.dmgDealt||0)+Math.min(amount,e.hp); e.hp-=amount; e.flash=0.08;
   if(player.burn>0&&e.hp>0&&Math.random()<0.16*player.burn){ e.burnT=Math.max(e.burnT||0,2.2); e.burnDmg=Math.max(e.burnDmg||0,dmg(4+player.burn*3)); }   // 灼燒被動：機率點燃敵人
@@ -1744,6 +1748,7 @@ function update(dt){
   if(player.frenzyT>0)player.frenzyT-=dt;
   if(player.overdriveT>0)player.overdriveT-=dt;
   if(player.chillT>0)player.chillT-=dt;
+  if(player.jamT>0)player.jamT-=dt;
   if(player.regen>0&&player.hp<player.maxHp)player.hp=Math.min(player.maxHp,player.hp+player.regen*dt);
   if(player.blockInterval>0&&!player.blockReady){ player.blockT=(player.blockT||0)+dt; if(player.blockT>=player.blockInterval){ player.blockReady=true; player.blockT=0; } }   // 能量護盾再生
   if(player.nova>0){ player.novaT=(player.novaT||0)-dt; if(player.novaT<=0){ player.novaT=2; var nvr=(120+player.nova*22)*player.area, nvr2=nvr*nvr, nvd=dmg(14+player.nova*8);   // 新星脈衝：週期範圍衝擊波
@@ -1765,7 +1770,7 @@ function update(dt){
   for(var wi=0;wi<player.weapons.length;wi++){ var w=player.weapons[wi];
     if(w.def.orbit)continue;
     var src=w.evolved?w.def.evo:w.def;
-    w.cd-=dt*player.fireRate*(player.frenzyT>0?1.6:1)*(player.overdriveT>0?1.5:1); if(w.cd<=0){ w.cd=src.cd(w.level)*(w.asc?0.6:1);
+    w.cd-=dt*player.fireRate*(player.frenzyT>0?1.6:1)*(player.overdriveT>0?1.5:1)*(player.jamT>0?0.5:1); if(w.cd<=0){ w.cd=src.cd(w.level)*(w.asc?0.6:1);
       if(w.asc){ var _d=player.dmgMult,_a=player.amount,_ar=player.area; player.dmgMult*=2.2; player.amount+=2; player.area*=1.4;
         src.fire(w); player.dmgMult=_d; player.amount=_a; player.area=_ar; }
       else src.fire(w); } }
@@ -1839,6 +1844,7 @@ function update(dt){
     if(e.affix==='healer'){ e.hlT=(e.hlT==null?2.8:e.hlT-dt); if(e.hlT<=0){ e.hlT=3.4; ringFx(e.x,e.y,160,'#5dff9b'); (function(ex,ey){ enemyGrid.query(ex,ey,170,function(o){ if(o.hp>0&&o.hp<o.maxHp&&dist2(o.x,o.y,ex,ey)<170*170){ o.hp=Math.min(o.maxHp,o.hp+o.maxHp*0.15); o.flash=Math.max(o.flash||0,0.12); } }); })(e.x,e.y); } }  // 治療者詞綴：週期治療周圍受傷敵人
     if(e.affix==='graviton'){ e.gvT=(e.gvT==null?3:e.gvT-dt); if(e.gvT<=0){ e.gvT=4; if(hazards.length<80)hazards.push({kind:'pull',x:e.x,y:e.y,r:155,life:2.5,max:2.5,dtk:0}); ringFx(e.x,e.y,70,'#8b5cf6'); } }  // 重力核詞綴：週期製造重力場拉扯玩家
     if(e.affix==='frostmancer'){ e.fmT=(e.fmT==null?3:e.fmT-dt); if(e.fmT<=0){ e.fmT=4; if(dist2(e.x,e.y,player.x,player.y)<360*360){ player.chillT=1.6; ringFx(player.x,player.y,58,'#8bd3ff'); ringFx(e.x,e.y,80,'#8bd3ff'); flashScreen('139,211,255',0.16); } } }  // 霜咒者詞綴：週期對附近玩家施加減速咒
+    if(e.affix==='disruptor'){ e.dsT=(e.dsT==null?3.5:e.dsT-dt); if(e.dsT<=0){ e.dsT=4.5; if(dist2(e.x,e.y,player.x,player.y)<380*380){ player.jamT=1.5; ringFx(player.x,player.y,52,'#ff5edb'); ringFx(e.x,e.y,74,'#ff5edb'); flashScreen('255,94,219',0.14); } } }  // 干擾者詞綴：週期擾亂附近玩家的武器射速
     if(e.affix==='repulsor'){ e.rpT=(e.rpT==null?2.5:e.rpT-dt); if(e.rpT<=0){ e.rpT=3.2; var rpa=Math.atan2(player.y-e.y,player.x-e.x); player.x+=Math.cos(rpa)*95; player.y+=Math.sin(rpa)*95; ringFx(e.x,e.y,80,'#5dd3ff'); ringFx(player.x,player.y,50,'#5dd3ff'); } }  // 斥力場詞綴：週期把玩家推開，打亂走位
     if(e.titan){ e.tqT=(e.tqT==null?3:e.tqT-dt); if(e.tqT<=0){ e.tqT=3.4; for(var tq=0;tq<12;tq++){ var tqa=tq/12*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(tqa),Math.sin(tqa),200,e.dmg*0.5); } ringFx(e.x,e.y,e.r*2.6,'#ff5030'); } }   // 泰坦：週期環狀震波
     if(e.stalker&&e.dash<=0){ e.stT=(e.stT==null?rand(2,3):e.stT-dt); if(e.stT<=0){ e.stT=rand(3,4.2); var sta=rand(0,TAU); e.x=player.x+Math.cos(sta)*165; e.y=player.y+Math.sin(sta)*165; ringFx(e.x,e.y,46,'#7d3cff'); var sda=Math.atan2(player.y-e.y,player.x-e.x); e.dash=0.35; e.dvx=Math.cos(sda)*620; e.dvy=Math.sin(sda)*620; } }   // 潛襲者：瞬移+突刺
@@ -2373,7 +2379,7 @@ function drawEnemy(e){
     ctx.stroke();
     ctx.globalAlpha=0.4; ctx.lineWidth=1.6; ctx.beginPath(); ctx.arc(0,0,r*0.52,-gs*1.5,-gs*1.5+4.9); ctx.stroke();
     ctx.globalAlpha=1; }
-  if(e.elite){ var affCol=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':e.affix==='reflector'?'#3df0c8':e.affix==='warlord'?'#ffd54a':e.affix==='phaser'?'#c8c8ff':e.affix==='splitburst'?'#ff9a3d':e.affix==='artillery'?'#ff6a3d':e.affix==='healer'?'#5dff9b':e.affix==='graviton'?'#8b5cf6':e.affix==='venomous'?'#9dff5d':e.affix==='detonator'?'#ff9a3d':e.affix==='repulsor'?'#5dd3ff':e.affix==='frostmancer'?'#8bd3ff':'#ffffff';
+  if(e.elite){ var affCol=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':e.affix==='reflector'?'#3df0c8':e.affix==='warlord'?'#ffd54a':e.affix==='phaser'?'#c8c8ff':e.affix==='splitburst'?'#ff9a3d':e.affix==='artillery'?'#ff6a3d':e.affix==='healer'?'#5dff9b':e.affix==='graviton'?'#8b5cf6':e.affix==='venomous'?'#9dff5d':e.affix==='detonator'?'#ff9a3d':e.affix==='repulsor'?'#5dd3ff':e.affix==='frostmancer'?'#8bd3ff':e.affix==='disruptor'?'#ff5edb':'#ffffff';
     ctx.lineWidth=2.8; ctx.strokeStyle=affCol; ctx.stroke();   // 精英詞綴描邊
     if(!e.boss){ ctx.globalAlpha=0.4+0.3*Math.sin(G.time*6+e.x*0.03); ctx.lineWidth=2; ctx.strokeStyle=affCol; ctx.setLineDash([6,7]); ctx.lineDashOffset=-G.time*24;
       ctx.beginPath(); ctx.arc(0,0,r*1.55,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1; } }   // 精英脈動光環（旋轉虛線）

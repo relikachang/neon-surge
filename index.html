@@ -2362,6 +2362,9 @@ function drawEnemy(e){
   ctx.closePath(); ctx.fill();
   // 全體輪廓描邊（讓造型更立體、有圖案辨識度）
   ctx.globalAlpha=0.85; ctx.lineWidth=e.boss?3:1.5; ctx.strokeStyle=f?'#ffffff':'rgba(255,255,255,0.4)'; ctx.stroke(); ctx.globalAlpha=1;
+  // 受擊火花：剛被打中時噴出白色放射火花線，增添打擊感
+  if(e.flash>0.04){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.6; ctx.globalAlpha=Math.min(1,e.flash*11);
+    for(var hs=0;hs<3;hs++){ var ha=e.x*0.6+hs*2.1, hl=r+7; ctx.beginPath(); ctx.moveTo(Math.cos(ha)*r*0.55,Math.sin(ha)*r*0.55); ctx.lineTo(Math.cos(ha)*hl,Math.sin(ha)*hl); ctx.stroke(); } ctx.restore(); ctx.globalAlpha=1; }
   // 內部旋轉幾何圖案（放射骨架 + 內圈弧），讓造型更豐富；小型雜兵略過以省效能
   if(!f && r>=11){ var gs=G.time*0.8+e.x*0.02;
     var spokes=e.boss?8:(e.shape==='hex'?6:e.shape==='penta'?5:e.shape==='tri'?3:4);
@@ -2380,8 +2383,10 @@ function drawEnemy(e){
   ctx.beginPath(); ctx.arc(0,0,coreR,0,TAU); ctx.fill();
   if(r>=11){ var pang=Math.atan2(player.y-e.y,player.x-e.x)-(e.shape==='arrow'?Math.atan2(player.y-e.y,player.x-e.x):0); var pr=coreR*0.45, px=Math.cos(pang)*coreR*0.4, py=Math.sin(pang)*coreR*0.4;
     ctx.shadowBlur=0; ctx.fillStyle=f?'#ff5a5a':e.color; ctx.beginPath(); ctx.arc(px,py,pr,0,TAU); ctx.fill(); }   // 瞳孔盯著玩家
-  // 首領：旋轉裝飾光環
-  if(e.boss){ ctx.globalAlpha=0.7; ctx.lineWidth=2.5; ctx.strokeStyle='rgba(255,255,255,0.55)';
+  // 首領：威壓尖冠 + 旋轉裝飾光環
+  if(e.boss){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.strokeStyle=e.color; ctx.globalAlpha=0.45; ctx.lineWidth=2; ctx.shadowColor=e.color; ctx.shadowBlur=10;
+    var spk=12, sr=r*1.42+4*Math.sin(G.time*3); ctx.beginPath(); for(var spi=0;spi<=spk;spi++){ var sa2=(e.spin||0)*0.5+spi/spk*TAU, ri=(spi%2?sr*1.16:sr); (spi?ctx.lineTo:ctx.moveTo).call(ctx,Math.cos(sa2)*ri,Math.sin(sa2)*ri);} ctx.stroke(); ctx.restore();
+    ctx.globalAlpha=0.7; ctx.lineWidth=2.5; ctx.strokeStyle='rgba(255,255,255,0.55)';
     for(var dq=0;dq<2;dq++){ ctx.beginPath(); ctx.arc(0,0,r*(1.16+dq*0.14),(e.spin||0)*(dq?-1:1),(e.spin||0)*(dq?-1:1)+4.2); ctx.stroke(); } ctx.globalAlpha=1; }
   // 狀態視覺：凍結(冰藍覆蓋+冰晶)、減速(青色薄膜)，讓控場效果一目了然
   if(e.frozen>0){ ctx.shadowBlur=0; ctx.globalAlpha=0.42; ctx.fillStyle='#a0e8ff'; ctx.beginPath(); ctx.arc(0,0,r*1.05,0,TAU); ctx.fill();
@@ -2445,6 +2450,10 @@ function drawPlayer(){
   // 護盾環（iframe>1 代表護盾道具，而非中彈短暫無敵）
   if(player.iframe>1){ ctx.strokeStyle='rgba(34,230,255,0.75)'; ctx.lineWidth=3; ctx.shadowColor='#22e6ff'; ctx.shadowBlur=14;
     ctx.beginPath(); ctx.arc(player.x,player.y,player.radius+11,0,TAU); ctx.stroke(); ctx.shadowBlur=0; }
+  // 狂化/過載能量脈環：向外擴張消散的能量環，強化「爆發狀態」的存在感
+  if(player.frenzyT>0||player.overdriveT>0){ var ovd=player.overdriveT>0; var pcol=ovd?'255,225,74':'255,94,94'; ctx.save(); ctx.globalCompositeOperation='lighter';
+    for(var er=0;er<2;er++){ var ph=((G.time*1.6)+er*0.5)%1; ctx.globalAlpha=(1-ph)*0.55; ctx.strokeStyle='rgba('+pcol+',1)'; ctx.lineWidth=2.5;
+      ctx.beginPath(); ctx.arc(player.x,player.y,pr+8+ph*34,0,TAU); ctx.stroke(); } ctx.restore(); ctx.globalAlpha=1; }
 }
 function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️',revivecharm:'🕊️',thunderstorm:'🌩️',jackpot:'🎰',nuke:'☢️',fullheal:'💚',repel:'💨',stasis:'⏳',overdrive:'⚙️',purify:'✨'}[p.type];
   var yy=p.y+Math.sin(G.time*4+p.x)*4;

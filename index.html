@@ -2136,6 +2136,8 @@ function render(){
   ctx.globalCompositeOperation='lighter';
   var orbImg=glow('#22e6ff'), orbCore=glow('#dffbff');
   for(var i=0;i<orbs.length;i++){ var o=orbs[i]; var op=8+1.6*Math.sin(G.time*6+o.x*0.05+o.y*0.05);   // 脈動大小
+    var osp=(o.vx||0)*(o.vx||0)+(o.vy||0)*(o.vy||0);
+    if(osp>90000){ ctx.globalAlpha=0.4; ctx.drawImage(orbImg,o.x-(o.vx||0)*0.018-op*0.7,o.y-(o.vy||0)*0.018-op*0.7,op*1.4,op*1.4); }   // 磁吸高速時的彗尾
     ctx.globalAlpha=0.85; ctx.drawImage(orbImg,o.x-op,o.y-op,op*2,op*2);
     ctx.globalAlpha=0.9; ctx.drawImage(orbCore,o.x-2.6,o.y-2.6,5.2,5.2); }   // 亮核
   // 特效環
@@ -2326,6 +2328,19 @@ function drawEnemy(e){
     ctx.fillStyle=e.boss?'#ff2b5e':'#5dff9b'; ctx.fillRect(e.x-w/2,e.y-e.r-8,w*hpr,3); }
 }
 function drawPlayer(){
+  // 殘影拖尾：記錄近幾幀位置，繪製漸淡幻影（純視覺，強化移動速度感）
+  if(!player.trail)player.trail=[];
+  G._pf=(G._pf||0)+1;
+  var lastp=player.trail.length?player.trail[player.trail.length-1]:null;
+  var movedFar=!lastp||Math.hypot(player.x-lastp.x,player.y-lastp.y)>4;
+  if(G._pf%2===0){ if(movedFar){ player.trail.push({x:player.x,y:player.y,ang:player.aimAngle}); if(player.trail.length>7)player.trail.shift(); } else if(player.trail.length){ player.trail.shift(); } }
+  var trFren=player.frenzyT>0, trPr=player.radius;
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  for(var ti=0;ti<player.trail.length;ti++){ var tp=player.trail[ti]; var tal=(ti+1)/player.trail.length*0.26;
+    ctx.save(); ctx.translate(tp.x,tp.y); ctx.rotate(tp.ang+Math.PI/2); ctx.globalAlpha=tal; ctx.fillStyle=trFren?'#ff5e5e':'#22e6ff';
+    ctx.beginPath(); ctx.moveTo(0,-trPr-2); ctx.lineTo(trPr*0.9,trPr); ctx.lineTo(0,trPr*0.5); ctx.lineTo(-trPr*0.9,trPr); ctx.closePath(); ctx.fill();
+    ctx.restore(); }
+  ctx.restore(); ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
   ctx.save(); ctx.translate(player.x,player.y);
   // 光暈（狂化變紅）
   ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=player.frenzyT>0?0.85:0.6; ctx.drawImage(glow(player.frenzyT>0?'#ff5e5e':'#22e6ff'),-44,-44,88,88);
@@ -2353,6 +2368,11 @@ function drawPlayer(){
   // 玩家能量環（旋轉虛線，增添造型）
   ctx.save(); ctx.globalAlpha=0.5; ctx.strokeStyle=fren?'rgba(255,138,90,0.6)':'rgba(93,255,224,0.55)'; ctx.lineWidth=2; ctx.setLineDash([5,9]); ctx.lineDashOffset=G.time*30;
   ctx.beginPath(); ctx.arc(player.x,player.y,pr+7,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+  // 連擊光環：連擊越高，額外的環越熱越亮（橙→白熱），給高連擊華麗回饋
+  var cb=Math.min(1,(G.combo||0)/150);
+  if(cb>0.15){ ctx.save(); ctx.globalCompositeOperation='lighter';
+    ctx.strokeStyle='rgba(255,'+Math.round(210-cb*150)+','+Math.round(100-cb*80)+','+(0.28+cb*0.4)+')'; ctx.lineWidth=2+cb*2.5; ctx.setLineDash([4,10]); ctx.lineDashOffset=-G.time*52;
+    ctx.beginPath(); ctx.arc(player.x,player.y,pr+13+cb*7,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.restore(); }
   // 護盾環（iframe>1 代表護盾道具，而非中彈短暫無敵）
   if(player.iframe>1){ ctx.strokeStyle='rgba(34,230,255,0.75)'; ctx.lineWidth=3; ctx.shadowColor='#22e6ff'; ctx.shadowBlur=14;
     ctx.beginPath(); ctx.arc(player.x,player.y,player.radius+11,0,TAU); ctx.stroke(); ctx.shadowBlur=0; }

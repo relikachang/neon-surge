@@ -575,6 +575,7 @@ var MUTATORS=[
   {id:'nightmare', name:'夢魘日',    desc:'萬敵皆兇 · 精英倍增 · 量多', eSpd:1.2,eHp:1.3,spawn:1.35,elite:2,pHp:0.9,pDmg:1.2,pSpd:1.05},
   {id:'duel',      name:'決鬥日',    desc:'敵人稀少但超肉超快 · 你火力全開', eSpd:1.4,eHp:2.5,spawn:0.5,elite:2,pHp:1,pDmg:1.6,pSpd:1.2},
   {id:'locust',    name:'蝗災日',    desc:'鋪天蓋地的脆弱蟲潮 · 你也更脆', eSpd:1.3,eHp:0.35,spawn:2.0,elite:1,pHp:0.7,pDmg:1.2,pSpd:1.15},
+  {id:'fortress',  name:'鐵壁日',    desc:'敵人稀少但堅如鐵壁 · 你更肉更慢', eSpd:0.85,eHp:2.6,spawn:0.7,elite:2,pHp:1.5,pDmg:1,pSpd:0.9},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
@@ -643,6 +644,7 @@ var META=[
   {id:'dodge',   ic:'💨', name:'迴避核心', desc:'初始閃避率', per:'+2%', max:5, cost:function(l){return 90+l*80;}},
   {id:'startpierce',ic:'⏩',name:'貫穿核心', desc:'初始子彈額外貫穿', per:'+1', max:3, cost:function(l){return 150+l*130;}},
   {id:'bossbane', ic:'🐉', name:'屠龍核心', desc:'對首領造成的傷害', per:'+8%', max:5, cost:function(l){return 130+l*110;}},
+  {id:'multishot',ic:'✳️',name:'多重核心', desc:'初始額外投射物（部分武器彈數）', per:'+1', max:2, cost:function(l){return 350+l*300;}},
   {id:'omni',    ic:'🌌', name:'萬能核心 · 殿堂', desc:'傷害/生命/攻速/移速全面提升（碎片無底洞）', per:'+3%全能', max:20, cost:function(l){return 8000*(l+1)*(l+1);}},
 ];
 function metaLv(id){return DB.meta[id]||0;}
@@ -1080,9 +1082,20 @@ var WDEFS={
         for(var i=0;i<n;i++){ var aa=a+(i-(n-1)/2)*0.16; spawnBullet(player.x,player.y,Math.cos(aa),Math.sin(aa),380,dmg(44+w.level*12),'#ffd54a',99,14,2.4); }
         for(var c=0;c<2;c++){ var ct=randEnemyNear(player.x,player.y,700); if(!ct)break; spawnCloud(ct.x,ct.y,(76+w.level*8)*player.area,dmg(7+w.level*3),2.4); burst(ct.x,ct.y,'#ffd54a',8,220); } shake(4); }
     }
+  },
+  hornet:{ic:'🐝',name:'蜂群飛彈',color:'#ffe14a',tag:'追蹤',max:8,
+    desc:function(l){return l===0?'快速連射大量小型追蹤蜂彈，自動獵殺四方':'蜂彈數↑ 傷害↑';},
+    cd:function(l){return Math.max(0.22,0.6-l*0.05);},
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var base=t?Math.atan2(t.y-player.y,t.x-player.x):rand(0,TAU); var n=3+Math.floor(w.level/2)+player.amount; for(var i=0;i<n;i++){ var a=base+rand(-0.9,0.9);
+        bullets.push({x:player.x,y:player.y,vx:Math.cos(a)*320,vy:Math.sin(a)*320,dmg:dmg(10+w.level*3.5),color:'#ffe14a',pierce:1,r:4,life:2.6,hitset:{},homing:640,trail:0}); } },
+    evo:{reqPassive:'pamount',ic:'🐝',name:'殺人蜂巢',color:'#fff08a',desc:'化為蜂群風暴，海量追蹤蜂彈鋪天蓋地追殺一切',
+      cd:function(l){return Math.max(0.16,0.4-l*0.03);},
+      fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var base=t?Math.atan2(t.y-player.y,t.x-player.x):rand(0,TAU); var n=6+w.level+player.amount*2; for(var i=0;i<n;i++){ var a=base+rand(-1.2,1.2);
+        bullets.push({x:player.x,y:player.y,vx:Math.cos(a)*360,vy:Math.sin(a)*360,dmg:dmg(14+w.level*4),color:'#fff08a',pierce:2,r:5,life:2.8,hitset:{},homing:760,trail:0}); } }
+    }
   }
 };
-var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet'];
+var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet','hornet'];
 
 // 被動定義
 var PDEFS={
@@ -1343,7 +1356,7 @@ function recalc(){
   player.regen=b.regen+0.6*(p.pregen||0);
   player.xpMult=b.xpMult*(1+0.15*(p.pxp||0));
   player.area=1+0.16*(p.parea||0)+0.05*metaLv('area');      // 範圍/巨大化(含局外強化)
-  player.amount=(p.pamount||0);          // 額外投射物
+  player.amount=(p.pamount||0)+metaLv('multishot');          // 額外投射物(含局外多重核心)
   player.pierceBonus=(p.ppierce||0)+metaLv('startpierce');     // 額外貫穿(含局外貫穿核心)
   player.bossDmg=1+0.08*metaLv('bossbane');     // 屠龍核心：對首領增傷
   player.dodge=Math.min(0.6,0.08*(p.pdodge||0)+0.02*metaLv('dodge'));   // 閃避機率(含局外迴避核心,上限60%)

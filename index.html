@@ -1281,6 +1281,11 @@ var FUSIONS=[
       for(var i=0;i<n;i++){ var a=i/n*TAU+w._m; fireBeam(a,d,len,12,'#c9a0ff'); }
       var t=nearestEnemy(player.x,player.y,600*600); if(t)spawnWell(t.x,t.y,(72+w.level*8)*player.area,dmg(6+w.level*2),1.5,false);
       ringFx(player.x,player.y,len*0.5,'#c9a0ff'); }},
+  {a:'comet',b:'toxic',id:'plaguecomet',ic:'☄️',name:'瘟疫彗星',color:'#b6ff5d',desc:'貫穿燃燒的彗星墜地炸開劇毒瘟疫雲，火毒交織席捲敵群',max:3,
+    cd:function(l){return Math.max(0.55,1.2-l*0.08);},
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var a=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle; var n=1+Math.floor(w.level/3);
+      for(var i=0;i<n;i++){ var aa=a+(i-(n-1)/2)*0.16; spawnBullet(player.x,player.y,Math.cos(aa),Math.sin(aa),360,dmg(30+w.level*10),'#b6ff5d',99,12,2.2); }
+      var ct=randEnemyNear(player.x,player.y,700)||t; if(ct){ spawnCloud(ct.x,ct.y,(80+w.level*9)*player.area,dmg(7+w.level*3),2.8); burst(ct.x,ct.y,'#b6ff5d',7,200); } }},
 ];
 function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)return FUSIONS[i]; return null; }
 
@@ -1438,6 +1443,7 @@ var ETYPES={
   harbinger:{r:22,hp:230,sp:46,dmg:18,color:'#ff5e7a',xp:24,shape:'penta',rare:true,seekerRare:true},   // 災厄先驅：發射追蹤彈
   gargantua:{r:42,hp:680,sp:30,dmg:32,color:'#ff2b5e',xp:40,shape:'hex',rare:true,titan:true},   // 巨獸君主：稀有震波巨獸，擊殺爆首領戰利品
   revenant:{r:24,hp:250,sp:64,dmg:18,color:'#c86bff',xp:30,shape:'penta',rare:true,deathnova:true},   // 亡魂領主：稀有怪，死亡時炸出整環彈幕，擊殺需保持距離
+  stormcaller:{r:23,hp:300,sp:40,dmg:20,color:'#ffe08a',xp:32,shape:'hex',rare:true,stormRare:true},   // 風暴使徒：稀有咒師，週期在玩家周圍召喚雷暴轟炸，擊殺爆厚賞+好道具
 };
 // 怪物圖鑑資料
 var MONSTER_INFO={
@@ -1469,6 +1475,7 @@ var MONSTER_INFO={
   harbinger:{n:'災厄先驅',d:'第 7 分鐘後降臨的稀有射手，發射會轉彎追蹤的災厄之彈。',rare:true},
   gargantua:{n:'巨獸君主',d:'第 6 分鐘後偶現的稀有震波巨獸，血量恐怖，擊殺可爆首領級戰利品。',rare:true},
   revenant:{n:'亡魂領主',d:'第 7 分鐘後降臨的稀有亡魂，死亡時炸出整環彈幕，擊殺時務必拉開距離。',rare:true},
+  stormcaller:{n:'風暴使徒',d:'第 6 分鐘後偶現的稀有咒師，週期在你腳下召喚雷暴轟炸，擊殺可爆大量碎片與稀有道具。',rare:true},
   boss:{n:'首領',d:'各地圖的統治者，具多階段攻擊、狂暴與絕命狂暴。',rare:true},
 };
 function spawnEnemy(type,ex,ey,mul,forceElite){
@@ -1487,7 +1494,7 @@ function spawnEnemy(type,ex,ey,mul,forceElite){
   if(ex==null){ ang=rand(0,TAU); ex=player.x+Math.cos(ang)*rr; ey=player.y+Math.sin(ang)*rr; }
   enemies.push({x:ex,y:ey,type:type,r:r,hp:hp,maxHp:hp,sp:sp,dmg:dm,color:d.color,
     xp:xp,shape:d.shape,ranged:d.ranged,explode:d.explode,split:d.split,charger:d.charger,elite:elite,affix:affix,
-    titan:d.titan,stalker:d.stalker,bombard:d.bombard,sniper:d.sniper,smasher:d.smasher,weaver:d.weaver,phaseknight:d.phaseknight,impaler:d.impaler,voidreaper:d.voidreaper,beamer:d.beamer,shade:d.shade,homer:d.homer,flee:d.flee,summonRare:d.summonRare,seekerRare:d.seekerRare,
+    titan:d.titan,stalker:d.stalker,bombard:d.bombard,sniper:d.sniper,smasher:d.smasher,weaver:d.weaver,phaseknight:d.phaseknight,impaler:d.impaler,voidreaper:d.voidreaper,beamer:d.beamer,shade:d.shade,homer:d.homer,flee:d.flee,summonRare:d.summonRare,seekerRare:d.seekerRare,stormRare:d.stormRare,
     flash:0,shoot:rand(1,3),chargeT:rand(2,4),dash:0,dvx:0,dvy:0,knx:0,kny:0,boss:false,slow:0,frozen:0});
 }
 function spawnBoss(){
@@ -1606,6 +1613,7 @@ function killEnemy(e){
   if(e.type==='warden'||e.type==='conjurer'||e.type==='harbinger')G.rareKills=(G.rareKills||0)+1;
   if(e.type==='gargantua'){ G.rareKills=(G.rareKills||0)+1; spawnPickup(e.x,e.y,'bosschest'); for(var gg=0;gg<6;gg++)spawnPickup(e.x+rand(-50,50),e.y+rand(-50,50),'shardbag'); announce('💀 巨獸君主殞落！','#ff2b5e'); flashScreen('255,43,94',0.4); }   // 巨獸君主：爆首領戰利品
   if(e.type==='revenant'){ G.rareKills=(G.rareKills||0)+1; for(var rn=0;rn<22;rn++){ var rna=rn/22*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(rna),Math.sin(rna),205,e.dmg*0.5); } ringFx(e.x,e.y,100,'#c86bff'); ringFx(e.x,e.y,60,'#fff'); burst(e.x,e.y,'#c86bff',18,240); for(var rg=0;rg<3;rg++)spawnPickup(e.x+rand(-40,40),e.y+rand(-40,40),'shardbag'); announce('☠ 亡魂爆裂！','#c86bff'); shake(8); }   // 亡魂領主：死亡炸出整環彈幕 + 掉落
+  if(e.type==='stormcaller'){ G.rareKills=(G.rareKills||0)+1; var scr=55+Math.floor(G.time/30)*7; G.shards+=scr; spawnPickup(e.x,e.y,pick(['frenzy','shield','overdrive','fullheal','jackpot'])); for(var sg=0;sg<4;sg++)spawnPickup(e.x+rand(-46,46),e.y+rand(-46,46),'shardbag'); ringFx(e.x,e.y,90,'#ffe08a'); burst(e.x,e.y,'#ffe08a',16,240); announce('⚡ 風暴使徒殞落！+◆'+scr+' + 稀有補給','#ffe08a'); flashScreen('255,224,138',0.32); }   // 風暴使徒：擊殺爆厚賞 + 稀有道具
   var km=G.kills; if(km===100||km===250||km===500||km===1000||km===2000||km===5000){ var kr=Math.floor(km/10); G.shards+=kr; player.frenzyT=Math.max(player.frenzyT,3);
     announce('擊殺 '+km+' 達成！ +◆'+kr,'#ffd54a'); GAudio.achieve&&GAudio.achieve(); }
   burst(e.x,e.y,e.color,e.boss?80:14,e.boss?300:190);
@@ -1636,8 +1644,8 @@ function killEnemy(e){
   // 掉落道具
   var lchance=0.02+G.luck+(player.luckBonus||0);
   if(e.boss){ spawnPickup(e.x,e.y,'bosschest'); G.bossKills=(G.bossKills||0)+1; }   // 首領：超級戰利品
-  else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','revivecharm','thunderstorm','jackpot','nuke','fullheal','repel','stasis','overdrive'])); }   // 精英必掉道具
-  else if(Math.random()<lchance){ spawnPickup(e.x,e.y,pick(['heal','heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','thunderstorm','overdrive'])); }
+  else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','revivecharm','thunderstorm','jackpot','nuke','fullheal','repel','stasis','overdrive','purify'])); }   // 精英必掉道具
+  else if(Math.random()<lchance){ spawnPickup(e.x,e.y,pick(['heal','heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','thunderstorm','overdrive','purify'])); }
   if(e.boss){ announce('首領擊破！','#ffd54a'); G.shards+=Math.floor(20*(1+0.15*metaLv('greed'))*(1+0.2*metaLv('bounty'))); }
 }
 function addCombo(){ G.combo++; G.comboTimer=2.2*(1+0.15*metaLv('combo')); if(G.combo>G.peakCombo)G.peakCombo=G.combo;
@@ -1810,6 +1818,7 @@ function update(dt){
     if(e.summonRare){ e.srT=(e.srT==null?3:e.srT-dt); if(e.srT<=0){ e.srT=3.2; if(enemies.length<220){ for(var q=0;q<3;q++)spawnEnemy('swarm',e.x+rand(-40,40),e.y+rand(-40,40),1.3); } ringFx(e.x,e.y,54,'#7dff9b'); } }  // 召魂者：週期召喚蟲群
     if(e.affix==='trail'){ e.trT=(e.trT==null?0.5:e.trT-dt); if(e.trT<=0 && hazards.length<80){ e.trT=0.55; hazards.push({kind:'lava',x:e.x,y:e.y,r:26,life:2.4,max:2.4,dtk:0}); } }  // 熔跡詞綴：移動留下灼熱地面
     if(e.seekerRare){ e.skT=(e.skT==null?2:e.skT-dt); if(e.skT<=0){ e.skT=2.4; var sba=Math.atan2(player.y-e.y,player.x-e.x); for(var sk=-1;sk<=1;sk++){ var ska=sba+sk*0.4; spawnEnemyBullet(e.x,e.y,Math.cos(ska),Math.sin(ska),150,e.dmg*0.6,1.6); } ringFx(e.x,e.y,40,'#ff5e7a'); } }  // 災厄先驅：發射追蹤彈
+    if(e.stormRare){ e.scT=(e.scT==null?2.4:e.scT-dt); if(e.scT<=0){ e.scT=3; for(var sc=0;sc<3;sc++){ if(hazards.length<80)hazards.push({kind:'strike',x:player.x+rand(-165,165),y:player.y+rand(-165,165),r:66,life:1.8,max:1.8,warn:1.05,fired:false,dtk:0}); } ringFx(e.x,e.y,64,'#ffe08a'); } }  // 風暴使徒：週期在玩家周圍召喚雷暴預警轟炸
     if(e.affix==='lunger'&&e.dash<=0){ e.luT=(e.luT==null?rand(1.5,2.5):e.luT-dt); if(e.luT<=0){ e.luT=rand(2.8,3.8); var lua=Math.atan2(dy,dx); e.dash=0.4; e.dvx=Math.cos(lua)*560; e.dvy=Math.sin(lua)*560; ringFx(e.x,e.y,e.r*2,'#ffca54'); } }  // 突襲詞綴：週期朝玩家猛衝
     if(e.affix==='warlord'){ e.wlT=(e.wlT==null?4:e.wlT-dt); if(e.wlT<=0){ e.wlT=5; ringFx(e.x,e.y,180,'#ffd54a'); (function(ex,ey){ enemyGrid.query(ex,ey,190,function(o){ if(o.hp>0&&dist2(o.x,o.y,ex,ey)<190*190)o.rally=2.5; }); })(e.x,e.y); } }  // 統帥詞綴：週期鼓舞周圍敵人移速大增
     if(e.affix==='phaser'){ e.phT=(e.phT==null?3:e.phT-dt); if(e.phT<=0){ e.phT=3.6; e.phaseEnd=G.time+1.0; ringFx(e.x,e.y,e.r*2.2,'#ffffff'); } }  // 相位詞綴：週期進入 1 秒無敵
@@ -1952,7 +1961,8 @@ function spawnDirector(dt){
     else if(m>=7 && rr<0.58){ spawnEnemy('harbinger',null,null,1.4+m*0.3); announce('🔻 災厄先驅降臨！','#ff5e7a'); flashScreen('255,94,122',0.3); shake&&shake(8); GAudio.elite&&GAudio.elite(); }
     else if(m>=6 && rr<0.68){ spawnEnemy('warden',null,null,1.4+m*0.3); announce('🛡 監視者降臨！','#ff5bff'); flashScreen('255,91,255',0.3); shake&&shake(8); GAudio.elite&&GAudio.elite(); }
     else if(m>=5 && rr<0.74){ spawnEnemy('conjurer',null,null,1.3+m*0.3); announce('🟢 召魂者現身！優先擊殺','#7dff9b'); flashScreen('125,255,155',0.25); GAudio.elite&&GAudio.elite(); }
-    else if(m>=6 && rr<0.86){ spawnEnemy('gargantua',null,null,1.3+m*0.35); announce('💀 巨獸君主降臨！擊殺爆厚賞','#ff2b5e'); flashScreen('255,43,94',0.35); shake&&shake(12); GAudio.boss&&GAudio.boss(); }
+    else if(m>=6 && rr<0.80){ spawnEnemy('gargantua',null,null,1.3+m*0.35); announce('💀 巨獸君主降臨！擊殺爆厚賞','#ff2b5e'); flashScreen('255,43,94',0.35); shake&&shake(12); GAudio.boss&&GAudio.boss(); }
+    else if(m>=6 && rr<0.90){ spawnEnemy('stormcaller',null,null,1.3+m*0.32); announce('⚡ 風暴使徒現身！小心腳下雷暴','#ffe08a'); flashScreen('255,224,138',0.3); shake&&shake(8); GAudio.elite&&GAudio.elite(); }
     else if(m>=2){ spawnEnemy('golden',null,null,1+m*0.4); announce('✨ 黃金巨獸出現！追上擊殺獲厚賞','#ffd54a'); GAudio.elite&&GAudio.elite(); } }
   // 波數（每 20 秒）
   // 無盡幕系統：每 150 秒進入新一幕，難度階梯上升 + 幕首領 + 幕間補給（呼應「遊戲節局」）
@@ -2017,6 +2027,7 @@ function collectPickup(p){
   else if(p.type==='magnet'){ orbs.forEach(function(o){ var a=Math.atan2(player.y-o.y,player.x-o.x); o.vx=Math.cos(a)*900; o.vy=Math.sin(a)*900; }); floatText('磁吸','#7c5bff'); }
   else if(p.type==='frenzy'){ player.frenzyT=6; ringFx(player.x,player.y,200,'#ff5e5e'); floatText('狂化！射速+傷害','#ff5e5e'); }
   else if(p.type==='overdrive'){ player.overdriveT=8; ringFx(player.x,player.y,220,'#ffe14a'); ringFx(player.x,player.y,130,'#fff'); flashScreen('255,225,74',0.3); floatText('⚙️ 過載核心！8 秒射速爆增 + 全部暴擊','#ffe14a'); }
+  else if(p.type==='purify'){ ebullets.length=0; player.iframe=Math.max(player.iframe,1.5); for(var pf=0;pf<3;pf++)ringFx(player.x,player.y,180+pf*120,'#dffcff'); flashScreen('223,252,255',0.3); floatText('✨ 淨化領域！清空敵彈 + 短暫無敵','#dffcff'); }
   else if(p.type==='shield'){ player.iframe=Math.max(player.iframe,4); ringFx(player.x,player.y,200,'#22e6ff'); floatText('無敵護盾！','#22e6ff'); }
   else if(p.type==='timefreeze'){ enemies.forEach(function(e){ if(!e.boss)e.frozen=Math.max(e.frozen||0,3); else e.frozen=Math.max(e.frozen||0,1.5); }); ringFx(player.x,player.y,420,'#7dd3ff'); flashScreen('125,211,255',0.32); floatText('時間凍結！','#7dd3ff'); }
   else if(p.type==='xpgem'){ gainXP(G.xpNeed*0.8); ringFx(player.x,player.y,180,'#22e6ff'); floatText('經驗寶石！','#22e6ff'); }
@@ -2422,7 +2433,7 @@ function drawPlayer(){
   if(player.iframe>1){ ctx.strokeStyle='rgba(34,230,255,0.75)'; ctx.lineWidth=3; ctx.shadowColor='#22e6ff'; ctx.shadowBlur=14;
     ctx.beginPath(); ctx.arc(player.x,player.y,player.radius+11,0,TAU); ctx.stroke(); ctx.shadowBlur=0; }
 }
-function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️',revivecharm:'🕊️',thunderstorm:'🌩️',jackpot:'🎰',nuke:'☢️',fullheal:'💚',repel:'💨',stasis:'⏳',overdrive:'⚙️'}[p.type];
+function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️',revivecharm:'🕊️',thunderstorm:'🌩️',jackpot:'🎰',nuke:'☢️',fullheal:'💚',repel:'💨',stasis:'⏳',overdrive:'⚙️',purify:'✨'}[p.type];
   var yy=p.y+Math.sin(G.time*4+p.x)*4;
   var pulse=0.5+0.5*Math.sin(G.time*5+p.x*0.1);
   ctx.save();
@@ -2581,7 +2592,7 @@ function renderCodex(){
       '<div class="cxd">'+d.desc(0)+'</div>'+line+'</div></div>'; }).join('');
   $('codexlist').innerHTML=html;
 }
-function renderBestiary(){ var order=['grunt','swarm','tank','ranged','bomber','splitter','charger','brute','wraith','mortar','titan','stalker','bombard','marksman','smasher','weaver','phaseknight','impaler','voidreaper','sentinel','shade','phantom','golden','warden','conjurer','harbinger','revenant','gargantua','boss'];
+function renderBestiary(){ var order=['grunt','swarm','tank','ranged','bomber','splitter','charger','brute','wraith','mortar','titan','stalker','bombard','marksman','smasher','weaver','phaseknight','impaler','voidreaper','sentinel','shade','phantom','golden','warden','conjurer','harbinger','revenant','gargantua','stormcaller','boss'];
   var seen=0; var html=order.map(function(id){ var mi=MONSTER_INFO[id]||{n:id,d:''}; var d=(id==='boss'?{color:'#ffd54a',shape:''}:ETYPES[id])||{color:'#888'};
     var found=!!(DB.bestiary&&DB.bestiary[id]); if(found)seen++;
     var star=mi.rare?' <span class="cxtag" style="color:#ffd54a;border-color:#ffd54a">★ 稀有</span>':'';

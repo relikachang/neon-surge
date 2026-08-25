@@ -399,7 +399,7 @@ var TAU=Math.PI*2;
 // =====================================================================
 var SAVE='neonSurge_v1';
 var DB=loadDB();
-function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false};
+function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false,enigma:false};
   var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
@@ -683,9 +683,10 @@ var CHARS=[
   {id:'bombardier',face:'💥',name:'轟炸使', desc:'散爆彈幕 · 起手防空炮', start:'flak', locked:true, unlock:'bombardier', stat:{dmg:1.05,fireRate:1.05}},
   {id:'cometeer',face:'☄️',name:'彗星使', desc:'貫穿燃燒 · 起手彗星炮', start:'comet', locked:true, unlock:'cometeer', stat:{dmg:1.1,fireRate:0.95}},
   {id:'lunar',   face:'🌙',name:'月刃使', desc:'扇形月刃 · 起手鐮月斬', start:'scythe', locked:true, unlock:'lunar', stat:{crit:0.08,speed:1.06}},
+  {id:'enigma',  face:'🎭',name:'謎影', desc:'隱者 · 起手黑洞 · 全能均衡', start:'blackhole', locked:true, hidden:true, unlock:'enigma', stat:{dmg:1.1,crit:0.1,speed:1.05,maxHp:0.95}},
 ];
 var selChar='ranger';
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕',lunar:'單局擊殺1200敵人'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕',lunar:'單局擊殺1200敵人',enigma:'？？？ 隱藏任務'};
 
 // =====================================================================
 // 地圖 / 關卡
@@ -1326,7 +1327,7 @@ function newRun(daily){
   G={ time:0, kills:0, level:1, xp:0, xpNeed:5, wave:1, shards:0, combo:0, comboTimer:0,
      spawnTimer:0, bossTimer:0, eliteTimer:0, over:false, paused:false,
      nextBossAt:90, usedRevive:false, luck:0.06*metaLv('luck'), stage:st, mut:mut, daily:!!daily,
-     dmgDealt:0, peakCombo:0, bossKills:0, eliteKills:0, act:1, actMul:1 };
+     dmgDealt:0, peakCombo:0, bossKills:0, eliteKills:0, act:1, actMul:1, flawless:true };
   player={ x:0,y:0, radius:15, hp:0, maxHp:0, speed:0, iframe:0, aimAngle:0, frenzyT:0, overdriveT:0,
     weapons:[], passives:{}, base:{} };
   // 基礎屬性（含永久強化 + 角色 + 每日變異）
@@ -1690,7 +1691,7 @@ function hurtPlayer(amount){
   if(player.dodge>0 && Math.random()<player.dodge){ player.iframe=0.3; ringFx(player.x,player.y,32,'#5dff9b'); floatText('閃避！','#5dff9b'); return; }   // 閃避被動：機率完全免傷
   if(player.blockReady){ player.blockReady=false; player.blockT=0; player.iframe=0.6; ringFx(player.x,player.y,40,'#5dd3ff'); floatText('護盾抵擋！','#5dd3ff'); return; }   // 能量護盾：抵擋一次攻擊
   amount*=(1-player.armor);
-  player.hp-=amount; player.iframe=0.6; shake(6);
+  player.hp-=amount; player.iframe=0.6; shake(6); G.flawless=false;
   if(player.retaliate>0){ var rtr=(90+player.retaliate*20)*player.area,rtr2=rtr*rtr,rtd=dmg(20+player.retaliate*10); enemyGrid.query(player.x,player.y,rtr,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<rtr2)hitEnemy(e,rtd,player.x,player.y,0.7); }); ringFx(player.x,player.y,rtr,'#ff6a3d'); }   // 反擊波：受傷震開周圍(iframe已設,不會無限遞迴)
   if(amount>=0.5)dmgNum(player.x,player.y-26,amount,false,true);   // 玩家中彈：明顯紅色 -N
   flashHurt(); GAudio.hurt();
@@ -1759,6 +1760,7 @@ function update(dt){
   if(player.overdriveT>0)player.overdriveT-=dt;
   if(player.chillT>0)player.chillT-=dt;
   if(player.jamT>0)player.jamT-=dt;
+  if(G.muzzleT>0)G.muzzleT-=dt;
   if(player.regen>0&&player.hp<player.maxHp)player.hp=Math.min(player.maxHp,player.hp+player.regen*dt);
   if(player.blockInterval>0&&!player.blockReady){ player.blockT=(player.blockT||0)+dt; if(player.blockT>=player.blockInterval){ player.blockReady=true; player.blockT=0; } }   // 能量護盾再生
   if(player.nova>0){ player.novaT=(player.novaT||0)-dt; if(player.novaT<=0){ player.novaT=2; var nvr=(120+player.nova*22)*player.area, nvr2=nvr*nvr, nvd=dmg(14+player.nova*8);   // 新星脈衝：週期範圍衝擊波
@@ -1780,7 +1782,7 @@ function update(dt){
   for(var wi=0;wi<player.weapons.length;wi++){ var w=player.weapons[wi];
     if(w.def.orbit)continue;
     var src=w.evolved?w.def.evo:w.def;
-    w.cd-=dt*player.fireRate*(player.frenzyT>0?1.6:1)*(player.overdriveT>0?1.5:1)*(player.jamT>0?0.5:1); if(w.cd<=0){ w.cd=src.cd(w.level)*(w.asc?0.6:1);
+    w.cd-=dt*player.fireRate*(player.frenzyT>0?1.6:1)*(player.overdriveT>0?1.5:1)*(player.jamT>0?0.5:1); if(w.cd<=0){ w.cd=src.cd(w.level)*(w.asc?0.6:1); G.muzzleT=0.06;
       if(w.asc){ var _d=player.dmgMult,_a=player.amount,_ar=player.area; player.dmgMult*=2.2; player.amount+=2; player.area*=1.4;
         src.fire(w); player.dmgMult=_d; player.amount=_a; player.area=_ar; }
       else src.fire(w); } }
@@ -2187,6 +2189,19 @@ function glow(color){ if(glowCache[color])return glowCache[color];
   rg.addColorStop(1,'rgba(0,0,0,0)'); g.globalAlpha=1; g.fillStyle=rg; g.beginPath(); g.arc(32,32,32,0,TAU); g.fill();
   glowCache[color]=c; return c; }
 
+// ===== 圖片素材系統（可選）：img/ 內放對應 PNG 並在 SPRITE_MANIFEST 登記即自動採用，否則沿用內建向量造型 =====
+// 命名建議：玩家 img/player.png；敵人 img/enemy_<型別>.png（型別見 ETYPES，如 enemy_grunt / enemy_boss）。
+// 規格：正方形透明背景 PNG（建議 256×256）、主體置中留白、頂視角；玩家船首朝『上』。
+var SPRITES={}, SPRITE_READY={};
+var SPRITE_MANIFEST=[
+  // 放入圖片後解除註解或新增，例如：
+  // {key:'player', url:'img/player.png'},
+  // {key:'enemy_grunt', url:'img/enemy_grunt.png'},
+];
+function loadSprite(key,url){ try{ var im=new Image(); im.onload=function(){SPRITE_READY[key]=true;}; im.onerror=function(){SPRITE_READY[key]=false;}; im.src=url; SPRITES[key]=im; }catch(e){} }
+SPRITE_MANIFEST.forEach(function(m){ loadSprite(m.key,m.url); });
+function spr(key){ return SPRITE_READY[key]?SPRITES[key]:null; }
+
 var STARS=(function(){ var a=[]; for(var i=0;i<110;i++)a.push({x:Math.random(),y:Math.random(),z:0.25+Math.random()*0.55,s:Math.random()*1.5+0.4,c:Math.random()<0.22?'#ff9ad8':(Math.random()<0.4?'#9ad8ff':'#cfe0ff'),tw:Math.random()*TAU}); return a; })();
 var NEBULA=(function(){ var a=[]; for(var i=0;i<5;i++)a.push({x:Math.random(),y:Math.random(),z:0.12+Math.random()*0.18,r:150+Math.random()*220,c:['#3a1d6e','#1d3a6e','#6e1d4a','#1d5a5a','#4a1d6e'][i]}); return a; })();
 function drawStars(camx,camy){ ctx.save(); ctx.globalCompositeOperation='lighter';
@@ -2200,6 +2215,11 @@ function drawStars(camx,camy){ ctx.save(); ctx.globalCompositeOperation='lighter
     var tw=0.55+0.45*Math.sin(G.time*2+stz.tw);
     ctx.globalAlpha=(0.3+0.55*stz.z)*tw; ctx.fillStyle=stz.c;
     ctx.beginPath(); ctx.arc(camx+px,camy+py,stz.s,0,TAU); ctx.fill(); }
+  // 環境漂浮光塵：關卡專屬色的柔光微塵緩緩飄升，增添場景生氣與氛圍
+  var ecol=(G&&G.stage&&G.stage.bossColor)||'#5db6ff';
+  ctx.fillStyle=ecol;
+  for(var em=0;em<22;em++){ var ex=((em*173.3+G.time*(9+em%4))%(W+40))-20, ey=((H+40)-((G.time*(7+em%5)+em*111)%(H+80))), es=1.1+(em%3)*0.8, ea=0.10+0.09*Math.sin(G.time*1.3+em*1.7);
+    if(ea>0.02){ ctx.globalAlpha=ea; ctx.beginPath(); ctx.arc(camx+ex,camy+ey,es,0,TAU); ctx.fill(); } }
   ctx.restore();
 }
 function render(){
@@ -2335,6 +2355,10 @@ function render(){
     var vg2=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.5,W/2,H/2,Math.max(W,H)*0.82);
     vg2.addColorStop(0,'rgba(0,0,0,0)'); vg2.addColorStop(1,'rgba('+br+','+bg2+','+bb+',0.12)');
     ctx.fillStyle=vg2; ctx.fillRect(0,0,W,H); }
+  // 首領危機邊緣暈影：場上有首領時，螢幕邊緣脈動暗紅暈影，強化壓迫感
+  if(!G.over){ var bossAlive=false; for(var bv=0;bv<enemies.length;bv++){ if(enemies[bv].boss&&enemies[bv].hp>0){ bossAlive=true; break; } }
+    if(bossAlive){ var bpul=0.13+0.06*Math.sin(G.time*3); var vg3=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.34,W/2,H/2,Math.max(W,H)*0.64);
+      vg3.addColorStop(0,'rgba(0,0,0,0)'); vg3.addColorStop(1,'rgba(150,20,44,'+bpul+')'); ctx.fillStyle=vg3; ctx.fillRect(0,0,W,H); } }
 
   // 傷害紅屏
   if(hurtFlash>0){ ctx.fillStyle='rgba(255,40,60,'+(hurtFlash*0.35)+')'; ctx.fillRect(0,0,W,H); }
@@ -2445,6 +2469,11 @@ function drawPlayer(){
   ctx.fillStyle=fren?'#ffb03a':'#3ad8ff'; ctx.shadowColor=fren?'#ff7a2b':'#22e6ff'; ctx.shadowBlur=16;
   ctx.beginPath(); ctx.moveTo(-pr*0.42,pr*0.9); ctx.lineTo(0,pr*0.9+fl); ctx.lineTo(pr*0.42,pr*0.9); ctx.closePath(); ctx.fill();
   ctx.globalCompositeOperation='source-over';
+  // 開火槍口閃光（船首，隨開火脈動）
+  if(G.muzzleT>0){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=Math.max(0,G.muzzleT/0.06)*0.9; ctx.drawImage(glow(fren?'#ffd08a':'#bff2ff'),-pr*0.9,-pr*2.2,pr*1.8,pr*1.8); ctx.restore(); ctx.globalAlpha=1; }
+  var pim=spr('player');
+  if(pim){ ctx.shadowColor=fren?'#ff5e5e':'#22e6ff'; ctx.shadowBlur=18; var pd=pr*2.9; ctx.drawImage(pim,-pd/2,-pd/2,pd,pd); }
+  else {
   // 船體
   ctx.fillStyle=player.iframe>0&&((G.time*20)|0)%2?'#ffffff':'#eaffff';
   ctx.shadowColor=fren?'#ff5e5e':'#22e6ff'; ctx.shadowBlur=18;
@@ -2454,6 +2483,7 @@ function drawPlayer(){
   // 座艙核心
   ctx.shadowColor=fren?'#ffd54a':'#ffffff'; ctx.shadowBlur=12; ctx.fillStyle=fren?'#fff0c0':'#ffffff';
   ctx.beginPath(); ctx.ellipse(0,-pr*0.1,pr*0.3,pr*0.42,0,0,TAU); ctx.fill();
+  }
   ctx.shadowBlur=0; ctx.restore();
   // 拾取範圍（淡）
   ctx.strokeStyle='rgba(34,230,255,0.08)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(player.x,player.y,player.pickup,0,TAU); ctx.stroke();
@@ -2570,6 +2600,7 @@ function gameOver(){
   if(G.time>=420&&!DB.chars.shockmancer){DB.chars.shockmancer=true;}
   if((G.eliteKills||0)>=40&&!DB.chars.bombardier){DB.chars.bombardier=true;}
   if((G.act||1)>=8&&!DB.chars.cometeer){DB.chars.cometeer=true;}
+  if(G.flawless&&G.time>=180&&!DB.chars.enigma){DB.chars.enigma=true; announce&&announce('🎭 隱藏角色「謎影」解鎖！','#c98bff');}
   if(G.kills>=1200&&!DB.chars.lunar){DB.chars.lunar=true;}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
@@ -2698,6 +2729,7 @@ function renderMenu(){
   $('dailybtn').textContent='每日挑戰 · '+todaysMutator().name;
   var cs=$('charsel'); cs.innerHTML='';
   CHARS.forEach(function(c){ var unlocked=!c.locked||DB.chars[c.unlock];
+    if(c.hidden&&!unlocked)return;   // 隱藏角色：未達成隱藏任務前完全不顯示
     var el=document.createElement('div'); el.className='charcard'+(selChar===c.id?' on':'')+(unlocked?'':' locked');
     el.innerHTML='<div class="cface">'+c.face+'</div><div class="cn">'+c.name+'</div><div class="cd">'+c.desc+'</div>'+
       (unlocked?'':'<div class="clk">🔒'+CHAR_UNLOCK[c.unlock]+'</div>');

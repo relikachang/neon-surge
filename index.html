@@ -2002,8 +2002,12 @@ function killEnemy(e){
   // 死亡外型碎裂：中大型/精英/首領炸出依其形狀的多邊形殘骸，屍塊感更足
   if(e.boss||e.elite||e.r>=16){ var _sd=e.shape==='tri'?3:e.shape==='penta'?5:e.shape==='hex'?6:e.shape==='boss'?8:4;
     spawnChunks(e.x,e.y,e.color,_sd,e.boss?12:(e.elite?7:4),e.boss?300:220,e.r); }
-  if(e.boss){ flashScreen('255,213,74',0.5); shake(16); for(var rr=0;rr<3;rr++)ringFx(e.x,e.y,120+rr*90,'#ffd54a'); burst(e.x,e.y,'#ffffff',40,340); }
-  else if(e.elite||e.type==='tank'){ ringFx(e.x,e.y,e.r*3.2,'#ffffff'); shake(3); }
+  if(e.boss){ flashScreen('255,255,255',0.42); flashScreen('255,213,74',0.55); shake(22);
+    for(var rr=0;rr<6;rr++)ringFx(e.x,e.y,90+rr*115,rr%2?'#ffffff':e.color);
+    burst(e.x,e.y,'#ffffff',60,440); burst(e.x,e.y,e.color,42,340); burst(e.x,e.y,'#ffd54a',28,260);
+    spawnChunks(e.x,e.y,e.color,(e.shape==='boss'?8:6),22,380,e.r*1.5);
+    GAudio.explode&&GAudio.explode(); GAudio.boss&&GAudio.boss(); }   // 首領壯烈爆散：多層震波環 + 海量碎屑 + 雙色閃 + 強震 + 爆炸音
+  else if(e.elite||e.type==='tank'){ ringFx(e.x,e.y,e.r*3.4,'#ffffff'); ringFx(e.x,e.y,e.r*2,e.color); burst(e.x,e.y,'#ffffff',10,240); shake(4); }   // 精英/坦克擊殺：雙色震波 + 白閃
   else { ringFx(e.x,e.y,e.r*2,e.color); }   // 擊殺碎裂環（一般敵人）
   GAudio.kill();
   if(e.explode){ // 爆裂兵死亡 AoE
@@ -3532,7 +3536,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v293 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v294 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

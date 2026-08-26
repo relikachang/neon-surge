@@ -2431,12 +2431,12 @@ function chooseType(m){ var r=Math.random();
 function gainXP(v){ var cb=1+Math.min(1,(G.combo||0)*0.01); G.xp+=v*player.xpMult*cb; while(G.xp>=G.xpNeed){ G.xp-=G.xpNeed; levelUp(); } }
 function levelUp(){ G.level++; G.xpNeed=Math.floor(5+G.level*3+G.level*G.level*0.6+Math.pow(Math.max(0,G.level-15),2.3)*0.85);   // 後期(15級後)升級所需經驗漸增，放慢升級節奏
   player.hp=Math.min(player.maxHp,player.hp+6);
-  for(var lr=0;lr<3;lr++)ringFx(player.x,player.y,50+lr*46,'#ffd54a'); burst(player.x,player.y,'#ffe89a',20,240); flashScreen('255,213,74',0.18);   // 升級瞬間金環爆發
+  for(var lr=0;lr<4;lr++)ringFx(player.x,player.y,64+lr*72,'#ffd54a'); ringFx(player.x,player.y,player.radius+22,'#ffffff'); burst(player.x,player.y,'#ffe89a',30,300); burst(player.x,player.y,'#ffffff',12,200); flashScreen('255,213,74',0.28); shake(4);   // 升級瞬間：盛大金環爆發 + 白核環 + 微震
   var xf=$('xpfill'); if(xf){ xf.classList.remove('lvflash'); void xf.offsetWidth; xf.classList.add('lvflash'); }   // 經驗條升級閃光
   GAudio.level(); checkAch(); openLevelUp(); }
 
 function collectPickup(p){
-  ringFx(p.x,p.y,42,'#ffffff'); burst(p.x,p.y,'#ffffff',7,190);   // 拾取瞬間閃光
+  ringFx(p.x,p.y,48,'#ffffff'); ringFx(p.x,p.y,26,'#ffe89a'); burst(p.x,p.y,'#ffffff',10,220); GAudio.pick&&GAudio.pick();   // 拾取瞬間：雙環閃光 + 收集音
   if(p.type==='heal'){ player.hp=Math.min(player.maxHp,player.hp+player.maxHp*0.25); floatText('+生命','#5dff9b'); }
   else if(p.type==='bomb'){ clearNearby(); shake(12); ringFx(player.x,player.y,320,'#ffd54a'); floatText('清場！','#ffd54a'); GAudio.explode&&GAudio.explode(); }
   else if(p.type==='magnet'){ orbs.forEach(function(o){ var a=Math.atan2(player.y-o.y,player.x-o.x); o.vx=Math.cos(a)*900; o.vy=Math.sin(a)*900; }); floatText('磁吸','#7c5bff'); }
@@ -3532,7 +3532,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v292 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v293 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

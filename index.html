@@ -2439,6 +2439,15 @@ function drawEnemy(e){
       for(var ck=0;ck<6;ck++){ var ca=G.time*3+ck/6*TAU; ctx.beginPath(); ctx.moveTo(Math.cos(ca)*r*0.75,Math.sin(ca)*r*0.75); ctx.lineTo(Math.cos(ca)*r*1.2,Math.sin(ca)*r*1.2); ctx.stroke(); } ctx.shadowBlur=0; }   // 衝刺類：躁動尖刺光冠
     else if(e.type==='splitter'){ ctx.globalAlpha=0.6; ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
       ctx.beginPath(); ctx.moveTo(0,-r*0.8); ctx.lineTo(0,r*0.8); ctx.moveTo(-r*0.8,0); ctx.lineTo(r*0.8,0); ctx.stroke(); ctx.setLineDash([]); }   // 分裂體：分裂縫線
+    else if(e.ranged||e.sniper||e.bombard){ ctx.globalAlpha=0.55; ctx.strokeStyle=e.color; ctx.lineWidth=1.4; ctx.shadowColor=e.color; ctx.shadowBlur=5;
+      ctx.beginPath(); ctx.arc(0,0,r*0.55,0,TAU); ctx.stroke(); ctx.save(); ctx.rotate(G.time*1.5); for(var rk=0;rk<4;rk++){ var ra=rk/4*TAU; ctx.beginPath(); ctx.moveTo(Math.cos(ra)*r*0.38,Math.sin(ra)*r*0.38); ctx.lineTo(Math.cos(ra)*r*0.78,Math.sin(ra)*r*0.78); ctx.stroke(); } ctx.restore(); ctx.shadowBlur=0; }   // 射手類：旋轉準星環
+    else if(e.type==='phantom'||e.shade||e.voidreaper){ ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.22+0.14*Math.sin(G.time*4+e.x); ctx.fillStyle=e.color; ctx.shadowColor=e.color; ctx.shadowBlur=14;
+      for(var pk=0;pk<3;pk++){ var pa=G.time*2+pk/3*TAU; ctx.beginPath(); ctx.arc(Math.cos(pa)*r*0.5,Math.sin(pa)*r*0.5,r*0.38,0,TAU); ctx.fill(); } ctx.shadowBlur=0; }   // 幽影類：飄渺殘影暈
+    else if(e.weaver){ ctx.globalAlpha=0.5; ctx.strokeStyle=e.color; ctx.lineWidth=1.2; ctx.save(); ctx.rotate(G.time*0.8);
+      for(var wk=0;wk<6;wk++){ var wa=wk/6*TAU; ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(wa)*r*0.9,Math.sin(wa)*r*0.9); ctx.stroke(); }
+      ctx.beginPath(); for(var wr=0;wr<=6;wr++){ var wa2=wr/6*TAU; (wr?ctx.lineTo:ctx.moveTo).call(ctx,Math.cos(wa2)*r*0.55,Math.sin(wa2)*r*0.55);} ctx.stroke(); ctx.restore(); }   // 織網者：旋轉蛛網
+    else if(e.summonRare||e.converger||e.stormRare){ ctx.globalCompositeOperation='lighter'; ctx.fillStyle=e.color; ctx.shadowColor=e.color; ctx.shadowBlur=8;
+      for(var sk=0;sk<5;sk++){ var sa3=-G.time*1.5+sk/5*TAU; ctx.globalAlpha=0.5+0.4*Math.sin(G.time*4+sk); ctx.beginPath(); ctx.arc(Math.cos(sa3)*r*0.82,Math.sin(sa3)*r*0.82,r*0.11,0,TAU); ctx.fill(); } ctx.shadowBlur=0; }   // 咒師/召喚類：環繞符文
     ctx.globalAlpha=1; ctx.restore(); }
   // 眼睛核心（白眼白 + 追向玩家的彩色瞳孔，脈動）
   var coreR=Math.max(2,r*(0.26+0.05*Math.sin(G.time*5+e.x*0.05)));
@@ -2545,12 +2554,15 @@ function drawPlayer(){
 function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️',revivecharm:'🕊️',thunderstorm:'🌩️',jackpot:'🎰',nuke:'☢️',fullheal:'💚',repel:'💨',stasis:'⏳',overdrive:'⚙️',purify:'✨',phaseshift:'🌀',lightstorm:'🌈'}[p.type];
   var yy=p.y+Math.sin(G.time*4+p.x)*4;
   var pulse=0.5+0.5*Math.sin(G.time*5+p.x*0.1);
+  // 依道具類型上色（回復=綠 / 防護=青 / 攻擊爆發=橙紅 / 財富=金 …），一眼辨識種類
+  var pcm={heal:'#5dff9b',fullheal:'#5dff9b',heart:'#ff6b8a',clover:'#5dff9b',revivecharm:'#5dff9b',shield:'#22e6ff',purify:'#dffcff',stasis:'#8bd3ff',timefreeze:'#7dd3ff',repel:'#5dd3ff',phaseshift:'#c98bff',frenzy:'#ff5e5e',overdrive:'#ffe14a',nuke:'#ff5030',airstrike:'#ff5030',bomb:'#ffce54',quake:'#ffce54',lightstorm:'#dffcff',shardbag:'#ffd54a',jackpot:'#ffd54a',chest:'#ffd54a',bosschest:'#ffd54a',xpgem:'#22e6ff',magnet:'#7c5bff',squad:'#5dffe0',vortex:'#b06bff',thunderstorm:'#a0e8ff'};
+  var pcol=pcm[p.type]||'#ffd54a', pcr=parseInt(pcol.slice(1,3),16),pcg=parseInt(pcol.slice(3,5),16),pcb=parseInt(pcol.slice(5,7),16);
   ctx.save();
   // 光柱信標（向上的柔光柱，讓道具在混戰中一眼可見）
-  ctx.globalCompositeOperation='lighter'; var bcg=ctx.createLinearGradient(p.x,p.y-78,p.x,p.y+8); bcg.addColorStop(0,'rgba(255,213,74,0)'); bcg.addColorStop(1,'rgba(255,213,74,'+(0.28+pulse*0.18)+')');
+  ctx.globalCompositeOperation='lighter'; var bcg=ctx.createLinearGradient(p.x,p.y-78,p.x,p.y+8); bcg.addColorStop(0,'rgba('+pcr+','+pcg+','+pcb+',0)'); bcg.addColorStop(1,'rgba('+pcr+','+pcg+','+pcb+','+(0.28+pulse*0.18)+')');
   ctx.fillStyle=bcg; ctx.fillRect(p.x-6,p.y-78,12,86);
-  // 脈動光環（加色疊加）
-  ctx.globalAlpha=0.25+pulse*0.35; ctx.drawImage(glow('#ffd54a'),p.x-26,yy-26,52,52);
+  // 脈動光環（加色疊加，依類型色）
+  ctx.globalAlpha=0.25+pulse*0.35; ctx.drawImage(glow(pcol),p.x-26,yy-26,52,52);
   ctx.globalCompositeOperation='source-over';
   // 地面小陰影
   ctx.globalAlpha=0.22; ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(p.x,p.y+16,10,3,0,0,TAU); ctx.fill(); ctx.globalAlpha=1;

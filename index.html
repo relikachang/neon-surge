@@ -2367,10 +2367,12 @@ function render(){
     var ts2=b.r*1.2; ctx.globalAlpha=0.18; ctx.drawImage(img,b.x-b.vx*0.036-ts2,b.y-b.vy*0.036-ts2,ts2*2,ts2*2);
     ctx.globalAlpha=1; var s=b.r*2.4; ctx.drawImage(img,b.x-s,b.y-s,s*2,s*2);
     var wc=b.r*0.85; ctx.drawImage(glow('#ffffff'),b.x-wc,b.y-wc,wc*2,wc*2); }   // 白熱亮核，射擊更清晰
-  // 雷射光束
-  for(var i=0;i<beams.length;i++){ var bm=beams[i]; ctx.save(); ctx.translate(bm.x,bm.y); ctx.rotate(bm.ang);
-    ctx.globalAlpha=bm.life/bm.max; ctx.fillStyle=bm.color; ctx.shadowColor=bm.color; ctx.shadowBlur=16;
-    ctx.fillRect(0,-bm.w/2,bm.len,bm.w); ctx.restore(); }
+  // 雷射光束（多層：外光暈 + 主束 + 白熱核心 + 起點閃焰）
+  for(var i=0;i<beams.length;i++){ var bm=beams[i]; var bl=bm.life/bm.max; ctx.save(); ctx.translate(bm.x,bm.y); ctx.rotate(bm.ang); ctx.globalCompositeOperation='lighter';
+    ctx.fillStyle=bm.color; ctx.shadowColor=bm.color; ctx.shadowBlur=22; ctx.globalAlpha=bl*0.32; ctx.fillRect(0,-bm.w,bm.len,bm.w*2);
+    ctx.shadowBlur=14; ctx.globalAlpha=bl*0.85; ctx.fillRect(0,-bm.w/2,bm.len,bm.w);
+    ctx.fillStyle='#ffffff'; ctx.shadowColor='#ffffff'; ctx.shadowBlur=8; ctx.globalAlpha=bl; ctx.fillRect(0,-bm.w*0.22,bm.len,bm.w*0.44);
+    ctx.globalAlpha=bl*0.9; ctx.drawImage(glow(bm.color),-bm.w*1.6,-bm.w*1.6,bm.w*3.2,bm.w*3.2); ctx.restore(); }
   ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
 
   // 環刃
@@ -2405,10 +2407,12 @@ function render(){
     var col=n.hurt?'#ff3b4e':(n.crit?'#ffe14a':(n.val>=150?'#ff5a3a':n.val>=50?'#ff9a3d':'#ffffff'));
     ctx.save(); ctx.globalAlpha=da; ctx.translate(n.x,n.y); ctx.scale(pop,pop);
     ctx.font='900 '+sz.toFixed(0)+'px system-ui';
-    if(n.crit){ ctx.shadowColor=col; ctx.shadowBlur=14; }
-    ctx.lineWidth=3.5; ctx.strokeStyle='rgba(0,0,0,0.6)'; ctx.strokeText(txt,0,0);
-    ctx.fillStyle=col; ctx.fillText(txt,0,0);
-    if(n.crit){ ctx.shadowBlur=0; ctx.font='900 '+(sz*0.5).toFixed(0)+'px system-ui'; ctx.fillStyle='#ffffff'; ctx.fillText('✦',sz*0.44,-sz*0.32); }
+    ctx.shadowColor=col; ctx.shadowBlur=n.crit?18:9;   // 全部數字加彩色光暈，混戰中更醒目
+    ctx.lineWidth=3.5; ctx.strokeStyle='rgba(0,0,0,0.65)'; ctx.strokeText(txt,0,0);
+    if(n.crit){ var cg=ctx.createLinearGradient(0,-sz*0.6,0,sz*0.4); cg.addColorStop(0,'#fff3a8'); cg.addColorStop(1,'#ff9a2b'); ctx.fillStyle=cg; }
+    else ctx.fillStyle=col;
+    ctx.fillText(txt,0,0); ctx.shadowBlur=0;
+    if(n.crit){ ctx.font='900 '+(sz*0.55).toFixed(0)+'px system-ui'; ctx.fillStyle='#ffffff'; ctx.fillText('✦',sz*0.5,-sz*0.34); }
     ctx.restore(); }
   ctx.globalAlpha=1;
 

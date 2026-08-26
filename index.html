@@ -76,7 +76,8 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   .wchip{background:linear-gradient(135deg,rgba(20,28,50,.66),rgba(12,18,34,.66));box-shadow:0 2px 8px rgba(0,0,0,.3),inset 0 0 8px rgba(34,230,255,.05);transition:transform .12s}
   .wchip:hover{transform:translateX(-3px)}
   .oscore{text-align:center;font-size:14px;color:#8ea0c8;letter-spacing:2px;margin:6px 0 4px}
-  .oscore b{font-size:30px;color:#ffd54a;display:block;text-shadow:0 0 16px rgba(255,213,74,.5)}
+  .oscore b{font-size:34px;color:#ffd54a;display:block;text-shadow:0 0 16px rgba(255,213,74,.5);animation:scorepulse 2.2s ease-in-out infinite}
+  @keyframes scorepulse{50%{text-shadow:0 0 30px rgba(255,213,74,.95);transform:scale(1.05)}}
   #pausebuild .blabel{font-size:10px;letter-spacing:2px;color:#8ea0c8;margin:12px 0 6px;font-weight:700}
   #pausebuild .brow{display:flex;flex-wrap:wrap;gap:6px}
   #pausebuild .bchip{font-size:12px;font-weight:700;padding:4px 9px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.04);color:#eaf0ff}
@@ -301,7 +302,8 @@ if('serviceWorker' in navigator){ var __reloaded=false;
 
   /* ---------- 結算 ---------- */
   #over .panel{max-width:520px;text-align:center}
-  #over .otitle{font-size:40px;font-weight:900;letter-spacing:4px;color:var(--red);text-shadow:0 0 24px rgba(255,77,94,.5)}
+  #over .otitle{font-size:44px;font-weight:900;letter-spacing:6px;color:var(--red);text-shadow:0 0 24px rgba(255,77,94,.5);animation:otitleglow 2.6s ease-in-out infinite}
+  @keyframes otitleglow{0%,100%{text-shadow:0 0 20px rgba(255,77,94,.45);letter-spacing:6px}50%{text-shadow:0 0 40px rgba(255,77,94,.95),0 0 10px rgba(255,255,255,.4);letter-spacing:9px}}
   #over .ostats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0}
   #over .ost{background:rgba(12,18,34,.6);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:14px}
   #over .ost b{display:block;font-size:26px;color:#fff}
@@ -309,8 +311,10 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   #over .oreward{color:var(--gold);font-weight:800;font-size:18px;margin-bottom:6px}
   /* --- B207 結算評價徽章 + 面板美化 --- */
   #o-rank{display:flex;flex-direction:column;align-items:center;gap:4px;margin:10px 0 4px}
-  #o-rank-badge{display:flex;align-items:center;justify-content:center;width:88px;height:88px;border:3px solid #22e6ff;border-radius:50%;
-    font-size:52px;font-weight:900;color:#22e6ff;background:rgba(8,12,24,.5);animation:rankpop .5s cubic-bezier(.2,1.4,.4,1) both,rankspin 6s linear infinite}
+  #o-rank-badge{display:flex;align-items:center;justify-content:center;width:106px;height:106px;border:3px solid #22e6ff;border-radius:50%;position:relative;
+    font-size:58px;font-weight:900;color:#22e6ff;background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.10),rgba(8,12,24,.6));animation:rankpop .55s cubic-bezier(.2,1.4,.4,1) both}
+  #o-rank-badge::before{content:'';position:absolute;inset:-11px;border-radius:50%;border:2px dashed currentColor;opacity:.55;animation:rankspin 9s linear infinite}
+  #o-rank-badge::after{content:'';position:absolute;inset:-4px;border-radius:50%;box-shadow:0 0 34px -6px currentColor;pointer-events:none}
   #o-rank-label{font-size:11px;letter-spacing:4px;color:#8ea0c8;font-weight:700}
   @keyframes rankpop{0%{transform:scale(0) rotate(-30deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
   @keyframes rankspin{0%,92%{filter:brightness(1)}96%{filter:brightness(1.5)}100%{filter:brightness(1)}}
@@ -3395,7 +3399,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v267 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v268 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

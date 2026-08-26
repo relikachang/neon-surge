@@ -81,6 +81,15 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   #pausebuild .blabel{font-size:10px;letter-spacing:2px;color:#8ea0c8;margin:12px 0 6px;font-weight:700}
   #pausebuild .brow{display:flex;flex-wrap:wrap;gap:6px}
   #pausebuild .bchip{font-size:12px;font-weight:700;padding:4px 9px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.04);color:#eaf0ff}
+  .setrow{display:flex;align-items:center;gap:12px;margin:14px 0}
+  .setlabel{flex:0 0 84px;color:#c9d6ff;font-size:14px;font-weight:700;letter-spacing:1px}
+  .setval{flex:0 0 46px;text-align:right;color:#8ea0c8;font-size:13px;font-variant-numeric:tabular-nums}
+  .setslider{flex:1;height:6px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,.12);border-radius:4px;outline:none;cursor:pointer}
+  .setslider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);cursor:pointer}
+  .setslider::-moz-range-thumb{width:18px;height:18px;border:none;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);cursor:pointer}
+  .setseg{flex:1;display:flex;gap:6px}
+  .setseg button{flex:1;padding:9px 4px;border-radius:9px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:#aeb9d8;font-size:13px;font-weight:700;cursor:pointer;transition:.12s}
+  .setseg button.on{background:rgba(34,230,255,.16);border-color:var(--cyan);color:#fff;box-shadow:0 0 12px rgba(34,230,255,.3)}
   #mutebtn,#musicbtn{position:fixed;top:14px;z-index:65;width:40px;height:40px;border-radius:10px;cursor:pointer;
     background:rgba(20,24,40,.8);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:18px;backdrop-filter:blur(6px)}
   #mutebtn{right:14px} #musicbtn{right:62px}
@@ -392,7 +401,10 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   </div>
   <button class="btn ghost" id="shopbtn">永久強化 ◆</button>
   <button class="btn ghost" id="boostbtn">局前補給 🎁</button>
-  <button class="btn ghost" id="tutbtn">新手教學 📘</button>
+  <div style="display:flex;gap:10px">
+    <button class="btn ghost" id="tutbtn" style="flex:1">新手教學 📘</button>
+    <button class="btn ghost" id="settingsbtn" style="flex:1">設定 ⚙️</button>
+  </div>
   <div class="hint">WASD／方向鍵 或 拖曳移動 · 自動開火 · 撿經驗升級三選一 · 活越久越強</div>
   <div id="verline" style="text-align:center;color:#5a6a8c;font-size:11px;margin-top:8px;letter-spacing:1px"></div>
 </div></div>
@@ -418,6 +430,17 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   <div class="lsub">每天更新 · 遊戲結算時自動達成領獎</div>
   <div id="missionlist" class="tutlist"></div>
   <button class="btn ghost" id="missionclose" style="margin-top:6px">返回選單</button>
+</div></div>
+
+<!-- 設定 -->
+<div id="settings" class="overlay"><div class="panel" style="max-width:480px">
+  <h2 style="text-align:center;font-size:24px;font-weight:900;letter-spacing:3px;color:var(--cyan);margin-bottom:18px">設定 ⚙️</h2>
+  <div class="setrow"><span class="setlabel">主音量</span><input id="setvol" type="range" min="0" max="100" step="5" class="setslider"><span id="setvolval" class="setval">80%</span></div>
+  <div class="setrow"><span class="setlabel">音樂</span><div class="setseg" id="setmusic"><button data-v="on">開</button><button data-v="off">關</button></div></div>
+  <div class="setrow"><span class="setlabel">音效</span><div class="setseg" id="setsfx"><button data-v="on">開</button><button data-v="off">關</button></div></div>
+  <div class="setrow"><span class="setlabel">特效強度</span><div class="setseg" id="setfx"><button data-v="high">高</button><button data-v="med">中</button><button data-v="low">簡潔</button></div></div>
+  <div class="hint" style="margin-top:4px">特效強度「簡潔」可讓低階手機更順;設定會自動記憶。</div>
+  <button class="btn ghost" id="settingsclose" style="margin-top:14px">返回選單</button>
 </div></div>
 
 <!-- 升級 -->
@@ -542,6 +565,8 @@ var pick=function(arr){return arr[Math.floor(Math.random()*arr.length)];};
 var clamp=function(v,a,b){return v<a?a:v>b?b:v;};
 var dist2=function(ax,ay,bx,by){var dx=ax-bx,dy=ay-by;return dx*dx+dy*dy;};
 var TAU=Math.PI*2;
+var fxScale=1;   // 特效強度縮放(1=高 / 0.6=中 / 0.3=簡潔)：影響粒子/碎片數量與敵人裝飾細節門檻
+try{ var _fx=localStorage.getItem('neon_fx'); if(_fx==='med')fxScale=0.6; else if(_fx==='low')fxScale=0.3; }catch(e){}
 
 // =====================================================================
 // 存檔（碎片、永久強化、最佳、角色解鎖）
@@ -1681,9 +1706,9 @@ function fireBeam(ang,damage,len,width,color){ var dx=Math.cos(ang),dy=Math.sin(
   beams.push({x:player.x,y:player.y,ang:ang,len:len,w:width,color:color,life:0.12,max:0.12}); }
 function spawnOrb(x,y,val){ orbs.push({x:x,y:y,val:val,vx:rand(-40,40),vy:rand(-40,40)}); }
 function spawnPickup(x,y,type){ pickups.push({x:x,y:y,type:type,vy:0,t:0}); }
-function burst(x,y,color,n,sp){ for(var i=0;i<n;i++){var a=rand(0,TAU),s=rand(0.3,1)*(sp||160);
+function burst(x,y,color,n,sp){ n=Math.max(1,Math.round(n*fxScale)); for(var i=0;i<n;i++){var a=rand(0,TAU),s=rand(0.3,1)*(sp||160);
   particles.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rand(0.3,0.7),max:0.7,color:color,r:rand(1.5,3.5)});} }
-function spawnShards(x,y,color,n,sp){ if(shards.length>260)return; for(var i=0;i<n;i++){ var a=rand(0,TAU),s=rand(0.45,1)*(sp||190);
+function spawnShards(x,y,color,n,sp){ if(shards.length>260)return; n=Math.max(1,Math.round(n*fxScale)); for(var i=0;i<n;i++){ var a=rand(0,TAU),s=rand(0.45,1)*(sp||190);
   shards.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,ang:rand(0,TAU),spin:rand(-16,16),life:rand(0.32,0.62),max:0.62,color:color,len:rand(4,10)}); } }   // 擊殺碎裂片：旋轉飛散的霓虹碎片
 function spawnChunks(x,y,color,sides,n,sp,rad){ if(shards.length>260)return; for(var i=0;i<n;i++){ var a=rand(0,TAU),s=rand(0.4,1)*(sp||200);
   shards.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,ang:rand(0,TAU),spin:rand(-13,13),life:rand(0.4,0.72),max:0.72,color:color,len:rand(0.35,0.6)*(rad||14),poly:sides||4}); } }   // 死亡外型碎塊：依敵種形狀噴出的多邊形殘骸
@@ -2880,7 +2905,7 @@ function drawGrid(camx,camy){ var s=64; ctx.strokeStyle=(G&&G.stage?G.stage.grid
     ctx.restore(); ctx.globalAlpha=1; }
 }
 function drawEnemy(e){
-  var f=e.flash>0, r=e.r, hi=(enemies.length<60||e.boss||e.elite); ctx.save(); ctx.translate(e.x,e.y);   // hi：細節層級(敵過多時普通敵簡化裝飾以保效能)
+  var f=e.flash>0, r=e.r, hi=(enemies.length<(60*fxScale)||e.boss||e.elite); ctx.save(); ctx.translate(e.x,e.y);   // hi：細節層級(敵過多/特效強度低時普通敵簡化裝飾以保效能)
   // 受擊擊退尾流：被打飛的瞬間朝退後方向拖出一道漸隱速度殘影，強化打擊回饋
   var knsp=Math.hypot(e.knx||0,e.kny||0);
   if(knsp>70 && r>=8 && !e.boss){ var ka=Math.atan2(e.kny,e.knx), kl=Math.min(r*2.4,knsp*0.05);
@@ -3431,7 +3456,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v276 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v277 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -3506,12 +3531,12 @@ function renderBoostShop(){
 // =====================================================================
 // 音效（WebAudio）
 // =====================================================================
-var GAudio=(function(){ var ac=null, mMusic=false, mSfx=false;
-  try{ mMusic=localStorage.getItem('neon_mMusic')==='1'; mSfx=localStorage.getItem('neon_mSfx')==='1'; }catch(e){}   // 記憶上次的音樂/音效開關
+var GAudio=(function(){ var ac=null, mMusic=false, mSfx=false, mVol=0.8;
+  try{ mMusic=localStorage.getItem('neon_mMusic')==='1'; mSfx=localStorage.getItem('neon_mSfx')==='1'; var v=localStorage.getItem('neon_vol'); if(v!=null)mVol=Math.max(0,Math.min(1,parseFloat(v))); }catch(e){}   // 記憶音樂/音效開關與主音量
   function ctx(){ if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}} return ac; }
-  function beep(freq,dur,type,vol,isMusic){ var a=ctx(); if(!a||(isMusic?mMusic:mSfx))return; var o=a.createOscillator(),g=a.createGain();
+  function beep(freq,dur,type,vol,isMusic){ var a=ctx(); if(!a||(isMusic?mMusic:mSfx)||mVol<=0)return; var o=a.createOscillator(),g=a.createGain();
     o.type=type||'square'; o.frequency.value=freq; g.gain.setValueAtTime(0.0001,a.currentTime);
-    g.gain.exponentialRampToValueAtTime(vol||0.12,a.currentTime+0.01); g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+dur);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002,(vol||0.12)*mVol),a.currentTime+0.01); g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+dur);
     o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime+dur+0.02); }
   // 背景音樂：簡易步進音序器（低音 + 琶音）
   var musicTimer=null, step=0;
@@ -3539,6 +3564,8 @@ var GAudio=(function(){ var ac=null, mMusic=false, mSfx=false;
     toggleMusic:function(){ mMusic=!mMusic; try{localStorage.setItem('neon_mMusic',mMusic?'1':'0');}catch(e){} return mMusic; },
     toggleSfx:function(){ mSfx=!mSfx; try{localStorage.setItem('neon_mSfx',mSfx?'1':'0');}catch(e){} return mSfx; },
     isMusicMuted:function(){ return mMusic; }, isSfxMuted:function(){ return mSfx; },
+    setVol:function(v){ mVol=Math.max(0,Math.min(1,v)); try{localStorage.setItem('neon_vol',mVol);}catch(e){} return mVol; }, getVol:function(){ return mVol; },
+    ping:function(){ beep(660,0.06,'triangle',0.12); },
     toggleMute:function(){ var m=!(mMusic&&mSfx); mMusic=mSfx=m; try{localStorage.setItem('neon_mMusic',m?'1':'0');localStorage.setItem('neon_mSfx',m?'1':'0');}catch(e){} return m; },
     isMuted:function(){ return mMusic&&mSfx; },
   };
@@ -3567,6 +3594,22 @@ $('boostbtn').onclick=function(){ renderBoostShop(); $('menu').classList.remove(
 $('boostclose').onclick=function(){ $('boostshop').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('tutbtn').onclick=function(){ $('menu').classList.remove('show'); $('tutorial').classList.add('show'); };
 $('tutclose').onclick=function(){ $('tutorial').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
+// ===== 設定面板 =====
+function renderSettings(){
+  var vv=Math.round(GAudio.getVol()*100); $('setvol').value=vv; $('setvolval').textContent=vv+'%';
+  function seg(id,val){ var box=$(id); Array.prototype.forEach.call(box.children,function(b){ b.classList.toggle('on',b.getAttribute('data-v')===val); }); }
+  seg('setmusic',GAudio.isMusicMuted()?'off':'on');
+  seg('setsfx',GAudio.isSfxMuted()?'off':'on');
+  var fxv='high'; try{ var f=localStorage.getItem('neon_fx'); if(f==='med')fxv='med'; else if(f==='low')fxv='low'; }catch(e){}
+  seg('setfx',fxv);
+}
+$('settingsbtn').onclick=function(){ $('menu').classList.remove('show'); $('settings').classList.add('show'); renderSettings(); };
+$('settingsclose').onclick=function(){ $('settings').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
+$('setvol').oninput=function(){ var v=parseInt(this.value,10); GAudio.setVol(v/100); $('setvolval').textContent=v+'%'; };
+$('setvol').onchange=function(){ GAudio.ping&&GAudio.ping(); };
+$('setmusic').onclick=function(e){ var b=e.target.closest?e.target.closest('button'):null; if(!b)return; var on=b.getAttribute('data-v')==='on'; if(GAudio.isMusicMuted()===on)GAudio.toggleMusic(); var mb=$('musicbtn'); if(mb)mb.classList.toggle('off',GAudio.isMusicMuted()); renderSettings(); };
+$('setsfx').onclick=function(e){ var b=e.target.closest?e.target.closest('button'):null; if(!b)return; var on=b.getAttribute('data-v')==='on'; if(GAudio.isSfxMuted()===on)GAudio.toggleSfx(); var sb=$('mutebtn'); if(sb){sb.textContent=GAudio.isSfxMuted()?'🔇':'🔊'; sb.classList.toggle('off',GAudio.isSfxMuted());} if(!GAudio.isSfxMuted())GAudio.ping&&GAudio.ping(); renderSettings(); };
+$('setfx').onclick=function(e){ var b=e.target.closest?e.target.closest('button'):null; if(!b)return; var v=b.getAttribute('data-v'); fxScale=(v==='med'?0.6:v==='low'?0.3:1); try{localStorage.setItem('neon_fx',v);}catch(_){} renderSettings(); };
 $('tutplay').onclick=function(){ $('tutorial').classList.remove('show'); DB.seenTutorial=true; saveDB(); startGame(false); };
 function renderMissions(){ var today=dayKey(); var done=(DB.missions&&DB.missions.date===today)?DB.missions.done:{};
   var html=todaysMissions().map(function(m){ var ok=!!done[m.id];

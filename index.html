@@ -2151,7 +2151,8 @@ function spawnDirector(dt){
   // 無盡幕系統：每 150 秒進入新一幕，難度階梯上升 + 幕首領 + 幕間補給（呼應「遊戲節局」）
   var actNow=1+Math.floor(G.time/150);
   if(actNow>G.act){ G.act=actNow; G.actMul=1+(G.act-1)*0.28;
-    announce('☰ 第 '+G.act+' 幕開始 · 強敵湧現！','#ff2b5e'); flashScreen('255,43,94',0.42); shake&&shake(13); GAudio.boss&&GAudio.boss();
+    announce('☰ 第 '+G.act+' 幕開始 · 強敵湧現！','#ff2b5e'); flashScreen('255,43,94',0.42); shake&&shake(16); GAudio.boss&&GAudio.boss();
+    for(var atr=0;atr<5;atr++)ringFx(player.x,player.y,80+atr*100,'#ff2b5e'); burst(player.x,player.y,'#ff2b5e',42,360);   // 幕轉場衝擊波
     spawnBoss(); G.nextBossAt=G.time+120;   // 幕首領登場，並重置常規首領計時
     spawnPickup(player.x+rand(-70,70),player.y+rand(-70,70),'heal'); }   // 幕間補給
   var wv=1+Math.floor(G.time/20); if(wv>G.wave){ G.wave=wv;
@@ -2205,6 +2206,7 @@ function levelUp(){ G.level++; G.xpNeed=Math.floor(5+G.level*3+G.level*G.level*0
   GAudio.level(); checkAch(); openLevelUp(); }
 
 function collectPickup(p){
+  ringFx(p.x,p.y,42,'#ffffff'); burst(p.x,p.y,'#ffffff',7,190);   // 拾取瞬間閃光
   if(p.type==='heal'){ player.hp=Math.min(player.maxHp,player.hp+player.maxHp*0.25); floatText('+生命','#5dff9b'); }
   else if(p.type==='bomb'){ clearNearby(); shake(12); ringFx(player.x,player.y,320,'#ffd54a'); floatText('清場！','#ffd54a'); }
   else if(p.type==='magnet'){ orbs.forEach(function(o){ var a=Math.atan2(player.y-o.y,player.x-o.x); o.vx=Math.cos(a)*900; o.vy=Math.sin(a)*900; }); floatText('磁吸','#7c5bff'); }

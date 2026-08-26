@@ -13,7 +13,21 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
-<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
+<script>
+if('serviceWorker' in navigator){ var __reloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange',function(){ if(__reloaded)return; __reloaded=true; location.reload(); });
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      reg.update();
+      setInterval(function(){ reg.update(); },60000);   // 每分鐘檢查一次新版
+      function watch(w){ if(!w)return; w.addEventListener('statechange',function(){ if(w.state==='installed'&&navigator.serviceWorker.controller){ w.postMessage('skipWaiting'); } }); }
+      reg.addEventListener('updatefound',function(){ watch(reg.installing); });
+      if(reg.waiting&&navigator.serviceWorker.controller)reg.waiting.postMessage('skipWaiting');
+    }).catch(function(){});
+  });
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden)navigator.serviceWorker.getRegistration&&navigator.serviceWorker.getRegistration().then(function(r){ r&&r.update(); }); });
+}
+</script>
 <style>
   :root{ --cyan:#22e6ff; --mag:#ff3df0; --gold:#ffd54a; --red:#ff4d5e; --green:#5dff9b; --bg:#05070f; }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
@@ -171,8 +185,12 @@
     animation:menudrift 16s ease-in-out infinite alternate}
   @keyframes menudrift{0%{transform:translateY(0) scale(1);opacity:.5}100%{transform:translateY(-24px) scale(1.06);opacity:.95}}
   #menu .panel{position:relative;z-index:1}
-  #menu .panel{max-width:820px;padding:0 6px}
-  #menu .title{font-size:min(17vw,108px);font-weight:900;letter-spacing:5px;text-align:center;line-height:.95;
+  #menu .panel{max-width:960px;padding:0 10px}
+  #menu .btn.ghost{font-size:17px;padding:16px}
+  #menu .sellabel{font-size:12.5px;letter-spacing:5px;margin-top:20px}
+  #menu .sub{font-size:13px;letter-spacing:8px}
+  #menu .best{font-size:16px}
+  #menu .title{font-size:min(18vw,124px);font-weight:900;letter-spacing:6px;text-align:center;line-height:.95;
     background:linear-gradient(90deg,#22e6ff,#7c5bff,#ff3df0,#22e6ff);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
     animation:titleflow 7s linear infinite,titleglow 3.2s ease-in-out infinite}
   @keyframes titleflow{0%{background-position:0 0}100%{background-position:200% 0}}
@@ -183,7 +201,8 @@
   #menustats .st{flex:1;min-width:88px;max-width:150px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:9px 6px;text-align:center}
   #menustats .st b{display:block;font-size:20px;font-weight:900;color:#eaf5ff;line-height:1.1}
   #menustats .st span{display:block;font-size:11px;color:#8ea0c8;letter-spacing:1px;margin-top:2px}
-  #menu .btn#playbtn{font-size:22px;padding:20px}
+  #menu .btn#playbtn{font-size:25px;padding:23px;letter-spacing:4px}
+  #menustats .st b{font-size:23px} #menustats .st{padding:11px 6px}
   .btn{display:block;width:100%;border:none;border-radius:16px;padding:16px;font-size:18px;font-weight:800;letter-spacing:2px;
     cursor:pointer;color:#05070f;background:linear-gradient(135deg,#22e6ff,#5db8ff);box-shadow:0 10px 30px rgba(34,230,255,.35);
     margin-top:12px;transition:transform .08s}
@@ -365,6 +384,7 @@
   <button class="btn ghost" id="boostbtn">局前補給 🎁</button>
   <button class="btn ghost" id="tutbtn">新手教學 📘</button>
   <div class="hint">WASD／方向鍵 或 拖曳移動 · 自動開火 · 撿經驗升級三選一 · 活越久越強</div>
+  <div id="verline" style="text-align:center;color:#5a6a8c;font-size:11px;margin-top:8px;letter-spacing:1px"></div>
 </div></div>
 
 <!-- 新手教學 -->
@@ -3332,6 +3352,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
+var BUILD='v263 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -3348,6 +3369,7 @@ function renderMenu(){
       '<div class="st"><b>'+(b.kills||0)+'</b><span>最佳擊殺</span></div>';
   }
   var tr=$('tiprow'); if(tr)tr.textContent=MENU_TIPS[Math.floor((Date.now()/6000))%MENU_TIPS.length];
+  var vl=$('verline'); if(vl)vl.textContent='版本 '+BUILD+' · 自動更新';
   if($('pname'))$('pname').value=DB.playerName||'';
   $('dailybtn').textContent='每日挑戰 · '+todaysMutator().name;
   var cs=$('charsel'); cs.innerHTML='';

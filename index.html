@@ -38,8 +38,9 @@ if('serviceWorker' in navigator){ var __reloaded=false;
 
   /* ---------- HUD ---------- */
   #hud{position:fixed;left:0;right:0;top:0;height:100svh;pointer-events:none;z-index:5}
-  #xpbar{position:absolute;top:0;left:0;right:0;height:8px;background:rgba(255,255,255,.06)}
-  #xpfill{height:100%;width:0;background:linear-gradient(90deg,#22e6ff,#7c5bff);box-shadow:0 0 10px #22e6ff;transition:width .12s;position:relative;overflow:hidden}
+  #xpbar{position:absolute;top:0;left:0;right:0;height:10px;background:rgba(255,255,255,.06);box-shadow:inset 0 -2px 4px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12)}
+  #xpbar::before{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;background-image:repeating-linear-gradient(90deg,transparent 0,transparent 56px,rgba(255,255,255,.16) 56px,rgba(255,255,255,.16) 58px)}
+  #xpfill{height:100%;width:0;background:linear-gradient(90deg,#22e6ff,#7c5bff 68%,#ff5edb);box-shadow:0 0 12px #22e6ff,inset 0 0 6px rgba(255,255,255,.5);border-right:2px solid rgba(255,255,255,.9);transition:width .12s;position:relative;overflow:hidden}
   #topbar{position:absolute;top:14px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:3px}
   #timer{font-size:34px;font-weight:800;letter-spacing:2px;text-shadow:0 0 16px rgba(34,230,255,.6);font-variant-numeric:tabular-nums}
   #toprow{display:flex;gap:16px;font-size:13px;font-weight:700;color:#9fb2d8}
@@ -3041,8 +3042,14 @@ function drawPlayer(){
   ctx.beginPath(); ctx.moveTo(pr*0.34,pr*0.8); ctx.lineTo(pr*0.46,pr*0.8+fl2); ctx.lineTo(pr*0.58,pr*0.8); ctx.closePath(); ctx.fill();
   ctx.beginPath(); ctx.moveTo(-pr*0.34,pr*0.8); ctx.lineTo(-pr*0.46,pr*0.8+fl2); ctx.lineTo(-pr*0.58,pr*0.8); ctx.closePath(); ctx.fill();
   ctx.globalCompositeOperation='source-over';
-  // 開火槍口閃光（船首，隨開火脈動）
-  if(G.muzzleT>0){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=Math.max(0,G.muzzleT/0.06)*0.9; ctx.drawImage(glow(fren?'#ffd08a':'#bff2ff'),-pr*0.9,-pr*2.2,pr*1.8,pr*1.8); ctx.restore(); ctx.globalAlpha=1; }
+  // 開火槍口爆閃（船首，星芒放射 + 白熱核，隨開火脈動）
+  if(G.muzzleT>0){ var mzf=Math.max(0,G.muzzleT/0.06); ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.translate(0,-pr*1.35);
+    var mcol=fren?'#ffd08a':'#bff2ff';
+    ctx.globalAlpha=mzf*0.85; ctx.drawImage(glow(mcol),-pr*1.1,-pr*1.1,pr*2.2,pr*2.2);
+    ctx.strokeStyle=mcol; ctx.lineWidth=2; ctx.globalAlpha=mzf; ctx.beginPath();
+    for(var mk=0;mk<8;mk++){ var mka=mk/8*TAU+0.2, ml=(mk%2?pr*0.55:pr*1.5)*(0.55+mzf*0.55); ctx.moveTo(0,0); ctx.lineTo(Math.cos(mka)*ml,Math.sin(mka)*ml); } ctx.stroke();
+    ctx.fillStyle='#ffffff'; ctx.globalAlpha=mzf; ctx.beginPath(); ctx.arc(0,0,pr*0.3*(0.7+mzf*0.5),0,TAU); ctx.fill();
+    ctx.restore(); ctx.globalAlpha=1; }
   var pim=spr('player');
   if(pim){ ctx.shadowColor=pGlow; ctx.shadowBlur=18; var pd=pr*2.9; ctx.drawImage(pim,-pd/2,-pd/2,pd,pd); }
   else {
@@ -3363,7 +3370,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v264 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v265 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

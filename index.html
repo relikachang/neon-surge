@@ -476,7 +476,7 @@ var TAU=Math.PI*2;
 // =====================================================================
 var SAVE='neonSurge_v1';
 var DB=loadDB();
-function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false,enigma:false,spiralist:false,gunslinger:false};
+function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false,enigma:false,spiralist:false,gunslinger:false,ronin:false};
   var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
@@ -669,6 +669,7 @@ var MUTATORS=[
   {id:'ironwall',  name:'銅牆日',    desc:'敵人極韌但緩慢 · 你攻速全開', eSpd:0.8,eHp:2.4,spawn:1,elite:2,pHp:1.1,pDmg:1,pSpd:1},
   {id:'featherfall',name:'羽落日',   desc:'萬物極脆 · 一觸即潰的爽快割草', eSpd:1.2,eHp:0.3,spawn:1.6,elite:1,pHp:0.9,pDmg:1.3,pSpd:1.15},
   {id:'doubleedge',name:'雙刃日',    desc:'敵我傷害雙倍 · 一擊定生死的極限對拼', eSpd:1.1,eHp:1,spawn:1.1,elite:2,pHp:0.6,pDmg:2,pSpd:1.1},
+  {id:'stampede',  name:'奔潮日',    desc:'敵群如奔潮般高速湧至 · 你更靈動', eSpd:1.55,eHp:0.8,spawn:1.7,elite:1,pHp:0.85,pDmg:1.25,pSpd:1.3},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
@@ -778,9 +779,10 @@ var CHARS=[
   {id:'enigma',  face:'🎭',name:'謎影', desc:'隱者 · 起手黑洞 · 全能均衡', start:'blackhole', locked:true, hidden:true, unlock:'enigma', stat:{dmg:1.1,crit:0.1,speed:1.05,maxHp:0.95}},
   {id:'spiralist',face:'🌀',name:'螺旋使', desc:'彈幕覆蓋 · 起手螺旋炮', start:'spiralgun', locked:true, unlock:'spiralist', stat:{fireRate:1.08,dmg:0.98}},
   {id:'gunslinger',face:'🔫',name:'機炮手', desc:'單體壓制 · 起手加特林', start:'gatling', locked:true, unlock:'gunslinger', stat:{fireRate:1.12,crit:0.05,maxHp:0.95}},
+  {id:'ronin',    face:'☸️',name:'輪刃客', desc:'迴旋絞殺 · 起手迴旋輪刃', start:'chakram', locked:true, unlock:'ronin', stat:{dmg:1.08,speed:1.08,crit:0.05}},
 ];
 var selChar='ranger';
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕',lunar:'單局擊殺1200敵人',enigma:'？？？ 隱藏任務',spiralist:'單局擊殺2500敵人',gunslinger:'單局造成100萬傷害'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕',lunar:'單局擊殺1200敵人',enigma:'？？？ 隱藏任務',spiralist:'單局擊殺2500敵人',gunslinger:'單局造成100萬傷害',ronin:'單局擊殺60精英'};
 
 // =====================================================================
 // 地圖 / 關卡
@@ -2917,6 +2919,7 @@ function gameOver(){
   if(G.kills>=1200&&!DB.chars.lunar){DB.chars.lunar=true;}
   if(G.kills>=2500&&!DB.chars.spiralist){DB.chars.spiralist=true;}
   if((G.dmgDealt||0)>=1000000&&!DB.chars.gunslinger){DB.chars.gunslinger=true;}
+  if((G.eliteKills||0)>=60&&!DB.chars.ronin){DB.chars.ronin=true;}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; } }

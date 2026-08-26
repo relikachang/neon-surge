@@ -611,6 +611,7 @@ var ACHIEVEMENTS=[
   // ===== 隱藏成就（解鎖前顯示 ??? ）=====
   {id:'h_blitz',  ic:'⚡',hidden:true,name:'閃電開局',desc:'開局 45 秒內擊殺 100',rw:400,chk:function(){return G.kills>=100&&G.time<=45;}},
   {id:'h_tycoon', ic:'🤑',hidden:true,name:'暴發戶',  desc:'單局累積 3000 碎片',rw:500,chk:function(){return G.shards>=3000;}},
+  {id:'h_moguls', ic:'💎',hidden:true,name:'富甲天下',desc:'單局累積 15000 碎片',rw:1500,chk:function(){return G.shards>=15000;}},
   {id:'h_phoenix',ic:'🐣',hidden:true,name:'浴火重生',desc:'復活後撐到單局第 5 分鐘',rw:500,chk:function(){return G.usedRevive&&G.time>=300;}},
   {id:'h_demigod',ic:'😇',hidden:true,name:'半神',    desc:'單局達到 Lv60',rw:600,chk:function(){return G.level>=60;}},
   {id:'lv80',     ic:'💫',hidden:true,name:'神之領域',desc:'單局達到 Lv80',rw:900,chk:function(){return G.level>=80;}},
@@ -677,6 +678,7 @@ var MUTATORS=[
   {id:'featherfall',name:'羽落日',   desc:'萬物極脆 · 一觸即潰的爽快割草', eSpd:1.2,eHp:0.3,spawn:1.6,elite:1,pHp:0.9,pDmg:1.3,pSpd:1.15},
   {id:'doubleedge',name:'雙刃日',    desc:'敵我傷害雙倍 · 一擊定生死的極限對拼', eSpd:1.1,eHp:1,spawn:1.1,elite:2,pHp:0.6,pDmg:2,pSpd:1.1},
   {id:'stampede',  name:'奔潮日',    desc:'敵群如奔潮般高速湧至 · 你更靈動', eSpd:1.55,eHp:0.8,spawn:1.7,elite:1,pHp:0.85,pDmg:1.25,pSpd:1.3},
+  {id:'endless',   name:'無盡日',    desc:'永不停歇的敵潮 · 全面小幅強化', eSpd:1.15,eHp:1.15,spawn:1.6,elite:2,pHp:0.95,pDmg:1.1,pSpd:1.1},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
@@ -1682,7 +1684,7 @@ function spawnEnemy(type,ex,ey,mul,forceElite){
   // 精英變體：更大更肉、發光、掉更多、隨機詞綴（隨時間提高機率，每日變異可加成）
   var elite = forceElite || (mul>1 && Math.random()<Math.min(0.62,(0.015+G.time/1100)*mt.elite));
   var affix=null;
-  if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst','magnetic','trail','lunger','reflector','warlord','phaser','splitburst','artillery','healer','graviton','venomous','detonator','repulsor','frostmancer','disruptor','quaker','leech','mirror']); if(affix==='haste')sp*=1.6;
+  if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst','magnetic','trail','lunger','reflector','warlord','phaser','splitburst','artillery','healer','graviton','venomous','detonator','repulsor','frostmancer','disruptor','quaker','leech','mirror','conductor']); if(affix==='haste')sp*=1.6;
     if(G.time-(G._eliteWarn||-9)>4){ G._eliteWarn=G.time; announce('⚠ 精英出現','#ffffff'); GAudio.elite&&GAudio.elite(); } }
   var ang,rr=Math.max(W,H)*0.62;
   if(ex==null){ ang=rand(0,TAU); ex=player.x+Math.cos(ang)*rr; ey=player.y+Math.sin(ang)*rr; }
@@ -2043,6 +2045,7 @@ function update(dt){
     if(e.affix==='leech'){ e.lcT=(e.lcT==null?1:e.lcT-dt); if(e.lcT<=0){ e.lcT=1.2; if(e.hp<e.maxHp&&dist2(e.x,e.y,player.x,player.y)<260*260){ e.hp=Math.min(e.maxHp,e.hp+e.maxHp*0.12); ringFx(e.x,e.y,42,'#ff4d6a'); } } }  // 汲血鬼詞綴：玩家在附近時快速自我回血，逼你速殺或拉開
     if(e.affix==='healer'){ e.hlT=(e.hlT==null?2.8:e.hlT-dt); if(e.hlT<=0){ e.hlT=3.4; ringFx(e.x,e.y,160,'#5dff9b'); (function(ex,ey){ enemyGrid.query(ex,ey,170,function(o){ if(o.hp>0&&o.hp<o.maxHp&&dist2(o.x,o.y,ex,ey)<170*170){ o.hp=Math.min(o.maxHp,o.hp+o.maxHp*0.15); o.flash=Math.max(o.flash||0,0.12); } }); })(e.x,e.y); } }  // 治療者詞綴：週期治療周圍受傷敵人
     if(e.affix==='graviton'){ e.gvT=(e.gvT==null?3:e.gvT-dt); if(e.gvT<=0){ e.gvT=4; if(hazards.length<80)hazards.push({kind:'pull',x:e.x,y:e.y,r:155,life:2.5,max:2.5,dtk:0}); ringFx(e.x,e.y,70,'#8b5cf6'); } }  // 重力核詞綴：週期製造重力場拉扯玩家
+    if(e.affix==='conductor'){ e.cdT=(e.cdT==null?3:e.cdT-dt); if(e.cdT<=0){ e.cdT=3.5; if(dist2(e.x,e.y,player.x,player.y)<380*380){ fxLightning(e.x,e.y,player.x,player.y); hurtPlayer(e.dmg*0.6); ringFx(e.x,e.y,40,'#c58bff'); } } }  // 導體詞綴：週期朝玩家射出一道電擊,懲罰停留在近距離
     if(e.affix==='frostmancer'){ e.fmT=(e.fmT==null?3:e.fmT-dt); if(e.fmT<=0){ e.fmT=4; if(dist2(e.x,e.y,player.x,player.y)<360*360){ player.chillT=1.6; ringFx(player.x,player.y,58,'#8bd3ff'); ringFx(e.x,e.y,80,'#8bd3ff'); flashScreen('139,211,255',0.16); } } }  // 霜咒者詞綴：週期對附近玩家施加減速咒
     if(e.affix==='disruptor'){ e.dsT=(e.dsT==null?3.5:e.dsT-dt); if(e.dsT<=0){ e.dsT=4.5; if(dist2(e.x,e.y,player.x,player.y)<380*380){ player.jamT=1.5; ringFx(player.x,player.y,52,'#ff5edb'); ringFx(e.x,e.y,74,'#ff5edb'); flashScreen('255,94,219',0.14); } } }  // 干擾者詞綴：週期擾亂附近玩家的武器射速
     if(e.affix==='repulsor'){ e.rpT=(e.rpT==null?2.5:e.rpT-dt); if(e.rpT<=0){ e.rpT=3.2; var rpa=Math.atan2(player.y-e.y,player.x-e.x); player.x+=Math.cos(rpa)*95; player.y+=Math.sin(rpa)*95; ringFx(e.x,e.y,80,'#5dd3ff'); ringFx(player.x,player.y,50,'#5dd3ff'); } }  // 斥力場詞綴：週期把玩家推開，打亂走位
@@ -2691,7 +2694,7 @@ function drawEnemy(e){
     ctx.stroke();
     ctx.globalAlpha=0.4; ctx.lineWidth=1.6; ctx.beginPath(); ctx.arc(0,0,r*0.52,-gs*1.5,-gs*1.5+4.9); ctx.stroke();
     ctx.globalAlpha=1; }
-  if(e.elite){ var affCol=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':e.affix==='reflector'?'#3df0c8':e.affix==='warlord'?'#ffd54a':e.affix==='phaser'?'#c8c8ff':e.affix==='splitburst'?'#ff9a3d':e.affix==='artillery'?'#ff6a3d':e.affix==='healer'?'#5dff9b':e.affix==='graviton'?'#8b5cf6':e.affix==='venomous'?'#9dff5d':e.affix==='detonator'?'#ff9a3d':e.affix==='repulsor'?'#5dd3ff':e.affix==='frostmancer'?'#8bd3ff':e.affix==='disruptor'?'#ff5edb':e.affix==='quaker'?'#ff8a3a':e.affix==='leech'?'#ff4d6a':e.affix==='mirror'?'#c8c8ff':'#ffffff';
+  if(e.elite){ var affCol=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':e.affix==='reflector'?'#3df0c8':e.affix==='warlord'?'#ffd54a':e.affix==='phaser'?'#c8c8ff':e.affix==='splitburst'?'#ff9a3d':e.affix==='artillery'?'#ff6a3d':e.affix==='healer'?'#5dff9b':e.affix==='graviton'?'#8b5cf6':e.affix==='venomous'?'#9dff5d':e.affix==='detonator'?'#ff9a3d':e.affix==='repulsor'?'#5dd3ff':e.affix==='frostmancer'?'#8bd3ff':e.affix==='disruptor'?'#ff5edb':e.affix==='quaker'?'#ff8a3a':e.affix==='leech'?'#ff4d6a':e.affix==='mirror'?'#c8c8ff':e.affix==='conductor'?'#c58bff':'#ffffff';
     ctx.lineWidth=2.8; ctx.strokeStyle=affCol; ctx.stroke();   // 精英詞綴描邊
     if(!e.boss){ ctx.globalAlpha=0.4+0.3*Math.sin(G.time*6+e.x*0.03); ctx.lineWidth=2; ctx.strokeStyle=affCol; ctx.setLineDash([6,7]); ctx.lineDashOffset=-G.time*24;
       ctx.beginPath(); ctx.arc(0,0,r*1.55,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1; } }   // 精英脈動光環（旋轉虛線）

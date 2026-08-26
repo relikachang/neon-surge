@@ -58,6 +58,11 @@
   #achpop .ai{font-size:30px}
   #achpop .at{font-size:10px;letter-spacing:3px;color:#ffd54a;font-weight:800}
   #achpop .an{font-size:16px;font-weight:800;color:#fff}
+  #achpop{overflow:hidden}
+  #achpop::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,213,74,.28),transparent);background-size:80px 100%;background-repeat:no-repeat;animation:hudshine 2s linear infinite;pointer-events:none}
+  #achpop .ai{filter:drop-shadow(0 0 8px #ffd54a)}
+  #achpop.show .ai{animation:achicon .7s cubic-bezier(.2,1.5,.4,1) both}
+  @keyframes achicon{0%{transform:scale(0) rotate(-40deg)}100%{transform:scale(1) rotate(0)}}
   .achitem{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;margin-bottom:8px;
     background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
   .achitem.locked{opacity:.45}
@@ -2253,10 +2258,16 @@ function drawStars(camx,camy){ ctx.save(); ctx.globalCompositeOperation='lighter
     var tw=0.55+0.45*Math.sin(G.time*2+stz.tw);
     ctx.globalAlpha=(0.3+0.55*stz.z)*tw; ctx.fillStyle=stz.c;
     ctx.beginPath(); ctx.arc(camx+px,camy+py,stz.s,0,TAU); ctx.fill(); }
-  // 環境漂浮光塵：關卡專屬色的柔光微塵緩緩飄升，增添場景生氣與氛圍
+  // 環境漂浮粒子：依關卡類型呈現不同氛圍（雪花／火花／虛空微光／柔光微塵）
+  var stid=(G&&G.stage&&G.stage.id)||'city';
   var ecol=(G&&G.stage&&G.stage.bossColor)||'#5db6ff';
-  ctx.fillStyle=ecol;
-  for(var em=0;em<22;em++){ var ex=((em*173.3+G.time*(9+em%4))%(W+40))-20, ey=((H+40)-((G.time*(7+em%5)+em*111)%(H+80))), es=1.1+(em%3)*0.8, ea=0.10+0.09*Math.sin(G.time*1.3+em*1.7);
+  var snow=(stid==='tundra'), fire=(stid==='wastes'||stid==='core'||stid==='meteorite'), voidm=(stid==='abyss'||stid==='oblivion'||stid==='eventhorizon'||stid==='rift'||stid==='paradox');
+  ctx.fillStyle= snow?'#dff4ff' : fire?'#ff8a3a' : ecol;
+  for(var em=0;em<26;em++){ var ex,ey,es,ea;
+    if(snow){ ex=((em*163.1+Math.sin(G.time*0.6+em)*30)%(W+40))-20; ey=((G.time*(20+em%6)+em*97)%(H+80))-20; es=1.2+(em%3)*0.9; ea=0.16+0.12*Math.sin(G.time*2+em); }
+    else if(fire){ ex=((em*151.7+Math.sin(G.time*3+em)*14)%(W+40))-20; ey=((H+40)-((G.time*(26+em%7)+em*83)%(H+80))); es=0.9+(em%3)*0.7; ea=0.12+0.14*Math.abs(Math.sin(G.time*4+em*2)); }
+    else if(voidm){ ex=((em*173.3+Math.sin(G.time*0.4+em*1.3)*40)%(W+40))-20; ey=((em*211.7+Math.cos(G.time*0.35+em)*40)%(H+40)); es=1.0+(em%4)*0.7; ea=0.08+0.10*Math.sin(G.time*1.1+em*1.9); }
+    else { ex=((em*173.3+G.time*(9+em%4))%(W+40))-20; ey=((H+40)-((G.time*(7+em%5)+em*111)%(H+80))); es=1.1+(em%3)*0.8; ea=0.10+0.09*Math.sin(G.time*1.3+em*1.7); }
     if(ea>0.02){ ctx.globalAlpha=ea; ctx.beginPath(); ctx.arc(camx+ex,camy+ey,es,0,TAU); ctx.fill(); } }
   ctx.restore();
 }

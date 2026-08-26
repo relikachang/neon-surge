@@ -111,6 +111,11 @@
   #bossintro .bi-warn{font-size:14px;letter-spacing:7px;font-weight:800;text-shadow:0 0 12px currentColor}
   #bossintro .bi-name{font-size:min(11vw,66px);font-weight:900;letter-spacing:4px;text-shadow:0 0 34px currentColor;margin-top:6px}
   @keyframes bossIntroAnim{0%{opacity:0;transform:scale(1.45);filter:blur(9px)}14%{opacity:1;transform:scale(1);filter:blur(0)}72%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.95)}}
+  /* --- B219 中央提示彈入 + 面板統一進場 --- */
+  #announce2.pop{animation:annpop .5s cubic-bezier(.2,1.5,.4,1)}
+  @keyframes annpop{0%{transform:translateX(-50%) scale(1.4);filter:brightness(1.9)}100%{transform:translateX(-50%) scale(1);filter:brightness(1)}}
+  @keyframes panelin{0%{transform:translateY(18px) scale(.985);opacity:0}100%{transform:none;opacity:1}}
+  .overlay.show .panel{animation:panelin .35s ease both}
 
   /* 手機搖桿 */
   #joy{position:absolute;display:none;width:120px;height:120px;border-radius:50%;
@@ -2147,6 +2152,7 @@ function collectPickup(p){
 function floatText(t,c){ var a=$('announce2'); a.textContent=t; a.style.color=c; a.style.opacity='1'; a.style.top='44%';
   setTimeout(function(){a.style.opacity='0';},700); }
 function announce(t,c){ var a=$('announce2'); a.textContent=t; a.style.color=c||'#22e6ff'; a.style.opacity='1'; a.style.top='36%';
+  a.classList.remove('pop'); void a.offsetWidth; a.classList.add('pop');   // 重新觸發彈入動畫
   setTimeout(function(){a.style.opacity='0';},1400); }
 
 // =====================================================================

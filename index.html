@@ -205,6 +205,18 @@
   #over .ost b{display:block;font-size:26px;color:#fff}
   #over .ost span{font-size:11px;color:#8ea0c8;letter-spacing:1px}
   #over .oreward{color:var(--gold);font-weight:800;font-size:18px;margin-bottom:6px}
+  /* --- B207 結算評價徽章 + 面板美化 --- */
+  #o-rank{display:flex;flex-direction:column;align-items:center;gap:4px;margin:10px 0 4px}
+  #o-rank-badge{display:flex;align-items:center;justify-content:center;width:88px;height:88px;border:3px solid #22e6ff;border-radius:50%;
+    font-size:52px;font-weight:900;color:#22e6ff;background:rgba(8,12,24,.5);animation:rankpop .5s cubic-bezier(.2,1.4,.4,1) both,rankspin 6s linear infinite}
+  #o-rank-label{font-size:11px;letter-spacing:4px;color:#8ea0c8;font-weight:700}
+  @keyframes rankpop{0%{transform:scale(0) rotate(-30deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
+  @keyframes rankspin{0%,92%{filter:brightness(1)}96%{filter:brightness(1.5)}100%{filter:brightness(1)}}
+  #over .ost{background:linear-gradient(180deg,rgba(20,28,50,.6),rgba(10,14,28,.6));transition:transform .12s}
+  #over .ost:hover{transform:translateY(-2px)}
+  #over .ost b{text-shadow:0 0 12px rgba(34,230,255,.4)}
+  #over.show .panel{animation:overin .5s ease both}
+  @keyframes overin{0%{transform:translateY(24px) scale(.96);opacity:0}100%{transform:none;opacity:1}}
 
   .hint{font-size:11px;color:#6b7ba0;text-align:center;margin-top:14px;letter-spacing:1px}
   .tutlist{text-align:left;margin:6px 0 8px;max-height:56vh;overflow-y:auto}
@@ -382,6 +394,7 @@
 <!-- 結算 -->
 <div id="over" class="overlay"><div class="panel">
   <div class="otitle">倒 下</div>
+  <div id="o-rank"><span id="o-rank-badge">C</span><span id="o-rank-label">評價</span></div>
   <div class="oscore">分數 <b id="o-score">0</b></div>
   <div id="o-record" style="display:none;text-align:center;font-size:15px;font-weight:900;color:#ffd54a;letter-spacing:2px;text-shadow:0 0 12px rgba(255,213,74,.6);margin-bottom:4px">🏆 新紀錄！</div>
   <div class="ostats">
@@ -2695,6 +2708,9 @@ function gameOver(){
   $('o-time').textContent=fmtTime(G.time); $('o-kills').textContent=G.kills;
   $('o-level').textContent=G.level; $('o-wave').textContent=G.wave;
   $('o-score').textContent=G.score||0;
+  // 結算評價（依分數評級 S/A/B/C/D）
+  var sc=G.score||0, rk=sc>=60000?['S','#ffd54a']:sc>=32000?['A','#ff5edb']:sc>=16000?['B','#7c5bff']:sc>=6000?['C','#22e6ff']:['D','#8ea0c8'];
+  var rb=$('o-rank-badge'); if(rb){ rb.textContent=rk[0]; rb.style.color=rk[1]; rb.style.borderColor=rk[1]; rb.style.textShadow='0 0 18px '+rk[1]; rb.style.boxShadow='0 0 26px '+rk[1]+'55, inset 0 0 18px '+rk[1]+'22'; }
   $('o-record').style.display=G.newRecord?'block':'none';
   $('o-boss').textContent=G.bossKills||0; $('o-elite').textContent=G.eliteKills||0;
   $('o-dps').textContent=Math.round((G.dmgDealt||0)/Math.max(1,G.time)); $('o-combo').textContent=G.peakCombo||0;

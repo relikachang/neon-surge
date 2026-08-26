@@ -3376,6 +3376,19 @@ function gameOver(){
 function togglePause(){ if(!running||G.over)return;
   if($('levelup').classList.contains('show'))return;
   G.paused=!G.paused; $('pause').classList.toggle('show',G.paused); if(G.paused)renderPauseBuild(); if(!G.paused)last=performance.now(); }
+function fusionHints(){
+  var ready=[], soon=[], one=[];
+  FUSIONS.forEach(function(f){ var a=weaponById(f.a), b=weaponById(f.b), da=WDEFS[f.a], db=WDEFS[f.b];
+    if(a&&b){ if(!a.fused&&!b.fused){ if(a.level>=4&&b.level>=4)ready.push(f); else soon.push(f); } }
+    else if(a&&!a.fused)one.push({f:f,have:da,need:db});
+    else if(b&&!b.fused)one.push({f:f,have:db,need:da}); });
+  var chips=[];
+  ready.forEach(function(f){ chips.push('<span class="bchip" style="border-color:'+f.color+';background:'+f.color+'22;color:#fff">✅ '+f.ic+' '+f.name+' 可合成！</span>'); });
+  soon.forEach(function(f){ chips.push('<span class="bchip" style="border-color:'+f.color+'99">'+f.ic+' '+f.name+' · 練滿雙武器</span>'); });
+  one.slice(0,4).forEach(function(o){ chips.push('<span class="bchip" style="border-color:'+o.f.color+'66">'+o.f.ic+' '+o.f.name+' · 你有'+o.have.name+'，再拿 <b style="color:#fff">'+o.need.name+'</b></span>'); });
+  if(!chips.length)return '';
+  return '<div class="blabel">🔗 融合提示（合成 = 兩把武器各滿 4 級後升級選單出現）</div><div class="brow">'+chips.slice(0,8).join('')+'</div>';
+}
 function renderPauseBuild(){
   var wh=player.weapons.map(function(w){ var mk=w.asc?' ✦極':w.fused?' 🔗':w.evolved?' ★':''; var nm=(w.evolved||w.asc)&&w.def.evo?w.def.evo.name:w.def.name;
     return '<span class="bchip" style="border-color:'+((w.evolved||w.asc)&&w.def.evo?w.def.evo.color:w.def.color)+'">'+(w.def.evo&&(w.evolved||w.asc)?w.def.evo.ic:w.def.ic)+' '+nm+(w.fused||w.asc?'':' L'+(w.level+1))+mk+'</span>'; }).join('');
@@ -3386,6 +3399,7 @@ function renderPauseBuild(){
     '<span class="bchip">⏱ '+fmtTime(G.time)+'</span><span class="bchip">☠ '+G.kills+'</span><span class="bchip">DPS '+dps+'</span>'+
     '<span class="bchip">🔥 x'+(G.peakCombo||0)+'</span><span class="bchip">👑 '+(G.bossKills||0)+'</span><span class="bchip">✨ '+(G.eliteKills||0)+'</span></div>';
   $('pausebuild').innerHTML=stats+'<div class="blabel">武器 ('+player.weapons.length+')</div><div class="brow">'+wh+'</div>'+
+    fusionHints()+
     '<div class="blabel">被動</div><div class="brow">'+ph+'</div>'+
     '<div class="blabel">角色 · 地圖</div><div class="brow"><span class="bchip">'+(CHARS.find(function(c){return c.id===selChar;})||{}).name+'</span><span class="bchip">'+G.stage.name+'</span>'+(G.daily?'<span class="bchip" style="border-color:#ffd54a">🗓️ '+G.mut.name+'</span>':'')+'</div>'; }
 
@@ -3471,7 +3485,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v279 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v280 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

@@ -2623,15 +2623,27 @@ function render(){
     ctx.save(); ctx.translate(dr.x,dr.y);
     ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=da*0.5; ctx.drawImage(glow(dcol),-13,-13,26,26);
     ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=da;
-    // 六角機殼（緩轉）
-    ctx.save(); ctx.rotate(dr.ang*0.6); ctx.fillStyle='rgba(8,16,26,0.72)'; ctx.strokeStyle=dcol; ctx.lineWidth=1.6; ctx.shadowColor=dcol; ctx.shadowBlur=7;
-    ctx.beginPath(); for(var hh=0;hh<6;hh++){ var ha=hh/6*TAU; (hh?ctx.lineTo:ctx.moveTo).call(ctx,Math.cos(ha)*7,Math.sin(ha)*7);} ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
-    // 四角旋翼（快轉短線）
-    ctx.strokeStyle=dcol; ctx.lineWidth=1.4; ctx.globalAlpha=da*0.85; ctx.shadowBlur=4;
-    for(var rt=0;rt<4;rt++){ var rta=rt/4*TAU+0.78; ctx.save(); ctx.translate(Math.cos(rta)*8,Math.sin(rta)*8); ctx.rotate(dr.ang*6); ctx.beginPath(); ctx.moveTo(-3.6,0); ctx.lineTo(3.6,0); ctx.stroke(); ctx.restore(); }
-    // 中央掃描眼（脈動）
-    ctx.shadowBlur=0; var dp=0.6+0.4*Math.sin(G.time*6+dr.x*0.1); ctx.fillStyle='#ffffff'; ctx.globalAlpha=da*dp; ctx.beginPath(); ctx.arc(0,0,2.5,0,TAU); ctx.fill();
-    ctx.fillStyle=dcol; ctx.globalAlpha=da; ctx.beginPath(); ctx.arc(0,0,1.3,0,TAU); ctx.fill(); ctx.restore(); }   // 核心燈
+    if(dr.fixed){
+      // 固定砲塔：六角底座 + 朝目標的砲管 + 砲塔頂燈（有別於環繞無人機）
+      ctx.save(); ctx.fillStyle='rgba(8,16,26,0.82)'; ctx.strokeStyle=dcol; ctx.lineWidth=1.7; ctx.shadowColor=dcol; ctx.shadowBlur=7;
+      ctx.beginPath(); for(var hb=0;hb<6;hb++){ var hba=hb/6*TAU+0.5; (hb?ctx.lineTo:ctx.moveTo).call(ctx,Math.cos(hba)*9,Math.sin(hba)*9);} ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+      var aim=(dr.mza!=null?dr.mza:G.time*0.7);
+      ctx.save(); ctx.rotate(aim); ctx.fillStyle=dcol; ctx.shadowColor=dcol; ctx.shadowBlur=8;
+      ctx.fillRect(2,-2.3,12,4.6); ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.beginPath(); ctx.arc(14,0,1.5,0,TAU); ctx.fill(); ctx.restore();
+      ctx.shadowBlur=0; var dpt=0.6+0.4*Math.sin(G.time*6+dr.x*0.1); ctx.fillStyle='#ffffff'; ctx.globalAlpha=da*dpt; ctx.beginPath(); ctx.arc(0,0,2.8,0,TAU); ctx.fill();
+      ctx.fillStyle=dcol; ctx.globalAlpha=da; ctx.beginPath(); ctx.arc(0,0,1.5,0,TAU); ctx.fill();
+    } else {
+      // 六角機殼（緩轉）
+      ctx.save(); ctx.rotate(dr.ang*0.6); ctx.fillStyle='rgba(8,16,26,0.72)'; ctx.strokeStyle=dcol; ctx.lineWidth=1.6; ctx.shadowColor=dcol; ctx.shadowBlur=7;
+      ctx.beginPath(); for(var hh=0;hh<6;hh++){ var ha=hh/6*TAU; (hh?ctx.lineTo:ctx.moveTo).call(ctx,Math.cos(ha)*7,Math.sin(ha)*7);} ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+      // 四角旋翼（快轉短線）
+      ctx.strokeStyle=dcol; ctx.lineWidth=1.4; ctx.globalAlpha=da*0.85; ctx.shadowBlur=4;
+      for(var rt=0;rt<4;rt++){ var rta=rt/4*TAU+0.78; ctx.save(); ctx.translate(Math.cos(rta)*8,Math.sin(rta)*8); ctx.rotate(dr.ang*6); ctx.beginPath(); ctx.moveTo(-3.6,0); ctx.lineTo(3.6,0); ctx.stroke(); ctx.restore(); }
+      // 中央掃描眼（脈動）
+      ctx.shadowBlur=0; var dp=0.6+0.4*Math.sin(G.time*6+dr.x*0.1); ctx.fillStyle='#ffffff'; ctx.globalAlpha=da*dp; ctx.beginPath(); ctx.arc(0,0,2.5,0,TAU); ctx.fill();
+      ctx.fillStyle=dcol; ctx.globalAlpha=da; ctx.beginPath(); ctx.arc(0,0,1.3,0,TAU); ctx.fill();
+    }
+    ctx.restore(); }   // 核心燈
 
   // 地雷
   for(var i=0;i<mines.length;i++){ var mn=mines[i]; var blink=mn.arm>0?0.4:(0.5+0.5*Math.sin(Date.now()/120));
@@ -2867,6 +2879,10 @@ function drawEnemy(e){
       ctx.globalCompositeOperation='lighter'; ctx.save(); ctx.rotate(toP+Math.PI);
       for(var gt=0;gt<3;gt++){ var gy=(gt-1)*r*0.4; ctx.globalAlpha=0.4-gt*0.05;
         ctx.beginPath(); ctx.moveTo(r*0.3,gy*0.4); ctx.quadraticCurveTo(r*1.2,gy,r*1.7+Math.sin(G.time*4+gt)*r*0.2,gy*1.4); ctx.lineTo(r*0.3,gy*0.4+r*0.18); ctx.closePath(); ctx.fill(); } ctx.restore();
+    } else if(e.homer||e.seekerRare||e.stormRare){   // 飛行類：面向玩家的後掠雙翼
+      ctx.save(); ctx.rotate(toP);
+      for(var wg=0;wg<2;wg++){ var wy=wg?1:-1; ctx.beginPath(); ctx.moveTo(-r*0.1,wy*r*0.28); ctx.lineTo(-r*1.3,wy*r*0.52); ctx.lineTo(-r*0.85,wy*r*0.96); ctx.lineTo(r*0.12,wy*r*0.48); ctx.closePath(); ctx.fill(); }
+      ctx.restore();
     } else {   // 一般雜兵：環身短棘（辨識為「基礎敵」）
       ctx.lineWidth=1.3;
       for(var bk2=0;bk2<8;bk2++){ var b2a=bk2/8*TAU+0.2; ctx.beginPath(); ctx.moveTo(Math.cos(b2a)*r*0.85,Math.sin(b2a)*r*0.85); ctx.lineTo(Math.cos(b2a)*r*1.22,Math.sin(b2a)*r*1.22); ctx.stroke(); }
@@ -3379,7 +3395,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v266 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v267 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

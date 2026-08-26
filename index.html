@@ -43,8 +43,11 @@
   #weprow{position:absolute;right:12px;bottom:calc(64px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:5px;align-items:flex-end}
   .wchip{display:flex;align-items:center;gap:6px;background:rgba(12,18,34,.62);border:1px solid rgba(255,255,255,.1);
     border-radius:9px;padding:3px 8px;font-size:11px;font-weight:700;backdrop-filter:blur(4px)}
-  .wchip .wi{font-size:14px}
+  .wchip .wi{font-size:14px;filter:drop-shadow(0 0 4px rgba(34,230,255,.5))}
   .wchip .wl{color:var(--cyan);font-size:10px}
+  /* --- B218 武器 chip 美化 --- */
+  .wchip{background:linear-gradient(135deg,rgba(20,28,50,.66),rgba(12,18,34,.66));box-shadow:0 2px 8px rgba(0,0,0,.3),inset 0 0 8px rgba(34,230,255,.05);transition:transform .12s}
+  .wchip:hover{transform:translateX(-3px)}
   .oscore{text-align:center;font-size:14px;color:#8ea0c8;letter-spacing:2px;margin:6px 0 4px}
   .oscore b{font-size:30px;color:#ffd54a;display:block;text-shadow:0 0 16px rgba(255,213,74,.5)}
   #pausebuild .blabel{font-size:10px;letter-spacing:2px;color:#8ea0c8;margin:12px 0 6px;font-weight:700}
@@ -2682,8 +2685,10 @@ function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'�
   ctx.globalCompositeOperation='source-over';
   // 地面小陰影
   ctx.globalAlpha=0.22; ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(p.x,p.y+16,10,3,0,0,TAU); ctx.fill(); ctx.globalAlpha=1;
-  ctx.shadowColor='#ffd54a'; ctx.shadowBlur=14; ctx.font='24px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText(ic,p.x,yy); ctx.restore(); }
+  ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.45+pulse*0.4; ctx.strokeStyle=pcol; ctx.lineWidth=1.6; ctx.setLineDash([4,5]); ctx.lineDashOffset=G.time*20;
+  ctx.beginPath(); ctx.arc(p.x,yy,16,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.restore();   // 收集指示環
+  ctx.shadowColor=pcol; ctx.shadowBlur=14; ctx.font='24px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.save(); ctx.translate(p.x,yy); var isc=1+pulse*0.08; ctx.scale(isc,isc); ctx.fillText(ic,0,0); ctx.restore(); ctx.restore(); }   // 圖示依類型色光暈 + 呼吸縮放
 
 // =====================================================================
 // HUD 更新

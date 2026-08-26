@@ -2342,10 +2342,14 @@ function render(){
     ctx.restore(); }
 
   // 黑洞重力井
-  for(var i=0;i<wells.length;i++){ var wl=wells[i], wa=Math.max(0,wl.life/wl.max);
-    ctx.save(); ctx.globalAlpha=0.55*wa; ctx.fillStyle='#180430'; ctx.beginPath(); ctx.arc(wl.x,wl.y,wl.r*0.42,0,TAU); ctx.fill();
-    ctx.globalAlpha=wa; ctx.strokeStyle=wl.explode?'#c98bff':'#b06bff'; ctx.lineWidth=3; ctx.shadowColor='#b06bff'; ctx.shadowBlur=18;
-    for(var k=0;k<3;k++){ ctx.beginPath(); ctx.arc(wl.x,wl.y,wl.r*(0.5+k*0.22),wl.spin+k,wl.spin+k+4.6); ctx.stroke(); }
+  for(var i=0;i<wells.length;i++){ var wl=wells[i], wa=Math.max(0,wl.life/wl.max); var wc=wl.explode?'#c98bff':'#b06bff';
+    ctx.save();
+    ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.32*wa; ctx.drawImage(glow(wc),wl.x-wl.r,wl.y-wl.r,wl.r*2,wl.r*2);   // 吸積外暈
+    ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=0.72*wa; ctx.fillStyle='#0a0118'; ctx.beginPath(); ctx.arc(wl.x,wl.y,wl.r*0.4,0,TAU); ctx.fill();   // 暗核
+    ctx.globalAlpha=wa; ctx.strokeStyle=wc; ctx.lineWidth=2.5; ctx.shadowColor=wc; ctx.shadowBlur=16; ctx.beginPath(); ctx.arc(wl.x,wl.y,wl.r*0.42,0,TAU); ctx.stroke();   // 事件視界
+    ctx.globalCompositeOperation='lighter'; ctx.lineWidth=3;
+    for(var k=0;k<3;k++){ ctx.globalAlpha=0.9*wa; ctx.beginPath(); ctx.arc(wl.x,wl.y,wl.r*(0.5+k*0.22),wl.spin+k,wl.spin+k+4.6); ctx.stroke(); }   // 吸積旋臂
+    ctx.lineWidth=2; for(var wsp=0;wsp<10;wsp++){ var wsa=-wl.spin*2+wsp/10*TAU, wr1=wl.r*0.95, wr2=wl.r*(0.5+0.15*Math.sin(G.time*5+wsp)); ctx.globalAlpha=0.5*wa; ctx.beginPath(); ctx.moveTo(wl.x+Math.cos(wsa)*wr1,wl.y+Math.sin(wsa)*wr1); ctx.lineTo(wl.x+Math.cos(wsa)*wr2,wl.y+Math.sin(wsa)*wr2); ctx.stroke(); }   // 向心吸入
     ctx.shadowBlur=0; ctx.restore(); }
 
   // 哨衛無人機
@@ -2396,7 +2400,10 @@ function render(){
 
   // 粒子
   ctx.globalCompositeOperation='lighter';
-  for(var i=0;i<particles.length;i++){ var p=particles[i]; ctx.globalAlpha=Math.max(0,p.life/p.max); ctx.drawImage(glow(p.color),p.x-p.r*3,p.y-p.r*3,p.r*6,p.r*6); }
+  for(var i=0;i<particles.length;i++){ var p=particles[i]; var pl=Math.max(0,p.life/p.max);
+    if((p.vx*p.vx+p.vy*p.vy)>16000){ ctx.globalAlpha=pl*0.4; ctx.drawImage(glow(p.color),p.x-p.vx*0.02-p.r*2.4,p.y-p.vy*0.02-p.r*2.4,p.r*4.8,p.r*4.8); }   // 高速拖尾
+    var gs=p.r*3*(0.6+pl*0.5); ctx.globalAlpha=pl; ctx.drawImage(glow(p.color),p.x-gs,p.y-gs,gs*2,gs*2);
+    if(pl>0.25){ ctx.globalAlpha=pl*0.9; ctx.drawImage(glow('#ffffff'),p.x-p.r,p.y-p.r,p.r*2,p.r*2); } }   // 白熱核
   // 擊殺碎片（旋轉飛散的霓虹線片，讓擊殺更有打擊感與畫面碎裂感）
   for(var i=0;i<shards.length;i++){ var sh=shards[i]; var sa=Math.max(0,sh.life/sh.max);
     ctx.save(); ctx.globalAlpha=sa; ctx.translate(sh.x,sh.y); ctx.rotate(sh.ang);

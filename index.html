@@ -578,6 +578,7 @@ var MUTATORS=[
   {id:'duel',      name:'決鬥日',    desc:'敵人稀少但超肉超快 · 你火力全開', eSpd:1.4,eHp:2.5,spawn:0.5,elite:2,pHp:1,pDmg:1.6,pSpd:1.2},
   {id:'locust',    name:'蝗災日',    desc:'鋪天蓋地的脆弱蟲潮 · 你也更脆', eSpd:1.3,eHp:0.35,spawn:2.0,elite:1,pHp:0.7,pDmg:1.2,pSpd:1.15},
   {id:'fortress',  name:'鐵壁日',    desc:'敵人稀少但堅如鐵壁 · 你更肉更慢', eSpd:0.85,eHp:2.6,spawn:0.7,elite:2,pHp:1.5,pDmg:1,pSpd:0.9},
+  {id:'frenzyfest',name:'狂歡日',    desc:'敵我皆極速 · 精英成群 · 高風險高爽度', eSpd:1.45,eHp:0.85,spawn:1.55,elite:3,pHp:0.85,pDmg:1.45,pSpd:1.35},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
@@ -2419,6 +2420,19 @@ function drawEnemy(e){
     ctx.lineWidth=2.8; ctx.strokeStyle=affCol; ctx.stroke();   // 精英詞綴描邊
     if(!e.boss){ ctx.globalAlpha=0.4+0.3*Math.sin(G.time*6+e.x*0.03); ctx.lineWidth=2; ctx.strokeStyle=affCol; ctx.setLineDash([6,7]); ctx.lineDashOffset=-G.time*24;
       ctx.beginPath(); ctx.arc(0,0,r*1.55,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1; } }   // 精英脈動光環（旋轉虛線）
+  // 敵種專屬造型裝飾（方向無關，讓關鍵敵人一眼可辨）
+  if(!f && r>=10){ ctx.save();
+    if(e.explode){ var bl=0.5+0.5*Math.sin(G.time*14+e.x); ctx.globalAlpha=0.45+bl*0.5; ctx.fillStyle='#fff'; ctx.shadowColor='#ff3b3b'; ctx.shadowBlur=8+bl*10;
+      ctx.beginPath(); ctx.arc(0,0,r*0.32,0,TAU); ctx.fill(); ctx.globalAlpha=0.8*bl; ctx.strokeStyle='#ff5b5b'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(0,0,r*0.62,0,TAU); ctx.stroke(); ctx.shadowBlur=0; }   // 爆裂類：閃爍警示核心
+    else if(e.type==='golden'){ ctx.globalCompositeOperation='lighter'; ctx.fillStyle='#fff4c0'; ctx.shadowColor='#ffd54a'; ctx.shadowBlur=12;
+      for(var gk=0;gk<4;gk++){ var gaa=G.time*2+gk/4*TAU, gd=r*(0.7+0.3*Math.sin(G.time*3+gk)); ctx.globalAlpha=0.5+0.5*Math.sin(G.time*6+gk*1.7); ctx.beginPath(); ctx.arc(Math.cos(gaa)*gd,Math.sin(gaa)*gd,1.7,0,TAU); ctx.fill(); } ctx.shadowBlur=0; }   // 黃金巨獸：閃耀星塵
+    else if(e.titan||e.type==='brute'||e.type==='tank'||e.type==='smasher'){ ctx.globalAlpha=0.6; ctx.fillStyle='rgba(255,255,255,0.7)'; var bolts=e.shape==='hex'?6:5;
+      for(var bk=0;bk<bolts;bk++){ var ba=bk/bolts*TAU+0.25; ctx.beginPath(); ctx.arc(Math.cos(ba)*r*0.68,Math.sin(ba)*r*0.68,r*0.09,0,TAU); ctx.fill(); } }   // 重甲類：鉚釘裝甲
+    else if(e.charger||e.impaler||e.type==='wraith'||e.stalker){ ctx.globalAlpha=0.7; ctx.strokeStyle=e.color; ctx.lineWidth=1.8; ctx.shadowColor=e.color; ctx.shadowBlur=6;
+      for(var ck=0;ck<6;ck++){ var ca=G.time*3+ck/6*TAU; ctx.beginPath(); ctx.moveTo(Math.cos(ca)*r*0.75,Math.sin(ca)*r*0.75); ctx.lineTo(Math.cos(ca)*r*1.2,Math.sin(ca)*r*1.2); ctx.stroke(); } ctx.shadowBlur=0; }   // 衝刺類：躁動尖刺光冠
+    else if(e.type==='splitter'){ ctx.globalAlpha=0.6; ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
+      ctx.beginPath(); ctx.moveTo(0,-r*0.8); ctx.lineTo(0,r*0.8); ctx.moveTo(-r*0.8,0); ctx.lineTo(r*0.8,0); ctx.stroke(); ctx.setLineDash([]); }   // 分裂體：分裂縫線
+    ctx.globalAlpha=1; ctx.restore(); }
   // 眼睛核心（白眼白 + 追向玩家的彩色瞳孔，脈動）
   var coreR=Math.max(2,r*(0.26+0.05*Math.sin(G.time*5+e.x*0.05)));
   ctx.shadowColor='#ffffff'; ctx.shadowBlur=e.boss?18:7; ctx.fillStyle=f?'#ffffff':'rgba(255,255,255,0.94)';

@@ -2310,11 +2310,14 @@ function render(){
     ctx.globalAlpha=rp*0.5; ctx.strokeStyle=r.color; ctx.lineWidth=2+rp*4; ctx.shadowColor=r.color; ctx.shadowBlur=12; ctx.beginPath(); ctx.arc(r.x,r.y,r.r,0,TAU); ctx.stroke();
     ctx.globalAlpha=rp*0.9; ctx.lineWidth=1.5; ctx.strokeStyle='#ffffff'; ctx.shadowBlur=6; ctx.beginPath(); ctx.arc(r.x,r.y,r.r,0,TAU); ctx.stroke(); }
   ctx.shadowBlur=0;
-  // 閃電
-  for(var i=0;i<lightningSeg.length;i++){ var s=lightningSeg[i]; ctx.globalAlpha=s.life/s.max; ctx.strokeStyle='#c58bff'; ctx.lineWidth=3;
-    ctx.shadowColor='#c58bff'; ctx.shadowBlur=12; ctx.beginPath(); ctx.moveTo(s.x1,s.y1);
-    var mx=(s.x1+s.x2)/2+rand(-14,14),my=(s.y1+s.y2)/2+rand(-14,14); ctx.lineTo(mx,my); ctx.lineTo(s.x2,s.y2); ctx.stroke(); ctx.shadowBlur=0; }
-  ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
+  // 閃電（多段鋸齒 + 白熱核心 + 紫光暈）
+  for(var i=0;i<lightningSeg.length;i++){ var s=lightningSeg[i], la=s.life/s.max, lsegs=4, lpts=[];
+    for(var j=1;j<lsegs;j++){ var lt=j/lsegs; lpts.push([s.x1+(s.x2-s.x1)*lt+rand(-13,13), s.y1+(s.y2-s.y1)*lt+rand(-13,13)]); }
+    ctx.globalAlpha=la*0.9; ctx.strokeStyle='#c58bff'; ctx.shadowColor='#c58bff'; ctx.shadowBlur=14; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(s.x1,s.y1); for(var j=0;j<lpts.length;j++)ctx.lineTo(lpts[j][0],lpts[j][1]); ctx.lineTo(s.x2,s.y2); ctx.stroke();
+    ctx.globalAlpha=la; ctx.strokeStyle='#ffffff'; ctx.shadowBlur=6; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.moveTo(s.x1,s.y1); for(var j=0;j<lpts.length;j++)ctx.lineTo(lpts[j][0],lpts[j][1]); ctx.lineTo(s.x2,s.y2); ctx.stroke(); }
+  ctx.shadowBlur=0; ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
 
   // 環境危害：熔岩池
   for(var i=0;i<hazards.length;i++){ var hz=hazards[i], ha=Math.max(0,hz.life/hz.max);
@@ -2407,9 +2410,13 @@ function render(){
   // 環刃
   var bw=weaponById('blades');
   if(bw&&blades.length){ var br=((bw.evolved?120:64)+bw.level*10)*(bw.asc?1.4:1), bcol=bw.asc?'#ffffff':(bw.evolved?'#ff7bef':'#ff3df0');
+    ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.14; ctx.strokeStyle=bcol; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(player.x,player.y,br,0,TAU); ctx.stroke(); ctx.restore();   // 軌道殘影弧
     for(var i=0;i<blades.length;i++){ var bl=blades[i],bx=player.x+Math.cos(bl.ang)*br,by=player.y+Math.sin(bl.ang)*br;
-      ctx.save(); ctx.translate(bx,by); ctx.rotate(bl.ang*3); ctx.fillStyle=bcol; ctx.shadowColor=bcol; ctx.shadowBlur=14;
-      ctx.beginPath(); ctx.moveTo(0,-11); ctx.lineTo(9,0); ctx.lineTo(0,11); ctx.lineTo(-9,0); ctx.closePath(); ctx.fill(); ctx.restore(); } }
+      ctx.save(); ctx.translate(bx,by);
+      ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.5; ctx.drawImage(glow(bcol),-16,-16,32,32);   // 刃光暈
+      ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1; ctx.rotate(bl.ang*3); ctx.fillStyle=bcol; ctx.shadowColor=bcol; ctx.shadowBlur=12;
+      ctx.beginPath(); ctx.moveTo(0,-12); ctx.lineTo(9,0); ctx.lineTo(0,12); ctx.lineTo(-9,0); ctx.closePath(); ctx.fill();
+      ctx.shadowBlur=0; ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.5; ctx.globalAlpha=0.9; ctx.stroke(); ctx.restore(); } }   // 白刃緣
 
   // 粒子
   ctx.globalCompositeOperation='lighter';

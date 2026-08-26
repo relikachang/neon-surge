@@ -151,7 +151,10 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   #bossintro{position:absolute;top:30%;left:0;width:100%;text-align:center;pointer-events:none;opacity:0;z-index:60}
   #bossintro.show{animation:bossIntroAnim 2.3s ease-out}
   #bossintro .bi-warn{font-size:14px;letter-spacing:7px;font-weight:800;text-shadow:0 0 12px currentColor}
-  #bossintro .bi-name{font-size:min(11vw,66px);font-weight:900;letter-spacing:4px;text-shadow:0 0 34px currentColor;margin-top:6px}
+  #bossintro .bi-name{font-size:min(11vw,66px);font-weight:900;letter-spacing:4px;text-shadow:0 0 34px currentColor;margin-top:6px;position:relative}
+  #bossintro::before{content:'';position:absolute;top:50%;left:0;width:100%;height:118px;transform:translateY(-50%);z-index:-1;
+    background:linear-gradient(90deg,transparent,rgba(6,4,12,.66) 18%,rgba(6,4,12,.66) 82%,transparent);
+    border-top:2px solid currentColor;border-bottom:2px solid currentColor;box-shadow:0 0 40px -8px currentColor}
   @keyframes bossIntroAnim{0%{opacity:0;transform:scale(1.45);filter:blur(9px)}14%{opacity:1;transform:scale(1);filter:blur(0)}72%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.95)}}
   /* --- B219 中央提示彈入 + 面板統一進場 --- */
   #announce2.pop{animation:annpop .5s cubic-bezier(.2,1.5,.4,1)}
@@ -2792,9 +2795,14 @@ function render(){
   if(flashA>0){ ctx.fillStyle='rgba('+flashRGB+','+Math.min(0.5,flashA*0.5)+')'; ctx.fillRect(0,0,W,H); }
   // 沙暴視野變暗(緋紅荒原)
   if(G.sandT>0){ ctx.save(); ctx.globalAlpha=Math.min(0.24,G.sandT*0.22); ctx.fillStyle='#c86428'; ctx.fillRect(0,0,W,H); ctx.restore(); }
-  // 低血警示：HP<25% 螢幕紅框脈動
-  if(!G.over&&player.maxHp>0&&player.hp/player.maxHp<0.25){ var lp=(Math.sin(Date.now()/200)+1)/2;
-    ctx.save(); ctx.strokeStyle='rgba(255,40,60,'+(0.25+lp*0.45)+')'; ctx.lineWidth=16; ctx.strokeRect(8,8,W-16,H-16); ctx.restore(); }
+  // 低血警示：HP<28% 紅色邊緣暈影 + 脈動紅框，越危險越濃、心跳越快
+  if(!G.over&&player.maxHp>0&&player.hp/player.maxHp<0.28){ var hpr2=player.hp/player.maxHp, sev=Math.min(1,(0.28-hpr2)/0.28); var lp=(Math.sin(Date.now()/(210-sev*110))+1)/2;
+    ctx.save();
+    var vg=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.30,W/2,H/2,Math.max(W,H)*0.72);
+    vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(176,12,32,'+(0.12+sev*0.24+lp*0.10)+')');
+    ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,40,60,'+(0.28+lp*0.5)+')'; ctx.lineWidth=9+sev*11; ctx.strokeRect(6,6,W-12,H-12);
+    ctx.restore(); }
   // 離屏 Boss 指示箭頭
   for(var bi2=0;bi2<enemies.length;bi2++){ var bo=enemies[bi2]; if(!bo.boss||bo.hp<=0)continue;
     var bsx=bo.x-(player.x-W/2), bsy=bo.y-(player.y-H/2);
@@ -3399,7 +3407,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v268 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v269 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

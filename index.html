@@ -891,13 +891,12 @@ function stageUnlocked(s){ return !s.locked || DB.stages[s.id]; }
 // 每把武器：base cd(秒)、fire(w) 觸發、levelup 敘述
 var WDEFS={
   plasma:{ic:'🔷',name:'電漿彈',color:'#22e6ff',tag:'單體',max:8,
-    desc:function(l){return l===0?'向最近敵人連射電漿彈':'傷害↑ 每2級+1發 穿透↑';},
-    cd:function(l){return Math.max(0.14,0.5-l*0.045);},
+    desc:function(l){return l===0?'蓄能射出巨型電漿球，緩速貫穿整條戰線':'傷害↑ 穿透↑ 每3級+1球';},
+    cd:function(l){return Math.max(0.28,0.72-l*0.055);},
     fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); if(!t)return;
-      var n=1+Math.floor(w.level/2)+player.amount, spread=(n-1)*0.12;
-      var base=Math.atan2(t.y-player.y,t.x-player.x);
-      for(var i=0;i<n;i++){ var a=base+(i-(n-1)/2)*spread*0.5+rand(-0.03,0.03);
-        spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),660,dmg(13+w.level*6),'#22e6ff',1+Math.floor(w.level/2),6);}
+      var n=1+Math.floor(w.level/3)+Math.floor(player.amount/2), base=Math.atan2(t.y-player.y,t.x-player.x);
+      for(var i=0;i<n;i++){ var a=base+(i-(n-1)/2)*0.16+rand(-0.02,0.02);
+        spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),470,dmg(20+w.level*8),'#22e6ff',2+Math.floor(w.level*0.7),9,1.6);}
     },
     evo:{reqPassive:'prate',ic:'🌀',name:'相位炮',color:'#00fff0',desc:'極速連射貫穿光束，洞穿一切',
       cd:function(l){return 0.11;},
@@ -923,10 +922,10 @@ var WDEFS={
     }
   },
   aura:{ic:'🔥',name:'烈焰環',color:'#ff8a3a',tag:'範圍',max:8,
-    desc:function(l){return l===0?'灼燒周身敵人的火環':'半徑↑ 傷害↑';},
+    desc:function(l){return l===0?'環身火場：點燃範圍內敵人，離場仍持續灼燒':'半徑↑ 灼燒↑';},
     cd:function(){return 0.4;},
-    fire:function(w){ var r=70+w.level*16, r2=r*r; enemyGrid.query(player.x,player.y,r,function(e){
-        if(dist2(e.x,e.y,player.x,player.y)<r2) hitEnemy(e,dmg(4+w.level*2.4),player.x,player.y,0.15);
+    fire:function(w){ var r=70+w.level*16, r2=r*r, bd=dmg(2.4+w.level*1.5); enemyGrid.query(player.x,player.y,r,function(e){
+        if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<r2){ hitEnemy(e,dmg(2+w.level*1.4),player.x,player.y,0); e.burnT=Math.max(e.burnT||0,1.8); e.burnDmg=Math.max(e.burnDmg||0,bd); }
       }); if(w.level>0)ringFx(player.x,player.y,r,'#ff8a3a'); },
     evo:{reqPassive:'pregen',ic:'☀️',name:'超新星',color:'#ffb347',desc:'灼燒範圍暴增，並週期性引爆巨型衝擊波',
       cd:function(){return 0.3;},
@@ -3421,7 +3420,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v272 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v273 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

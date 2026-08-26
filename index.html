@@ -122,6 +122,14 @@
     filter:drop-shadow(0 0 12px rgba(255,120,40,.95));animation:comboflame .42s ease-in-out infinite alternate}
   #combo.flame.inferno{background:linear-gradient(0deg,#ff1f6d 6%,#ff2bd0 30%,#ff6a2b 62%,#ffe14a 88%,#fff)}
   @keyframes comboflame{from{filter:drop-shadow(0 0 8px rgba(255,80,30,.8)) drop-shadow(0 2px 3px rgba(255,40,20,.5))}to{filter:drop-shadow(0 0 20px rgba(255,190,70,1)) drop-shadow(0 -2px 4px rgba(255,120,30,.7))}}
+  #buffbar{position:absolute;top:150px;left:12px;display:flex;flex-direction:column;gap:6px;z-index:8;pointer-events:none}
+  #buffbar .buff{display:flex;align-items:center;gap:6px;background:rgba(10,14,28,.72);border:1px solid var(--bc,rgba(255,255,255,.2));border-left:3px solid var(--bc,#fff);
+    border-radius:9px;padding:4px 9px 4px 7px;backdrop-filter:blur(4px);box-shadow:0 0 12px var(--bg,rgba(0,0,0,.3));animation:buffin .22s ease both}
+  #buffbar .buff .bi{font-size:16px;line-height:1}
+  #buffbar .buff .bt{font-size:12px;font-weight:800;color:#eaf2ff;font-variant-numeric:tabular-nums;letter-spacing:.3px}
+  #buffbar .buff.pulse{animation:buffpulse .6s ease-in-out infinite}
+  @keyframes buffin{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:translateX(0)}}
+  @keyframes buffpulse{50%{box-shadow:0 0 18px var(--bc,rgba(255,255,255,.6));border-color:#fff}}
   #announce2{position:absolute;top:36%;left:50%;transform:translateX(-50%);font-size:min(8vw,52px);font-weight:900;
     letter-spacing:3px;text-align:center;opacity:0;pointer-events:none;text-shadow:0 0 30px currentColor}
   #bossintro{position:absolute;top:30%;left:0;width:100%;text-align:center;pointer-events:none;opacity:0;z-index:60}
@@ -316,6 +324,7 @@
   <div id="lvchip">LV <span id="lvn">1</span></div>
   <div id="shardchip">◆ <span id="shardn">0</span></div>
   <div id="combo"></div>
+  <div id="buffbar"></div>
   <div id="announce2"></div>
   <div id="bossintro"><div class="bi-warn">⚠ 首領降臨 ⚠</div><div class="bi-name">BOSS</div></div>
   <div id="hpwrap"><div id="hpbar"><div id="hpfill"></div></div><div id="hptxt">100 / 100</div></div>
@@ -2866,6 +2875,12 @@ function drawEnemy(e){
     else if(e.summonRare||e.converger||e.stormRare||e.hexer){ ctx.globalCompositeOperation='lighter'; ctx.fillStyle=e.color; ctx.shadowColor=e.color; ctx.shadowBlur=8;
       for(var sk=0;sk<5;sk++){ var sa3=-G.time*1.5+sk/5*TAU; ctx.globalAlpha=0.5+0.4*Math.sin(G.time*4+sk); ctx.beginPath(); ctx.arc(Math.cos(sa3)*r*0.82,Math.sin(sa3)*r*0.82,r*0.11,0,TAU); ctx.fill(); } ctx.shadowBlur=0; }   // 咒師/召喚類：環繞符文
     ctx.globalAlpha=1; ctx.restore(); }
+  // 咒師/召喚類「多眼」：主眼周圍再生數顆盯著玩家的小眼，強化詭譎外型（納入 LOD）
+  if(hi && !f && r>=11 && (e.weaver||e.summonRare||e.hexer||e.converger||e.type==='conjurer'||e.type==='harbinger')){
+    var mpa=Math.atan2(player.y-e.y,player.x-e.x), neyes=e.boss?5:3;
+    for(var me2=0;me2<neyes;me2++){ var mea=me2/neyes*TAU+G.time*0.4, mex=Math.cos(mea)*r*0.52, mey=Math.sin(mea)*r*0.52, mer=r*0.15;
+      ctx.fillStyle='rgba(255,255,255,0.92)'; ctx.beginPath(); ctx.arc(mex,mey,mer,0,TAU); ctx.fill();
+      ctx.fillStyle=e.color; ctx.beginPath(); ctx.arc(mex+Math.cos(mpa)*mer*0.4,mey+Math.sin(mpa)*mer*0.4,mer*0.5,0,TAU); ctx.fill(); } }
   // 眼睛核心（白眼白 + 追向玩家的彩色瞳孔，脈動）
   var coreR=Math.max(2,r*(0.26+0.05*Math.sin(G.time*5+e.x*0.05)));
   ctx.shadowColor='#ffffff'; ctx.shadowBlur=e.boss?18:7; ctx.fillStyle=f?'#ffffff':'rgba(255,255,255,0.94)';
@@ -3101,6 +3116,19 @@ function updateHud(){
       el.innerHTML='<span class="wi">'+w.def.evo.ic+'</span><span class="wl" style="color:#ffd54a">★MAX</span>'; }
     else el.innerHTML='<span class="wi">'+w.def.ic+'</span><span class="wl">L'+(w.level+1)+'</span>';
     wr.appendChild(el); });
+  // 狀態增益 HUD：即時顯示啟用中的強化/減益(圖示+倒數)
+  var bl=[];
+  if(player.frenzyT>0)bl.push({k:'fren',ic:'🔥',t:player.frenzyT,c:'#ff5e5e',p:1});
+  if(player.overdriveT>0)bl.push({k:'over',ic:'⚙️',t:player.overdriveT,c:'#ffe14a',p:1});
+  if(player.iframe>1)bl.push({k:'shd',ic:'🛡️',t:player.iframe,c:'#22e6ff',p:0});
+  if((G.curseT||0)>0)bl.push({k:'curse',ic:'🌀',t:G.curseT,c:'#c86bff',p:1});
+  if((G.sandT||0)>0)bl.push({k:'sand',ic:'🌪️',t:G.sandT,c:'#c86428',p:0});
+  if(G.charmRevive)bl.push({k:'revive',ic:'🕊️',t:0,c:'#5dff9b',p:1});
+  var bar=$('buffbar'), sig=bl.map(function(b){return b.k;}).join(',');
+  if(bar){ if(updateHud._bsig!==sig){ updateHud._bsig=sig; bar.innerHTML=bl.map(function(b){
+      return '<div class="buff'+(b.p?' pulse':'')+'" data-k="'+b.k+'" style="--bc:'+b.c+';--bg:'+b.c+'55"><span class="bi">'+b.ic+'</span><span class="bt" data-k="'+b.k+'">'+(b.t>0?Math.ceil(b.t)+'s':'✓')+'</span></div>';
+    }).join(''); }
+    else { bl.forEach(function(b){ var t=bar.querySelector('.bt[data-k="'+b.k+'"]'); if(t)t.textContent=b.t>0?Math.ceil(b.t)+'s':'✓'; }); } }
 }
 function fmtTime(t){ var m=Math.floor(t/60),s=Math.floor(t%60); return (m<10?'0':'')+m+':'+(s<10?'0':'')+s; }
 

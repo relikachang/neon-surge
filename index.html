@@ -1107,18 +1107,18 @@ var WDEFS={
     cd:function(l){return Math.max(0.5,1.15-l*0.08);},
     fire:function(w){ var t=nearestEnemy(player.x,player.y,520*520); if(!t)return;
       var hops=4+w.level+player.amount, hitset={}, cur=t; hitset[t._id||(t._id=++eidc)]=1;
-      hitEnemy(t,dmg(14+w.level*5),player.x,player.y,0.2); fxLightning(player.x,player.y,t.x,t.y);
+      hitEnemy(t,dmg(14+w.level*5),player.x,player.y,0.2); sawSlash(player.x,player.y,t.x,t.y);
       for(var h=0;h<hops;h++){ var best=null,bd=260*260;
         enemyGrid.query(cur.x,cur.y,260,function(e){ if(e.hp<=0)return; var id=e._id||(e._id=++eidc); if(hitset[id])return; var dd=dist2(e.x,e.y,cur.x,cur.y); if(dd<bd){bd=dd;best=e;} });
-        if(!best)break; hitset[best._id]=1; hitEnemy(best,dmg(14+w.level*5),cur.x,cur.y,0.2); fxLightning(cur.x,cur.y,best.x,best.y); cur=best; } },
+        if(!best)break; hitset[best._id]=1; hitEnemy(best,dmg(14+w.level*5),cur.x,cur.y,0.2); sawSlash(cur.x,cur.y,best.x,best.y); cur=best; } },
     evo:{reqPassive:'pamount',ic:'🌀',name:'千刃亂舞',color:'#e0e0ff',desc:'鋸刃無限彈跳，切裂全場敵群',
       cd:function(l){return Math.max(0.35,0.8-l*0.05);},
       fire:function(w){ var t=nearestEnemy(player.x,player.y,600*600); if(!t)return;
         var hops=8+w.level+player.amount, hitset={}, cur=t; hitset[t._id||(t._id=++eidc)]=1;
-        hitEnemy(t,dmg(20+w.level*6),player.x,player.y,0.25); fxLightning(player.x,player.y,t.x,t.y);
+        hitEnemy(t,dmg(20+w.level*6),player.x,player.y,0.25); sawSlash(player.x,player.y,t.x,t.y);
         for(var h=0;h<hops;h++){ var best=null,bd=320*320;
           enemyGrid.query(cur.x,cur.y,320,function(e){ if(e.hp<=0)return; var id=e._id||(e._id=++eidc); if(hitset[id])return; var dd=dist2(e.x,e.y,cur.x,cur.y); if(dd<bd){bd=dd;best=e;} });
-          if(!best)break; hitset[best._id]=1; hitEnemy(best,dmg(20+w.level*6),cur.x,cur.y,0.25); fxLightning(cur.x,cur.y,best.x,best.y); cur=best; } }
+          if(!best)break; hitset[best._id]=1; hitEnemy(best,dmg(20+w.level*6),cur.x,cur.y,0.25); sawSlash(cur.x,cur.y,best.x,best.y); cur=best; } }
     }
   },
   turret:{ic:'🗼',name:'部署砲塔',color:'#ffa03d',tag:'部署',max:8,
@@ -1292,10 +1292,10 @@ var WDEFS={
       fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var a=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle; for(var g=-1;g<=1;g+=2){ var ga=a+g*0.06+rand(-0.05,0.05); spawnBullet(player.x,player.y,Math.cos(ga),Math.sin(ga),780,dmg(9+w.level*3),'#fff0a0',1,4,0.9); } }
     }
   },
-  chakram:{ic:'☸️',name:'迴旋輪刃',color:'#5df0ff',tag:'迴旋',max:8,
-    desc:function(l){return l===0?'擲出多枚貫穿並迴旋返回的輪刃':'輪刃數↑ 傷害↑';},
+  chakram:{ic:'☸️',name:'迴旋輪刃',color:'#5df0ff',tag:'環射',max:8,
+    desc:function(l){return l===0?'向四面八方環射貫穿迴旋輪刃，絞殺周身':'輪刃數↑ 傷害↑';},
     cd:function(l){return Math.max(0.6,1.4-l*0.1);},
-    fire:function(w){ var num=2+Math.floor(w.level/2)+player.amount, base=player.aimAngle; for(var i=0;i<num;i++){ var a=base+(i-(num-1)/2)*0.5; spawnBoomerang(a,dmg(16+w.level*6),1.4); } },
+    fire:function(w){ var num=4+Math.floor(w.level/2)+player.amount; if(w._sp==null)w._sp=0; w._sp+=0.4; for(var i=0;i<num;i++){ var a=w._sp+i/num*TAU; spawnBoomerang(a,dmg(16+w.level*6),1.3); } },
     evo:{reqPassive:'ppierce',ic:'☸️',name:'千刃輪迴',color:'#aef4ff',desc:'環身噴發密集迴旋輪刃風暴，絞碎四方',
       cd:function(l){return Math.max(0.4,0.9-l*0.05);},
       fire:function(w){ var num=6+w.level; for(var i=0;i<num;i++)spawnBoomerang(i/num*TAU,dmg(20+w.level*7),1.6); }
@@ -1870,6 +1870,8 @@ function chainLightning(sx,sy,first,jumps,damage){
 var eidc=0;
 var lightningSeg=[];
 function fxLightning(x1,y1,x2,y2){ lightningSeg.push({x1:x1,y1:y1,x2:x2,y2:y2,life:0.14,max:0.14}); }
+var sawSeg=[];
+function sawSlash(x1,y1,x2,y2){ sawSeg.push({x1:x1,y1:y1,x2:x2,y2:y2,life:0.16,max:0.16}); }   // 環鋸彈跳：鋼刃切割軌跡(非閃電)
 
 // =====================================================================
 // 命中 / 死亡
@@ -2238,6 +2240,7 @@ function update(dt){
   for(var i=dmgnums.length-1;i>=0;i--){ var n=dmgnums[i]; n.life-=dt; n.y+=n.vy*dt; n.vy*=Math.pow(0.2,dt); if(n.life<=0)dmgnums.splice(i,1); }
   for(var i=fxRings.length-1;i>=0;i--){ var r=fxRings[i]; r.life-=dt; r.r+=(r.tr-r.r)*Math.min(1,dt*14); if(r.life<=0)fxRings.splice(i,1); }
   for(var i=lightningSeg.length-1;i>=0;i--){ lightningSeg[i].life-=dt; if(lightningSeg[i].life<=0)lightningSeg.splice(i,1); }
+  for(var i=sawSeg.length-1;i>=0;i--){ sawSeg[i].life-=dt; if(sawSeg[i].life<=0)sawSeg.splice(i,1); }
 
   if(shakeAmt>0)shakeAmt*=Math.pow(0.001,dt);
   if(hurtFlash>0)hurtFlash-=dt*2.5;
@@ -2583,6 +2586,13 @@ function render(){
     ctx.beginPath(); ctx.moveTo(s.x1,s.y1); for(var j=0;j<lpts.length;j++)ctx.lineTo(lpts[j][0],lpts[j][1]); ctx.lineTo(s.x2,s.y2); ctx.stroke();
     ctx.globalAlpha=la; ctx.strokeStyle='#ffffff'; ctx.shadowBlur=6; ctx.lineWidth=1.6;
     ctx.beginPath(); ctx.moveTo(s.x1,s.y1); for(var j=0;j<lpts.length;j++)ctx.lineTo(lpts[j][0],lpts[j][1]); ctx.lineTo(s.x2,s.y2); ctx.stroke(); }
+  // 環鋸鋼刃切割軌跡：筆直鋼色切線 + 終點旋轉鋸片(有別於閃電的鋸齒電弧)
+  for(var i=0;i<sawSeg.length;i++){ var ss=sawSeg[i], sa=ss.life/ss.max;
+    ctx.globalAlpha=sa*0.7; ctx.strokeStyle='#dfe4ff'; ctx.shadowColor='#c8c8ff'; ctx.shadowBlur=8; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(ss.x1,ss.y1); ctx.lineTo(ss.x2,ss.y2); ctx.stroke();
+    ctx.globalAlpha=sa; ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.2; ctx.shadowBlur=3; ctx.beginPath(); ctx.moveTo(ss.x1,ss.y1); ctx.lineTo(ss.x2,ss.y2); ctx.stroke();
+    ctx.save(); ctx.translate(ss.x2,ss.y2); ctx.rotate(G.time*20+ss.x2); ctx.globalAlpha=sa; ctx.fillStyle='#e6e9ff'; ctx.shadowColor='#c8c8ff'; ctx.shadowBlur=7;
+    for(var sb=0;sb<8;sb++){ var sba=sb/8*TAU; ctx.beginPath(); ctx.moveTo(Math.cos(sba)*4,Math.sin(sba)*4); ctx.lineTo(Math.cos(sba+0.2)*9,Math.sin(sba+0.2)*9); ctx.lineTo(Math.cos(sba+0.4)*4,Math.sin(sba+0.4)*4); ctx.closePath(); ctx.fill(); } ctx.restore(); }
   ctx.shadowBlur=0; ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
 
   // 環境危害：熔岩池
@@ -3406,7 +3416,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v270 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v271 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

@@ -2706,9 +2706,13 @@ function drawEnemy(e){
     ctx.globalAlpha=0.7; ctx.lineWidth=2.5; ctx.strokeStyle='rgba(255,255,255,0.55)';
     for(var dq=0;dq<2;dq++){ ctx.beginPath(); ctx.arc(0,0,r*(1.16+dq*0.14),(e.spin||0)*(dq?-1:1),(e.spin||0)*(dq?-1:1)+4.2); ctx.stroke(); } ctx.globalAlpha=1; }
   // 狀態視覺：凍結(冰藍覆蓋+冰晶)、減速(青色薄膜)，讓控場效果一目了然
-  if(e.frozen>0){ ctx.shadowBlur=0; ctx.globalAlpha=0.42; ctx.fillStyle='#a0e8ff'; ctx.beginPath(); ctx.arc(0,0,r*1.05,0,TAU); ctx.fill();
-    ctx.globalAlpha=0.9; ctx.strokeStyle='#dff4ff'; ctx.lineWidth=1.6; for(var iz=0;iz<3;iz++){ var za=iz/3*TAU+(e.x*0.1); ctx.beginPath(); ctx.moveTo(Math.cos(za)*r*0.4,Math.sin(za)*r*0.4); ctx.lineTo(Math.cos(za)*r*1.1,Math.sin(za)*r*1.1); ctx.stroke(); } ctx.globalAlpha=1; }
-  else if(e.slow>0){ ctx.shadowBlur=0; ctx.globalAlpha=0.22; ctx.fillStyle='#7dd3ff'; ctx.beginPath(); ctx.arc(0,0,r*1.02,0,TAU); ctx.fill(); ctx.globalAlpha=1; }
+  if(e.frozen>0){ ctx.shadowBlur=0; ctx.globalAlpha=0.4; ctx.fillStyle='#a0e8ff'; ctx.beginPath(); ctx.arc(0,0,r*1.05,0,TAU); ctx.fill();
+    ctx.globalAlpha=0.7; ctx.strokeStyle='#dff4ff'; ctx.lineWidth=2; ctx.shadowColor='#a0e8ff'; ctx.shadowBlur=8;   // 六角冰殼
+    ctx.beginPath(); for(var hz=0;hz<=6;hz++){ var hza=hz/6*TAU+0.4; (hz?ctx.lineTo:ctx.moveTo).call(ctx,Math.cos(hza)*r*1.18,Math.sin(hza)*r*1.18);} ctx.stroke(); ctx.shadowBlur=0;
+    ctx.globalAlpha=0.9; ctx.lineWidth=1.6; for(var iz=0;iz<6;iz++){ var za=iz/6*TAU+(e.x*0.1); ctx.beginPath(); ctx.moveTo(Math.cos(za)*r*0.35,Math.sin(za)*r*0.35); ctx.lineTo(Math.cos(za)*r*1.05,Math.sin(za)*r*1.05); ctx.stroke(); }   // 冰晶放射
+    ctx.fillStyle='#ffffff'; ctx.globalAlpha=0.85; for(var sp=0;sp<3;sp++){ var spa=G.time*0.5+sp*2.1; ctx.beginPath(); ctx.arc(Math.cos(spa)*r*0.6,Math.sin(spa)*r*0.6,1.4,0,TAU); ctx.fill(); } ctx.globalAlpha=1; }   // 霜點
+  else if(e.slow>0){ ctx.shadowBlur=0; ctx.globalAlpha=0.22; ctx.fillStyle='#7dd3ff'; ctx.beginPath(); ctx.arc(0,0,r*1.02,0,TAU); ctx.fill();
+    ctx.globalAlpha=0.5; ctx.strokeStyle='#7dd3ff'; ctx.lineWidth=1.4; ctx.setLineDash([4,4]); ctx.beginPath(); ctx.arc(0,0,r*1.1,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1; }
   // 哨戒者雷射光束（旋轉掃射，明確可見的威脅線）
   if(e.beamer&&e.beamAng!=null){ ctx.save(); ctx.rotate(e.beamAng); ctx.globalCompositeOperation='lighter'; ctx.shadowColor=e.color; ctx.shadowBlur=14;
     ctx.globalAlpha=0.45; ctx.fillStyle=e.color; ctx.fillRect(r*0.6,-3.5,520,7);
@@ -3040,7 +3044,11 @@ function renderMenu(){
   var ss=$('stagesel'); ss.innerHTML='';
   STAGES.forEach(function(s){ var unlocked=stageUnlocked(s);
     var el=document.createElement('div'); el.className='charcard'+(selStage===s.id?' on':'')+(unlocked?'':' locked');
-    el.innerHTML='<div class="cface" style="color:'+s.bossColor+'">◈</div><div class="cn">'+s.name+'</div><div class="cd">'+s.desc+'</div>'+
+    el.innerHTML='<div class="stageprev" style="height:46px;border-radius:8px;margin:0 2px 6px;background:'+s.bg+';border:1px solid '+s.bossColor+'55;box-shadow:inset 0 0 16px '+s.bossColor+'44;position:relative;overflow:hidden">'+
+        '<div style="position:absolute;inset:0;background:radial-gradient(circle at 70% 28%,'+s.bossColor+'66,transparent 62%)"></div>'+
+        '<div style="position:absolute;inset:0;background-image:linear-gradient('+s.grid+' 1px,transparent 1px),linear-gradient(90deg,'+s.grid+' 1px,transparent 1px);background-size:11px 11px"></div>'+
+        '<div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:'+s.bossColor+';font-size:22px;text-shadow:0 0 10px '+s.bossColor+'">◈</div></div>'+
+      '<div class="cn">'+s.name+'</div><div class="cd">'+s.desc+'</div>'+
       (unlocked?'':'<div class="clk">🔒 前圖存活3分</div>');
     el.onclick=function(){ if(!unlocked)return; selStage=s.id; renderMenu(); };
     ss.appendChild(el);

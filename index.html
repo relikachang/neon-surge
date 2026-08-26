@@ -1506,7 +1506,8 @@ function newRun(daily){
      nextBossAt:90, usedRevive:false, luck:0.06*metaLv('luck'), stage:st, mut:mut, daily:!!daily,
      dmgDealt:0, peakCombo:0, bossKills:0, eliteKills:0, act:1, actMul:1, flawless:true };
   player={ x:0,y:0, radius:15, hp:0, maxHp:0, speed:0, iframe:0, aimAngle:0, frenzyT:0, overdriveT:0,
-    weapons:[], passives:{}, base:{} };
+    weapons:[], passives:{}, base:{}, charId:ch.id, sig:charSig(ch.id) };
+  var _ci=CHARS.indexOf(ch); if(_ci>=0)player.sig.arch=_ci%6;   // 依名冊序號分派船體原型，六型平均分佈
   // 基礎屬性（含永久強化 + 角色 + 每日變異）
   var omni=1+0.03*metaLv('omni');   // 萬能核心：全能加成
   player.base={ dmg:1*(1+0.08*metaLv('dmg'))*(1+0.06*metaLv('overcharge'))*omni*(ch.stat.dmg||1)*mut.pDmg,
@@ -2803,6 +2804,13 @@ function drawEnemy(e){
   if(e.hp<e.maxHp){ var w=e.r*2, hpr=Math.max(0,e.hp/e.maxHp); ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(e.x-w/2,e.y-e.r-8,w,3);
     ctx.fillStyle=e.boss?'#ff2b5e':'#5dff9b'; ctx.fillRect(e.x-w/2,e.y-e.r-8,w*hpr,3); }
 }
+// ===== 角色視覺識別：每位角色由 id 穩定衍生專屬配色與船體原型，讓外觀彼此各異（無需逐一改角色資料）=====
+function charHash(s){ var h=2166136261; s=s||'ranger'; for(var i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=(h*16777619)>>>0; } return h>>>0; }
+function charSig(id){ var h=charHash(id); var hue=h%360, h2=(h>>7)%360;
+  return { hue:hue, arch:h%6,
+    col:'hsl('+hue+',85%,60%)', glow:'hsl('+hue+',90%,62%)',
+    edge:'hsl('+hue+',92%,78%)', hull:'hsl('+hue+',46%,30%)', hull2:'hsl('+((hue+22)%360)+',50%,23%)',
+    core:'hsl('+((hue+16)%360)+',82%,88%)', accent:'hsl('+h2+',90%,64%)' }; }
 function drawPlayer(){
   // 殘影拖尾：記錄近幾幀位置，繪製漸淡幻影（純視覺，強化移動速度感）
   if(!player.trail)player.trail=[];
@@ -2810,7 +2818,9 @@ function drawPlayer(){
   var lastp=player.trail.length?player.trail[player.trail.length-1]:null;
   var movedFar=!lastp||Math.hypot(player.x-lastp.x,player.y-lastp.y)>4;
   if(G._pf%2===0){ if(movedFar){ player.trail.push({x:player.x,y:player.y,ang:player.aimAngle}); if(player.trail.length>9)player.trail.shift(); } else if(player.trail.length){ player.trail.shift(); } }
-  var trFren=player.frenzyT>0, trOv=player.overdriveT>0, trCol=trFren?'#ff5e5e':(trOv?'#ffe14a':'#22e6ff'), trPr=player.radius;
+  var sig=player.sig||charSig(player.charId||'ranger');
+  var trFren=player.frenzyT>0, trOv=player.overdriveT>0, trCol=trFren?'#ff5e5e':(trOv?'#ffe14a':sig.col), trPr=player.radius;
+  var pGlow=trFren?'#ff5e5e':(trOv?'#ffe14a':sig.glow);
   ctx.save(); ctx.globalCompositeOperation='lighter';
   for(var ti=0;ti<player.trail.length;ti++){ var tp=player.trail[ti]; var tf=(ti+1)/player.trail.length, tal=tf*0.26;
     ctx.globalAlpha=tf*0.20; var gsz=trPr*(1.3+tf*0.6); ctx.drawImage(glow(trCol),tp.x-gsz,tp.y-gsz,gsz*2,gsz*2);   // 柔光殘影球
@@ -2820,14 +2830,14 @@ function drawPlayer(){
   ctx.restore(); ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
   ctx.save(); ctx.translate(player.x,player.y);
   // 光暈（狂化變紅）
-  ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=player.frenzyT>0?0.85:0.6; ctx.drawImage(glow(player.frenzyT>0?'#ff5e5e':'#22e6ff'),-44,-44,88,88);
+  ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=player.frenzyT>0?0.85:0.6; ctx.drawImage(glow(pGlow),-44,-44,88,88);
   ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
   ctx.rotate(player.aimAngle+Math.PI/2);
   var pr=player.radius, fren=player.frenzyT>0;
   // 雙側引擎噴焰（隨時間閃動，呼應雙翼）
   var fl=pr*(0.9+0.5*Math.abs(Math.sin(G.time*24))), fl2=pr*(0.7+0.4*Math.abs(Math.sin(G.time*24+1.3)));
   ctx.globalCompositeOperation='lighter';
-  ctx.fillStyle=fren?'#ffb03a':'#3ad8ff'; ctx.shadowColor=fren?'#ff7a2b':'#22e6ff'; ctx.shadowBlur=16;
+  ctx.fillStyle=fren?'#ffb03a':(trOv?'#ffe9a0':sig.accent); ctx.shadowColor=fren?'#ff7a2b':sig.glow; ctx.shadowBlur=16;
   ctx.beginPath(); ctx.moveTo(-pr*0.16,pr*0.85); ctx.lineTo(0,pr*0.85+fl); ctx.lineTo(pr*0.16,pr*0.85); ctx.closePath(); ctx.fill();
   ctx.beginPath(); ctx.moveTo(pr*0.34,pr*0.8); ctx.lineTo(pr*0.46,pr*0.8+fl2); ctx.lineTo(pr*0.58,pr*0.8); ctx.closePath(); ctx.fill();
   ctx.beginPath(); ctx.moveTo(-pr*0.34,pr*0.8); ctx.lineTo(-pr*0.46,pr*0.8+fl2); ctx.lineTo(-pr*0.58,pr*0.8); ctx.closePath(); ctx.fill();
@@ -2835,32 +2845,61 @@ function drawPlayer(){
   // 開火槍口閃光（船首，隨開火脈動）
   if(G.muzzleT>0){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=Math.max(0,G.muzzleT/0.06)*0.9; ctx.drawImage(glow(fren?'#ffd08a':'#bff2ff'),-pr*0.9,-pr*2.2,pr*1.8,pr*1.8); ctx.restore(); ctx.globalAlpha=1; }
   var pim=spr('player');
-  if(pim){ ctx.shadowColor=fren?'#ff5e5e':'#22e6ff'; ctx.shadowBlur=18; var pd=pr*2.9; ctx.drawImage(pim,-pd/2,-pd/2,pd,pd); }
+  if(pim){ ctx.shadowColor=pGlow; ctx.shadowBlur=18; var pd=pr*2.9; ctx.drawImage(pim,-pd/2,-pd/2,pd,pd); }
   else {
-  var edge=fren?'#ff8a8a':'#7fe9ff', hull=fren?'#ff5e5e':'#22e6ff', hot=player.iframe>0&&((G.time*20)|0)%2;
-  // 側翼（左右對稱後掠翼，加深戰機輪廓）
-  ctx.shadowColor=hull; ctx.shadowBlur=14; ctx.fillStyle=fren?'#b33':'#0e5566';
-  ctx.beginPath(); ctx.moveTo(pr*0.28,-pr*0.1); ctx.lineTo(pr*1.15,pr*0.75); ctx.lineTo(pr*0.5,pr*0.95); ctx.lineTo(pr*0.2,pr*0.4); ctx.closePath(); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(-pr*0.28,-pr*0.1); ctx.lineTo(-pr*1.15,pr*0.75); ctx.lineTo(-pr*0.5,pr*0.95); ctx.lineTo(-pr*0.2,pr*0.4); ctx.closePath(); ctx.fill();
-  // 主船體（尖銳箭形 + 內層漸層感）
-  ctx.shadowColor=hull; ctx.shadowBlur=18; ctx.fillStyle=hot?'#ffffff':'#eaffff';
-  ctx.beginPath(); ctx.moveTo(0,-pr*1.25); ctx.lineTo(pr*0.5,pr*0.2); ctx.lineTo(pr*0.62,pr); ctx.lineTo(0,pr*0.62); ctx.lineTo(-pr*0.62,pr); ctx.lineTo(-pr*0.5,pr*0.2); ctx.closePath(); ctx.fill();
-  ctx.lineWidth=1.6; ctx.strokeStyle=edge; ctx.globalAlpha=0.95; ctx.stroke(); ctx.globalAlpha=1;
-  // 船身面板線（中脊 + 分段），增加機械細節
-  ctx.shadowBlur=0; ctx.strokeStyle=fren?'rgba(255,180,180,0.7)':'rgba(120,235,255,0.7)'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(0,-pr*1.1); ctx.lineTo(0,pr*0.55); ctx.moveTo(-pr*0.34,pr*0.1); ctx.lineTo(pr*0.34,pr*0.1); ctx.stroke();
-  // 船首砲口尖鋒
-  ctx.shadowColor=edge; ctx.shadowBlur=10; ctx.fillStyle=edge; ctx.beginPath(); ctx.moveTo(0,-pr*1.32); ctx.lineTo(pr*0.12,-pr*0.95); ctx.lineTo(-pr*0.12,-pr*0.95); ctx.closePath(); ctx.fill();
-  // 座艙核心（發光脈動）
+  var hot=player.iframe>0&&((G.time*20)|0)%2;
+  var edge=fren?'#ff8a8a':sig.edge, hull=fren?'#ff5e5e':sig.hull, hull2=fren?'#7a2323':sig.hull2, body=hot?'#ffffff':sig.core, arch=sig.arch;
+  ctx.lineJoin='round';
+  if(arch===0){   // 銳鋒：尖箭戰機 + 後掠翼
+    ctx.shadowColor=hull; ctx.shadowBlur=14; ctx.fillStyle=hull2;
+    ctx.beginPath(); ctx.moveTo(pr*0.28,-pr*0.1); ctx.lineTo(pr*1.15,pr*0.75); ctx.lineTo(pr*0.5,pr*0.95); ctx.lineTo(pr*0.2,pr*0.4); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-pr*0.28,-pr*0.1); ctx.lineTo(-pr*1.15,pr*0.75); ctx.lineTo(-pr*0.5,pr*0.95); ctx.lineTo(-pr*0.2,pr*0.4); ctx.closePath(); ctx.fill();
+    ctx.shadowColor=hull; ctx.shadowBlur=18; ctx.fillStyle=body;
+    ctx.beginPath(); ctx.moveTo(0,-pr*1.25); ctx.lineTo(pr*0.5,pr*0.2); ctx.lineTo(pr*0.62,pr); ctx.lineTo(0,pr*0.62); ctx.lineTo(-pr*0.62,pr); ctx.lineTo(-pr*0.5,pr*0.2); ctx.closePath(); ctx.fill();
+    ctx.lineWidth=1.8; ctx.strokeStyle=edge; ctx.stroke();
+    ctx.shadowColor=edge; ctx.shadowBlur=10; ctx.fillStyle=edge; ctx.beginPath(); ctx.moveTo(0,-pr*1.34); ctx.lineTo(pr*0.13,-pr*0.95); ctx.lineTo(-pr*0.13,-pr*0.95); ctx.closePath(); ctx.fill();
+  } else if(arch===1){   // 重甲：寬六角重坦 + 側掛砲艙
+    ctx.shadowColor=hull; ctx.shadowBlur=13; ctx.fillStyle=hull2;
+    ctx.beginPath(); ctx.rect(-pr*1.18,-pr*0.32,pr*0.5,pr*1.05); ctx.fill();
+    ctx.beginPath(); ctx.rect(pr*0.68,-pr*0.32,pr*0.5,pr*1.05); ctx.fill();
+    ctx.shadowBlur=18; ctx.fillStyle=body; ctx.lineWidth=2.2; ctx.strokeStyle=edge;
+    ctx.beginPath(); ctx.moveTo(0,-pr*1.15); ctx.lineTo(pr*0.74,-pr*0.5); ctx.lineTo(pr*0.74,pr*0.72); ctx.lineTo(0,pr*1.12); ctx.lineTo(-pr*0.74,pr*0.72); ctx.lineTo(-pr*0.74,-pr*0.5); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.shadowBlur=0; ctx.strokeStyle=hull; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(-pr*0.4,-pr*0.2); ctx.lineTo(pr*0.4,-pr*0.2); ctx.moveTo(-pr*0.4,pr*0.4); ctx.lineTo(pr*0.4,pr*0.4); ctx.stroke();
+  } else if(arch===2){   // 環核：圓核浮遊體 + 旋轉衛節
+    ctx.shadowColor=hull; ctx.shadowBlur=16; ctx.fillStyle=body;
+    ctx.beginPath(); ctx.arc(0,0,pr*0.82,0,TAU); ctx.fill();
+    ctx.lineWidth=2.4; ctx.strokeStyle=edge; ctx.beginPath(); ctx.arc(0,0,pr*1.02,0,TAU); ctx.stroke();
+    ctx.fillStyle=sig.accent; ctx.shadowColor=sig.accent; ctx.shadowBlur=10;
+    for(var an=0;an<3;an++){ var aa=G.time*2+an/3*TAU; ctx.beginPath(); ctx.arc(Math.cos(aa)*pr*1.02,Math.sin(aa)*pr*1.02,pr*0.2,0,TAU); ctx.fill(); }
+    ctx.shadowColor=edge; ctx.shadowBlur=10; ctx.fillStyle=edge; ctx.beginPath(); ctx.moveTo(0,-pr*1.4); ctx.lineTo(pr*0.22,-pr*0.9); ctx.lineTo(-pr*0.22,-pr*0.9); ctx.closePath(); ctx.fill();
+  } else if(arch===3){   // 雙刃：交叉利刃 + 前突尖鋒
+    ctx.shadowColor=hull; ctx.shadowBlur=16; ctx.fillStyle=hull2; ctx.lineWidth=1.6; ctx.strokeStyle=edge;
+    ctx.save(); ctx.rotate(0.6); ctx.beginPath(); ctx.moveTo(0,-pr*1.3); ctx.lineTo(pr*0.34,0); ctx.lineTo(0,pr*1.3); ctx.lineTo(-pr*0.34,0); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+    ctx.save(); ctx.rotate(-0.6); ctx.beginPath(); ctx.moveTo(0,-pr*1.3); ctx.lineTo(pr*0.34,0); ctx.lineTo(0,pr*1.3); ctx.lineTo(-pr*0.34,0); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+    ctx.shadowColor=hull; ctx.shadowBlur=18; ctx.fillStyle=body;
+    ctx.beginPath(); ctx.moveTo(0,-pr*1.4); ctx.lineTo(pr*0.4,pr*0.3); ctx.lineTo(0,pr*0.7); ctx.lineTo(-pr*0.4,pr*0.3); ctx.closePath(); ctx.fill(); ctx.lineWidth=1.8; ctx.strokeStyle=edge; ctx.stroke();
+  } else if(arch===4){   // 月牙：新月弧翼載具
+    ctx.shadowColor=hull; ctx.shadowBlur=16; ctx.fillStyle=body;
+    ctx.beginPath(); ctx.arc(0,pr*0.15,pr*1.05,Math.PI*1.12,Math.PI*1.88); ctx.arc(0,-pr*0.15,pr*0.95,Math.PI*1.9,Math.PI*1.1,true); ctx.closePath(); ctx.fill();
+    ctx.lineWidth=2; ctx.strokeStyle=edge; ctx.stroke();
+    ctx.shadowColor=sig.accent; ctx.shadowBlur=12; ctx.fillStyle=sig.accent; ctx.beginPath(); ctx.arc(0,-pr*0.25,pr*0.26,0,TAU); ctx.fill();
+    ctx.shadowColor=edge; ctx.shadowBlur=8; ctx.fillStyle=edge; ctx.beginPath(); ctx.moveTo(0,-pr*1.34); ctx.lineTo(pr*0.14,-pr*0.98); ctx.lineTo(-pr*0.14,-pr*0.98); ctx.closePath(); ctx.fill();
+  } else {   // 棱星：四角棱星（雙菱交疊）
+    ctx.shadowColor=hull; ctx.shadowBlur=15; ctx.fillStyle=hull2;
+    ctx.beginPath(); ctx.moveTo(0,-pr*0.7); ctx.lineTo(pr*1.25,0); ctx.lineTo(0,pr*0.7); ctx.lineTo(-pr*1.25,0); ctx.closePath(); ctx.fill();
+    ctx.shadowColor=hull; ctx.shadowBlur=18; ctx.fillStyle=body; ctx.lineWidth=1.8; ctx.strokeStyle=edge;
+    ctx.beginPath(); ctx.moveTo(0,-pr*1.4); ctx.lineTo(pr*0.5,0); ctx.lineTo(0,pr*1.15); ctx.lineTo(-pr*0.5,0); ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+  // 座艙核心（共用，發光脈動）
   var cpul=0.8+0.2*Math.sin(G.time*6);
-  ctx.shadowColor=fren?'#ffd54a':'#8ff6ff'; ctx.shadowBlur=14; ctx.fillStyle=fren?'#fff0c0':'#dffcff'; ctx.globalAlpha=cpul;
-  ctx.beginPath(); ctx.ellipse(0,-pr*0.15,pr*0.26,pr*0.44,0,0,TAU); ctx.fill(); ctx.globalAlpha=1;
+  ctx.shadowColor=fren?'#ffd54a':edge; ctx.shadowBlur=14; ctx.fillStyle=fren?'#fff0c0':'#ffffff'; ctx.globalAlpha=cpul;
+  ctx.beginPath(); ctx.ellipse(0,arch===2?0:-pr*0.12,pr*0.24,arch===2?pr*0.24:pr*0.4,0,0,TAU); ctx.fill(); ctx.globalAlpha=1;
   }
   ctx.shadowBlur=0; ctx.restore();
   // 拾取範圍（淡）
   ctx.strokeStyle='rgba(34,230,255,0.08)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(player.x,player.y,player.pickup,0,TAU); ctx.stroke();
   // 玩家能量環（旋轉虛線，增添造型）
-  ctx.save(); ctx.globalAlpha=0.5; ctx.strokeStyle=fren?'rgba(255,138,90,0.6)':'rgba(93,255,224,0.55)'; ctx.lineWidth=2; ctx.setLineDash([5,9]); ctx.lineDashOffset=G.time*30;
+  ctx.save(); ctx.globalAlpha=0.5; ctx.strokeStyle=fren?'rgba(255,138,90,0.6)':sig.glow; ctx.lineWidth=2; ctx.setLineDash([5,9]); ctx.lineDashOffset=G.time*30;
   ctx.beginPath(); ctx.arc(player.x,player.y,pr+7,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
   // 連擊光環：連擊越高，額外的環越熱越亮（橙→白熱），給高連擊華麗回饋
   var cb=Math.min(1,(G.combo||0)/150);

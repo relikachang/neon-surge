@@ -937,9 +937,13 @@ var WDEFS={
   shotgun:{ic:'💥',name:'散彈',color:'#ffd54a',tag:'爆發',max:8,
     desc:function(l){return l===0?'朝移動方向噴射散彈':'彈數↑ 傷害↑';},
     cd:function(l){return Math.max(0.6,1.4-l*0.1);},
-    fire:function(w){ var ang=player.aimAngle, n=4+w.level+player.amount;
-      for(var i=0;i<n;i++){ var a=ang+rand(-0.5,0.5);
-        spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),rand(500,640),dmg(7+w.level*3),'#ffd54a',1,5,0.5);} },
+    fire:function(w){ var ang=player.aimAngle, n=5+w.level+player.amount;
+      for(var i=0;i<n;i++){ var a=ang+rand(-0.62,0.62);
+        spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),rand(540,700),dmg(8+w.level*3),'#ffd54a',1,6,0.34);}
+      // 近身錐形衝擊：前方扇形強力擊退並附加傷害，賦予散彈招牌的近身爆發手感
+      var br=(120+w.level*8)*player.area, br2=br*br, bd=dmg(6+w.level*2);
+      enemyGrid.query(player.x,player.y,br,function(o){ if(o.hp>0){ var oa=Math.atan2(o.y-player.y,o.x-player.x), da=Math.abs(((oa-ang+Math.PI*3)%(Math.PI*2))-Math.PI); if(da<0.85&&dist2(o.x,o.y,player.x,player.y)<br2)hitEnemy(o,bd,player.x,player.y,0.7); } });
+      ringFx(player.x,player.y,br*0.55,'#ffe08a'); },
     evo:{reqPassive:'pdmg',ic:'☄️',name:'殲滅者',color:'#ffd54a',desc:'向四面八方噴發高傷散彈風暴',
       cd:function(l){return Math.max(0.42,0.7-l*0.03);},
       fire:function(w){ var n=18; for(var i=0;i<n;i++){ var a=i/n*TAU+rand(-0.08,0.08); spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),rand(560,720),dmg(16+w.level*5),'#ffd54a',2,5,0.6); } }
@@ -1163,10 +1167,11 @@ var WDEFS={
     }
   },
   starburst:{ic:'🎇',name:'星爆',color:'#ffcf5d',tag:'環射',max:8,
-    desc:function(l){return l===0?'向四面八方射出星爆彈幕':'彈數↑ 傷害↑';},
+    desc:function(l){return l===0?'週期性爆發整環星爆彈幕，如新星脈衝向外炸開':'彈數↑ 傷害↑';},
     cd:function(l){return Math.max(0.5,1.0-l*0.06);},
-    fire:function(w){ var num=8+w.level*2+player.amount*2; if(w._a==null)w._a=0; w._a+=0.3;
-      for(var i=0;i<num;i++){ var a=i/num*TAU+w._a; spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),480,dmg(9+w.level*3),'#ffcf5d',1,5,0.9); } },
+    fire:function(w){ var num=10+w.level*2+player.amount*2; if(w._a==null)w._a=0; w._a+=0.32;
+      for(var i=0;i<num;i++){ var a=i/num*TAU+w._a; spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),440,dmg(9+w.level*3),'#ffcf5d',1,6,1.0); }
+      ringFx(player.x,player.y,54,'#ffe08a'); ringFx(player.x,player.y,30,'#fff'); },
     evo:{reqPassive:'pamount',ic:'🌟',name:'超新星爆',color:'#fff0a0',desc:'密集雙環星爆，全方位火力覆蓋',
       cd:function(l){return Math.max(0.35,0.7-l*0.04);},
       fire:function(w){ var num=14+w.level*2+player.amount*2; if(w._a==null)w._a=0; w._a+=0.4;
@@ -3416,7 +3421,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v271 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v272 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

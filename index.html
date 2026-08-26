@@ -620,6 +620,7 @@ var ACHIEVEMENTS=[
   {id:'h_evolver', ic:'🧬',hidden:true,name:'進化大師',desc:'單局進化 3 把武器',rw:800,chk:function(){return player.weapons.filter(function(w){return w.evolved;}).length>=3;}},
   {id:'h_alchemist',ic:'⚗️',hidden:true,name:'煉金術士',desc:'單局合成 2 把武器',rw:800,chk:function(){return player.weapons.filter(function(w){return w.fused;}).length>=2;}},
   {id:'h_jackofall',ic:'🎴',hidden:true,name:'博學者',desc:'單局擁有 15 種不同被動',rw:900,chk:function(){return Object.keys(player.passives||{}).length>=15;}},
+  {id:'h_maxmeta',ic:'🏛️',hidden:true,name:'殿堂常客',desc:'永久強化總等級達 40',rw:1200,chk:function(){var t=0;for(var k in DB.meta)t+=DB.meta[k]||0;return t>=40;}},
 ];
 function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); }
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';
@@ -2403,6 +2404,8 @@ function render(){
   var orbImg=glow('#22e6ff'), orbCore=glow('#dffbff');
   for(var i=0;i<orbs.length;i++){ var o=orbs[i]; var op=8+1.6*Math.sin(G.time*6+o.x*0.05+o.y*0.05);   // 脈動大小
     var osp=(o.vx||0)*(o.vx||0)+(o.vy||0)*(o.vy||0);
+    var odx=player.x-o.x, ody=player.y-o.y, odd=Math.sqrt(odx*odx+ody*ody);
+    if(odd<player.pickup){ ctx.globalAlpha=0.16*(1-odd/player.pickup); ctx.strokeStyle='#22e6ff'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(o.x,o.y); ctx.lineTo(player.x,player.y); ctx.stroke(); }   // 磁吸吸入光線
     if(osp>90000){ ctx.globalAlpha=0.4; ctx.drawImage(orbImg,o.x-(o.vx||0)*0.018-op*0.7,o.y-(o.vy||0)*0.018-op*0.7,op*1.4,op*1.4); }   // 磁吸高速時的彗尾
     ctx.globalAlpha=0.85; ctx.drawImage(orbImg,o.x-op,o.y-op,op*2,op*2);
     ctx.globalAlpha=0.9; ctx.drawImage(orbCore,o.x-2.6,o.y-2.6,5.2,5.2);   // 亮核

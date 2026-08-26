@@ -1032,7 +1032,9 @@ var WDEFS={
       for(var i=0;i<n;i++){ var t=randEnemyNear(player.x,player.y,720); if(!t)break;
         var r=(58+w.level*8)*player.area, r2=r*r, tx=t.x, ty=t.y;
         enemyGrid.query(tx,ty,r,function(e){ if(e.hp>0&&dist2(e.x,e.y,tx,ty)<r2)hitEnemy(e,dmg(24+w.level*8),tx,ty,0.2); });
-        ringFx(tx,ty,r,'#ffe94a'); burst(tx,ty,'#ffffff',10,240); } },
+        ringFx(tx,ty,r,'#ffe94a'); burst(tx,ty,'#ffffff',10,240); fxLightning(tx,ty-180,tx,ty);   // 天降垂直雷柱
+        var forks=1+Math.floor(w.level/4), fk=[]; enemyGrid.query(tx,ty,r*2.4,function(e){ if(e.hp>0&&e!==t&&fk.length<forks&&dist2(e.x,e.y,tx,ty)<(r*2.4)*(r*2.4))fk.push(e); });
+        for(var fi=0;fi<fk.length;fi++){ fxLightning(tx,ty,fk[fi].x,fk[fi].y); hitEnemy(fk[fi],dmg(14+w.level*5),tx,ty,0.15); } } },
     evo:{reqPassive:'pcritdmg',ic:'🌩️',name:'審判',color:'#fff0a0',desc:'落雷化為連環天罰，全場範圍轟炸',
       cd:function(l){return Math.max(0.5,1.2-l*0.08);},
       fire:function(w){ var n=3+Math.floor(w.level/2);
@@ -1200,9 +1202,9 @@ var WDEFS={
     }
   },
   meteorrain:{ic:'☄️',name:'隕星召喚',color:'#ff7a2b',tag:'天降',max:8,
-    desc:function(l){return l===0?'在敵群上空召喚隕石轟炸':'隕石數↑ 傷害↑ 範圍↑';},
+    desc:function(l){return l===0?'召喚隕石轟炸，落點殘留燃燒隕石坑封鎖地面':'隕石數↑ 傷害↑ 範圍↑';},
     cd:function(l){return Math.max(0.6,1.3-l*0.08);},
-    fire:function(w){ var num=1+Math.floor(w.level/3)+player.amount; for(var i=0;i<num;i++){ var tg=randEnemyNear(player.x,player.y,700)||nearestEnemy(player.x,player.y,9999); var mx=tg?tg.x+rand(-30,30):player.x+rand(-200,200), my=tg?tg.y+rand(-30,30):player.y+rand(-200,200), mr=(90+w.level*9)*player.area,mr2=mr*mr,md=dmg(30+w.level*9); (function(mx,my,mr,mr2,md){ enemyGrid.query(mx,my,mr,function(o){ if(o.hp>0&&dist2(o.x,o.y,mx,my)<mr2)hitEnemy(o,md,mx,my,0.3); }); })(mx,my,mr,mr2,md); ringFx(mx,my,mr,'#ff7a2b'); burst(mx,my,'#ff7a2b',10,220); } },
+    fire:function(w){ var num=1+Math.floor(w.level/3)+player.amount; for(var i=0;i<num;i++){ var tg=randEnemyNear(player.x,player.y,700)||nearestEnemy(player.x,player.y,9999); var mx=tg?tg.x+rand(-30,30):player.x+rand(-200,200), my=tg?tg.y+rand(-30,30):player.y+rand(-200,200), mr=(90+w.level*9)*player.area,mr2=mr*mr,md=dmg(30+w.level*9); (function(mx,my,mr,mr2,md){ enemyGrid.query(mx,my,mr,function(o){ if(o.hp>0&&dist2(o.x,o.y,mx,my)<mr2)hitEnemy(o,md,mx,my,0.3); }); })(mx,my,mr,mr2,md); ringFx(mx,my,mr,'#ff7a2b'); burst(mx,my,'#ff7a2b',10,220); if(hazards.length<80)hazards.push({kind:'lava',x:mx,y:my,r:mr*0.6,life:2.4,max:2.4,dtk:0}); } },
     evo:{reqPassive:'parea',ic:'🌠',name:'流星風暴',color:'#ffca4a',desc:'密集隕石雨覆蓋全場，天崩地裂',
       cd:function(l){return Math.max(0.4,0.9-l*0.05);},
       fire:function(w){ var num=3+Math.floor(w.level/2)+player.amount; for(var i=0;i<num;i++){ var tg=randEnemyNear(player.x,player.y,800)||{x:player.x+rand(-260,260),y:player.y+rand(-260,260)}; var mx=tg.x+rand(-40,40),my=tg.y+rand(-40,40),mr=(110+w.level*10)*player.area,mr2=mr*mr,md=dmg(38+w.level*10); (function(mx,my,mr,mr2,md){ enemyGrid.query(mx,my,mr,function(o){ if(o.hp>0&&dist2(o.x,o.y,mx,my)<mr2)hitEnemy(o,md,mx,my,0.3); }); })(mx,my,mr,mr2,md); ringFx(mx,my,mr,'#ffca4a'); burst(mx,my,'#ffca4a',8,200); } shake(4); }
@@ -3420,7 +3422,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v273 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v274 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

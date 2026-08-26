@@ -462,7 +462,7 @@ var TAU=Math.PI*2;
 // =====================================================================
 var SAVE='neonSurge_v1';
 var DB=loadDB();
-function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false,enigma:false};
+function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false,enigma:false,spiralist:false};
   var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
@@ -602,6 +602,7 @@ var ACHIEVEMENTS=[
   {id:'h_paradox', ic:'🌌',hidden:true,name:'悖論行者',desc:'踏入悖論深淵',rw:1000,chk:function(){return G.stage&&G.stage.id==='paradox';}},
   {id:'h_hoarder', ic:'🎒',hidden:true,name:'軍火收藏家',desc:'單局同時擁有 8 種武器',rw:700,chk:function(){return player.weapons.length>=8;}},
   {id:'h_evolver', ic:'🧬',hidden:true,name:'進化大師',desc:'單局進化 3 把武器',rw:800,chk:function(){return player.weapons.filter(function(w){return w.evolved;}).length>=3;}},
+  {id:'h_alchemist',ic:'⚗️',hidden:true,name:'煉金術士',desc:'單局合成 2 把武器',rw:800,chk:function(){return player.weapons.filter(function(w){return w.fused;}).length>=2;}},
 ];
 function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); }
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';
@@ -749,9 +750,10 @@ var CHARS=[
   {id:'cometeer',face:'☄️',name:'彗星使', desc:'貫穿燃燒 · 起手彗星炮', start:'comet', locked:true, unlock:'cometeer', stat:{dmg:1.1,fireRate:0.95}},
   {id:'lunar',   face:'🌙',name:'月刃使', desc:'扇形月刃 · 起手鐮月斬', start:'scythe', locked:true, unlock:'lunar', stat:{crit:0.08,speed:1.06}},
   {id:'enigma',  face:'🎭',name:'謎影', desc:'隱者 · 起手黑洞 · 全能均衡', start:'blackhole', locked:true, hidden:true, unlock:'enigma', stat:{dmg:1.1,crit:0.1,speed:1.05,maxHp:0.95}},
+  {id:'spiralist',face:'🌀',name:'螺旋使', desc:'彈幕覆蓋 · 起手螺旋炮', start:'spiralgun', locked:true, unlock:'spiralist', stat:{fireRate:1.08,dmg:0.98}},
 ];
 var selChar='ranger';
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕',lunar:'單局擊殺1200敵人',enigma:'？？？ 隱藏任務'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕',lunar:'單局擊殺1200敵人',enigma:'？？？ 隱藏任務',spiralist:'單局擊殺2500敵人'};
 
 // =====================================================================
 // 地圖 / 關卡
@@ -1617,7 +1619,7 @@ function spawnBoss(){
     hp:1400*mul,maxHp:1400*mul,sp:46*st.eSpd,dmg:26,color:st.bossColor,xp:60,shape:'boss',flash:0,shoot:1.4,knx:0,kny:0,boss:true,
     pattern:st.pattern,spin:0,dash:0,dvx:0,dvy:0,tp:0,name:st.bossName,slow:0,frozen:0,summonT:9};
   // 高幕首領隨機採用進階攻擊模式，增加多樣性與挑戰
-  if(G&&G.act>=3&&Math.random()<0.6){ e.pattern=pick(['spiral','twin','aimburst','cross','wall','seeker','meteor','gravity','pulsar','sweeper','converge','petal','homingnova','homingwall','starmine','trident','pinwheel','paradoxnova']); }
+  if(G&&G.act>=3&&Math.random()<0.6){ e.pattern=pick(['spiral','twin','aimburst','cross','wall','seeker','meteor','gravity','pulsar','sweeper','converge','petal','homingnova','homingwall','starmine','trident','pinwheel','paradoxnova','minefield']); }
   enemies.push(e); bossIntro(st.bossName,st.bossColor);
   var brgb=parseInt(st.bossColor.slice(1,3),16)+','+parseInt(st.bossColor.slice(3,5),16)+','+parseInt(st.bossColor.slice(5,7),16);
   flashScreen(brgb,0.4); shake(12);
@@ -1671,6 +1673,9 @@ function bossAttack(e,dx,dy){
     var arms=5; for(var pw=0;pw<arms;pw++){ var pwa=e.spin+pw/arms*TAU; for(var seg=1;seg<=3;seg++){ spawnEnemyBullet(e.x,e.y,Math.cos(pwa),Math.sin(pwa),135+seg*48,e.dmg*0.5); } } }
   else if(e.pattern==='paradoxnova'){ e.spin=(e.spin||0)+0.24;   // 悖論新星：兩道反向旋轉的環以不同速度射出，交織成干涉彈網，逼你讀出旋向縫隙
     var pm=10; for(var pn=0;pn<pm;pn++){ var pa1=e.spin+pn/pm*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(pa1),Math.sin(pa1),180,e.dmg*0.5); var pa2=-e.spin*1.35+pn/pm*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(pa2),Math.sin(pa2),132,e.dmg*0.45); } }
+  else if(e.pattern==='minefield'){ e.tp=(e.tp||0)+1;   // 地雷陣：在玩家周圍佈下持續灼熱地雷 + 輕度環狀彈幕，逼你不斷轉移陣地
+    if(e.tp%3===0){ for(var mf=0;mf<4;mf++){ if(hazards.length<80){ var mfa=rand(0,TAU), mfd=rand(120,320); hazards.push({kind:'lava',x:player.x+Math.cos(mfa)*mfd,y:player.y+Math.sin(mfa)*mfd,r:46,life:4,max:4,dtk:0}); } } }
+    for(var mk=0;mk<6;mk++){ var mka=mk/6*TAU+e.tp*0.2; spawnEnemyBullet(e.x,e.y,Math.cos(mka),Math.sin(mka),165,e.dmg*0.4); } }
   else { for(var k=0;k<10;k++){var a=k/10*TAU+G.time; spawnEnemyBullet(e.x,e.y,Math.cos(a),Math.sin(a),200,e.dmg*0.6);} }
 }
 
@@ -2804,6 +2809,7 @@ function gameOver(){
   if((G.act||1)>=8&&!DB.chars.cometeer){DB.chars.cometeer=true;}
   if(G.flawless&&G.time>=180&&!DB.chars.enigma){DB.chars.enigma=true; announce&&announce('🎭 隱藏角色「謎影」解鎖！','#c98bff');}
   if(G.kills>=1200&&!DB.chars.lunar){DB.chars.lunar=true;}
+  if(G.kills>=2500&&!DB.chars.spiralist){DB.chars.spiralist=true;}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; } }

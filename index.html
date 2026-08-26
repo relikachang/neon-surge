@@ -1851,7 +1851,7 @@ function spawnEnemy(type,ex,ey,mul,forceElite){
   enemies.push({x:ex,y:ey,type:type,r:r,hp:hp,maxHp:hp,sp:sp,dmg:dm,color:d.color,
     xp:xp,shape:d.shape,ranged:d.ranged,explode:d.explode,split:d.split,charger:d.charger,elite:elite,affix:affix,
     titan:d.titan,stalker:d.stalker,bombard:d.bombard,sniper:d.sniper,smasher:d.smasher,weaver:d.weaver,phaseknight:d.phaseknight,impaler:d.impaler,voidreaper:d.voidreaper,beamer:d.beamer,converger:d.converger,suppressor:d.suppressor,hexer:d.hexer,shade:d.shade,homer:d.homer,flee:d.flee,summonRare:d.summonRare,seekerRare:d.seekerRare,stormRare:d.stormRare,
-    flash:0,shoot:rand(1,3),chargeT:rand(2,4),dash:0,dvx:0,dvy:0,knx:0,kny:0,boss:false,slow:0,frozen:0});
+    flash:0,shoot:rand(1,3),chargeT:rand(2,4),dash:0,dvx:0,dvy:0,knx:0,kny:0,boss:false,slow:0,frozen:0,spawnT:0.24});
 }
 function spawnBoss(){
   var st=G.stage||STAGES[0];
@@ -2186,6 +2186,7 @@ function update(dt){
   // ---- 敵人移動 / 攻擊 ----
   for(var i=enemies.length-1;i>=0;i--){ var e=enemies[i]; if(e.dead||e.hp<=0){ enemies.splice(i,1); continue; }
     if(e.flash>0)e.flash-=dt;
+    if(e.spawnT>0)e.spawnT-=dt;
     if(e.burnT>0){ e.burnT-=dt; e._bk=(e._bk||0)-dt; if(e._bk<=0){ e._bk=0.35; e.hp-=e.burnDmg; e.flash=Math.max(e.flash,0.05); dmgNum(e.x,e.y-e.r,Math.round(e.burnDmg),false); if(e.hp<=0){ killEnemy(e); enemies.splice(i,1); continue; } } }   // 灼燒 DoT：週期扣血，死亡即結算並移除
     var dx=player.x-e.x, dy=player.y-e.y, d=Math.hypot(dx,dy)||1;
     var espd=e.sp;
@@ -2958,6 +2959,9 @@ function drawGrid(camx,camy){ var s=64; ctx.strokeStyle=(G&&G.stage?G.stage.grid
 }
 function drawEnemy(e){
   var f=e.flash>0, r=e.r, hi=(enemies.length<(60*fxScale)||e.boss||e.elite); ctx.save(); ctx.translate(e.x,e.y);   // hi：細節層級(敵過多/特效強度低時普通敵簡化裝飾以保效能)
+  if(e.spawnT>0){ var sp0=e.spawnT/0.24, sc=1-sp0*0.55;   // 登場彈入：由小長回原尺寸 + 生成光環
+    ctx.globalAlpha=1-sp0*0.45; ctx.scale(sc,sc);
+    ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=sp0*0.6; ctx.strokeStyle=e.color; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,r*(1.2+sp0*1.6),0,TAU); ctx.stroke(); ctx.restore(); ctx.globalAlpha=1; }
   // 受擊擊退尾流：被打飛的瞬間朝退後方向拖出一道漸隱速度殘影，強化打擊回饋
   var knsp=Math.hypot(e.knx||0,e.kny||0);
   if(knsp>70 && r>=8 && !e.boss){ var ka=Math.atan2(e.kny,e.knx), kl=Math.min(r*2.4,knsp*0.05);
@@ -3528,7 +3532,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v291 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v292 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

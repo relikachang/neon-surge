@@ -1213,9 +1213,18 @@ var WDEFS={
       cd:function(l){return Math.max(0.03,0.08-l*0.005);},
       fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var a=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle; for(var g=-1;g<=1;g+=2){ var ga=a+g*0.06+rand(-0.05,0.05); spawnBullet(player.x,player.y,Math.cos(ga),Math.sin(ga),780,dmg(9+w.level*3),'#fff0a0',1,4,0.9); } }
     }
+  },
+  chakram:{ic:'☸️',name:'迴旋輪刃',color:'#5df0ff',tag:'迴旋',max:8,
+    desc:function(l){return l===0?'擲出多枚貫穿並迴旋返回的輪刃':'輪刃數↑ 傷害↑';},
+    cd:function(l){return Math.max(0.6,1.4-l*0.1);},
+    fire:function(w){ var num=2+Math.floor(w.level/2)+player.amount, base=player.aimAngle; for(var i=0;i<num;i++){ var a=base+(i-(num-1)/2)*0.5; spawnBoomerang(a,dmg(16+w.level*6),1.4); } },
+    evo:{reqPassive:'ppierce',ic:'☸️',name:'千刃輪迴',color:'#aef4ff',desc:'環身噴發密集迴旋輪刃風暴，絞碎四方',
+      cd:function(l){return Math.max(0.4,0.9-l*0.05);},
+      fire:function(w){ var num=6+w.level; for(var i=0;i<num;i++)spawnBoomerang(i/num*TAU,dmg(20+w.level*7),1.6); }
+    }
   }
 };
-var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet','hornet','spiralgun','gatling'];
+var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet','hornet','spiralgun','gatling','chakram'];
 
 // 被動定義
 var PDEFS={
@@ -1443,6 +1452,10 @@ var FUSIONS=[
   {a:'gatling',b:'lightning',id:'stormvulcan',ic:'⚡',name:'電磁機炮',color:'#c9e6ff',desc:'超高速電磁彈流連射，命中即在敵群間炸開連鎖閃電',max:3,
     cd:function(l){return Math.max(0.05,0.12-l*0.008);},
     fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var a=(t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle)+rand(-0.05,0.05); spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),780,dmg(9+w.level*3),'#c9e6ff',1,4,0.9); if(t&&Math.random()<0.25)chainLightning(player.x,player.y,t,3+w.level,dmg(8+w.level*3)); }},
+  {a:'chakram',b:'lightning',id:'thunderchakram',ic:'☸️',name:'雷霆輪刃',color:'#c9e6ff',desc:'環身噴發迴旋輪刃，並在命中處炸開連鎖閃電',max:3,
+    cd:function(l){return Math.max(0.4,0.9-l*0.05);},
+    fire:function(w){ var num=5+w.level; for(var i=0;i<num;i++)spawnBoomerang(i/num*TAU,dmg(18+w.level*6),1.6);
+      var t=nearestEnemy(player.x,player.y,560*560); if(t)chainLightning(player.x,player.y,t,3+w.level,dmg(10+w.level*4)); }},
 ];
 function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)return FUSIONS[i]; return null; }
 

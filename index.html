@@ -80,8 +80,11 @@
   #bossbar{position:absolute;top:66px;left:50%;transform:translateX(-50%);width:min(560px,86vw);display:none;z-index:5}
   #bossbar.show{display:block}
   #bossname{font-size:13px;font-weight:800;letter-spacing:2px;text-align:center;margin-bottom:4px;text-shadow:0 0 10px currentColor}
-  #bosshpbg{height:12px;border-radius:7px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);overflow:hidden}
-  #bosshpfill{height:100%;width:100%;box-shadow:0 0 12px currentColor;transition:width .15s}
+  #bosshpbg{height:16px;border-radius:9px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);overflow:hidden;position:relative}
+  #bosshpbg::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(90deg,transparent 0,transparent 9.5%,rgba(0,0,0,.4) 9.7%,rgba(0,0,0,.4) 10%)}
+  #bosshpfill{height:100%;width:100%;background:currentColor;box-shadow:0 0 12px currentColor;transition:width .15s;position:relative;overflow:hidden}
+  #bosshpfill::before{content:'';position:absolute;left:0;right:0;top:0;height:45%;background:linear-gradient(180deg,rgba(255,255,255,.45),transparent)}
+  #bosshpfill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);background-size:80px 100%;background-repeat:no-repeat;animation:hudshine 2s linear infinite;pointer-events:none}
   #bossbar.enraged #bosshpbg{border-color:#ff2b5e;animation:enragePulse .5s infinite}
   @keyframes enragePulse{50%{box-shadow:0 0 16px #ff2b5e}}
   #combo{position:absolute;top:104px;left:50%;transform:translateX(-50%) scale(1);transform-origin:center top;font-size:20px;font-weight:900;
@@ -2246,7 +2249,9 @@ function render(){
     var osp=(o.vx||0)*(o.vx||0)+(o.vy||0)*(o.vy||0);
     if(osp>90000){ ctx.globalAlpha=0.4; ctx.drawImage(orbImg,o.x-(o.vx||0)*0.018-op*0.7,o.y-(o.vy||0)*0.018-op*0.7,op*1.4,op*1.4); }   // 磁吸高速時的彗尾
     ctx.globalAlpha=0.85; ctx.drawImage(orbImg,o.x-op,o.y-op,op*2,op*2);
-    ctx.globalAlpha=0.9; ctx.drawImage(orbCore,o.x-2.6,o.y-2.6,5.2,5.2); }   // 亮核
+    ctx.globalAlpha=0.9; ctx.drawImage(orbCore,o.x-2.6,o.y-2.6,5.2,5.2);   // 亮核
+    ctx.save(); ctx.translate(o.x,o.y); ctx.rotate(G.time*2+o.x*0.05); ctx.globalAlpha=0.8; ctx.fillStyle='#dffbff';
+    ctx.beginPath(); ctx.moveTo(0,-3.4); ctx.lineTo(2.2,0); ctx.lineTo(0,3.4); ctx.lineTo(-2.2,0); ctx.closePath(); ctx.fill(); ctx.restore(); }   // 旋轉晶體切面（寶石感）
   // 特效環
   for(var i=0;i<fxRings.length;i++){ var r=fxRings[i]; ctx.globalAlpha=r.life/r.max*0.6; ctx.strokeStyle=r.color; ctx.lineWidth=4;
     ctx.beginPath(); ctx.arc(r.x,r.y,r.r,0,TAU); ctx.stroke(); }

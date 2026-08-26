@@ -2294,13 +2294,16 @@ function render(){
   ctx.globalCompositeOperation='lighter';
   for(var i=0;i<ebullets.length;i++){ var b=ebullets[i]; var eg=glow('#ff5e7a');
     ctx.globalAlpha=0.3; ctx.drawImage(eg,b.x-b.vx*0.016-7,b.y-b.vy*0.016-7,14,14);   // 微拖尾
-    ctx.globalAlpha=1; ctx.drawImage(eg,b.x-9,b.y-9,18,18);
-    ctx.drawImage(glow('#ffffff'),b.x-3.5,b.y-3.5,7,7); }   // 白色核心
+    var epul=0.85+0.15*Math.sin(G.time*10+b.x*0.1);
+    ctx.globalAlpha=1; ctx.drawImage(eg,b.x-9*epul,b.y-9*epul,18*epul,18*epul);
+    ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(G.time*6+b.x*0.3); ctx.fillStyle='#ffffff';
+    ctx.beginPath(); ctx.moveTo(0,-4); ctx.lineTo(3,0); ctx.lineTo(0,4); ctx.lineTo(-3,0); ctx.closePath(); ctx.fill(); ctx.restore(); }   // 旋轉晶核
   // 我方子彈（含速度方向拖尾）
   for(var i=0;i<bullets.length;i++){ var b=bullets[i]; var img=glow(b.color);
     var ts=b.r*1.7; ctx.globalAlpha=0.32; ctx.drawImage(img,b.x-b.vx*0.020-ts,b.y-b.vy*0.020-ts,ts*2,ts*2);
     var ts2=b.r*1.2; ctx.globalAlpha=0.18; ctx.drawImage(img,b.x-b.vx*0.036-ts2,b.y-b.vy*0.036-ts2,ts2*2,ts2*2);
-    ctx.globalAlpha=1; var s=b.r*2.4; ctx.drawImage(img,b.x-s,b.y-s,s*2,s*2); }
+    ctx.globalAlpha=1; var s=b.r*2.4; ctx.drawImage(img,b.x-s,b.y-s,s*2,s*2);
+    var wc=b.r*0.85; ctx.drawImage(glow('#ffffff'),b.x-wc,b.y-wc,wc*2,wc*2); }   // 白熱亮核，射擊更清晰
   // 雷射光束
   for(var i=0;i<beams.length;i++){ var bm=beams[i]; ctx.save(); ctx.translate(bm.x,bm.y); ctx.rotate(bm.ang);
     ctx.globalAlpha=bm.life/bm.max; ctx.fillStyle=bm.color; ctx.shadowColor=bm.color; ctx.shadowBlur=16;
@@ -2361,6 +2364,9 @@ function render(){
   if(!G.over){ var bossAlive=false; for(var bv=0;bv<enemies.length;bv++){ if(enemies[bv].boss&&enemies[bv].hp>0){ bossAlive=true; break; } }
     if(bossAlive){ var bpul=0.13+0.06*Math.sin(G.time*3); var vg3=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.34,W/2,H/2,Math.max(W,H)*0.64);
       vg3.addColorStop(0,'rgba(0,0,0,0)'); vg3.addColorStop(1,'rgba(150,20,44,'+bpul+')'); ctx.fillStyle=vg3; ctx.fillRect(0,0,W,H); } }
+  // 高連擊螢幕暖光：連擊越高，畫面邊緣泛起暖橙光，烘托連殺手感
+  if(!G.over&&(G.combo||0)>=30){ var cw=Math.min(0.16,(G.combo-30)/500); var vgc=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.42,W/2,H/2,Math.max(W,H)*0.72);
+    vgc.addColorStop(0,'rgba(0,0,0,0)'); vgc.addColorStop(1,'rgba(255,150,60,'+cw+')'); ctx.fillStyle=vgc; ctx.fillRect(0,0,W,H); }
 
   // 傷害紅屏
   if(hurtFlash>0){ ctx.fillStyle='rgba(255,40,60,'+(hurtFlash*0.35)+')'; ctx.fillRect(0,0,W,H); }

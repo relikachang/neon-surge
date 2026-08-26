@@ -577,7 +577,7 @@ try{ var _fx=localStorage.getItem('neon_fx'); if(_fx==='med')fxScale=0.6; else i
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false,enigma:false,spiralist:false,gunslinger:false,ronin:false,warden2:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0},weekly:{week:-1,done:false}};
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0},weekly:{week:-1,done:false},achMile:{}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
@@ -726,7 +726,10 @@ var ACHIEVEMENTS=[
   {id:'h_untouchable',ic:'🕊️',hidden:true,name:'無瑕',desc:'全程無傷存活 5 分鐘',rw:1400,chk:function(){return G.flawless&&G.time>=300;}},
   {id:'h_earlyboss',ic:'⏱️',hidden:true,name:'速斬',desc:'開局 2 分鐘內擊敗首領',rw:700,chk:function(){return (G.bossKills||0)>=1&&G.time<=120;}},
 ];
-function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); }
+function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); checkAchMile(); }
+var ACH_MILE=[{n:25,rw:400},{n:50,rw:800},{n:75,rw:1200},{n:100,rw:2000}];   // 成就里程碑：累計解鎖 N 個給階段大獎
+function checkAchMile(){ DB.achMile=DB.achMile||{}; var got=Object.keys(DB.achievements||{}).length;
+  ACH_MILE.forEach(function(m){ if(got>=m.n && !DB.achMile[m.n]){ DB.achMile[m.n]=1; DB.shards+=m.rw; saveDB(); achToast({ic:'🏅',name:'成就里程碑 '+m.n+' 達成！'},m.rw); } }); }
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';
   el.classList.add('show'); GAudio.achieve&&GAudio.achieve(); clearTimeout(achToast._t); achToast._t=setTimeout(function(){el.classList.remove('show');},2600); }
 function dailyToast(info){ var el=$('achpop'); if(!el)return;
@@ -3442,7 +3445,10 @@ function renderAch(){ var got=0, lgTotal=0, lgGot=0, hidGot=0, hidTotal=0; var h
   return '<div class="achitem'+(lg?' legendary':'')+(a.hidden?' hidden':'')+(u?'':' locked')+'"><div class="aic">'+ic+'</div>'+
     '<div><div class="an">'+nm+'</div><div class="ad">'+dc+'</div></div>'+
     '<div class="ax">'+(u?'✅':(a.hidden?'❔':'🔒'))+'</div></div>'; }).join('');
-  $('achlist').innerHTML='<div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:12px">已解鎖 '+got+' / '+ACHIEVEMENTS.length+'　·　🏆 傳說 '+lgGot+' / '+lgTotal+'　·　❔ 隱藏 '+hidGot+' / '+hidTotal+'</div>'+html;
+  var mileHtml='<div style="margin:2px 0 14px"><div style="display:flex;justify-content:space-between;font-size:11px;color:#8ea0c8;margin-bottom:4px"><span>🏅 成就里程碑獎勵</span><span>'+got+' / '+ACHIEVEMENTS.length+'</span></div>'+
+    '<div style="height:8px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden"><div style="height:100%;width:'+Math.min(100,got/ACHIEVEMENTS.length*100)+'%;background:linear-gradient(90deg,#ffd54a,#ff9a3d);box-shadow:0 0 8px #ffd54a"></div></div>'+
+    '<div class="brow" style="margin-top:8px">'+ACH_MILE.map(function(m){ var done=got>=m.n; return '<span class="bchip" style="border-color:'+(done?'#ffd54a':'rgba(255,255,255,.16)')+';'+(done?'background:rgba(255,213,74,.14);color:#ffd54a':'')+'">'+(done?'✅':'🏅')+' '+m.n+' → +◆'+m.rw+'</span>'; }).join('')+'</div></div>';
+  $('achlist').innerHTML='<div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:10px">已解鎖 '+got+' / '+ACHIEVEMENTS.length+'　·　🏆 傳說 '+lgGot+' / '+lgTotal+'　·　❔ 隱藏 '+hidGot+' / '+hidTotal+'</div>'+mileHtml+html;
 }
 function renderCodex(){
   var html=WORDER.map(function(id){ var d=WDEFS[id];
@@ -3514,7 +3520,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v287 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v288 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

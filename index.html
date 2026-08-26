@@ -248,7 +248,9 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   .card{background:linear-gradient(180deg,rgba(20,28,50,.9),rgba(10,14,28,.9));border:2px solid var(--cc,#2a3355);
     border-radius:18px;padding:18px 14px;cursor:pointer;transition:transform .1s,box-shadow .2s;text-align:center;position:relative;overflow:hidden}
   .card:hover{transform:translateY(-4px);box-shadow:0 12px 30px rgba(0,0,0,.5)}
-  .card .cicon{font-size:44px;filter:drop-shadow(0 0 12px var(--cc))}
+  .card .cicon{font-size:40px;display:inline-flex;align-items:center;justify-content:center;width:78px;height:78px;border-radius:50%;margin:2px auto 0;
+    background:radial-gradient(circle at 50% 40%,rgba(255,255,255,.10),rgba(255,255,255,.02) 70%);border:2px solid var(--cc,#2a3355);
+    box-shadow:0 0 22px -5px var(--cc),inset 0 0 20px -8px var(--cc);filter:drop-shadow(0 0 8px var(--cc))}
   .card .cname{font-size:18px;font-weight:800;margin-top:8px;color:#fff}
   .card .ctag{font-size:10px;font-weight:800;letter-spacing:1px;padding:2px 8px;border-radius:6px;display:inline-block;margin-top:6px;
     background:var(--cc);color:#05070f}
@@ -3123,6 +3125,7 @@ function drawPlayer(){
   if((G.curseT||0)>0){ ctx.save(); ctx.globalAlpha=0.4+0.25*Math.sin(G.time*8); ctx.strokeStyle='#c86bff'; ctx.lineWidth=2; ctx.shadowColor='#c86bff'; ctx.shadowBlur=10; ctx.setLineDash([5,6]); ctx.lineDashOffset=-G.time*30;
     ctx.beginPath(); ctx.arc(player.x,player.y,pr+16,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.restore(); }
 }
+var RAREPK={jackpot:1,bosschest:1,overdrive:1,nuke:1,revivecharm:1,carpetbomb:1,soulharvest:1,lightstorm:1,thunderstorm:1,vortex:1,airstrike:1,turretdrop:1,chronofield:1,emppulse:1,phaseshift:1,fullheal:1};   // 稀有/強力道具：多一圈金色稀有光環
 function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️',revivecharm:'🕊️',thunderstorm:'🌩️',jackpot:'🎰',nuke:'☢️',fullheal:'💚',repel:'💨',stasis:'⏳',overdrive:'⚙️',purify:'✨',phaseshift:'🌀',lightstorm:'🌈',emppulse:'⚡',turretdrop:'🗼',blitz:'➡️',carpetbomb:'🎆',chronofield:'⌛',soulharvest:'💀'}[p.type];
   var yy=p.y+Math.sin(G.time*4+p.x)*4;
   var pulse=0.5+0.5*Math.sin(G.time*5+p.x*0.1);
@@ -3140,6 +3143,12 @@ function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'�
   ctx.globalAlpha=0.22; ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(p.x,p.y+16,10,3,0,0,TAU); ctx.fill(); ctx.globalAlpha=1;
   ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.45+pulse*0.4; ctx.strokeStyle=pcol; ctx.lineWidth=1.6; ctx.setLineDash([4,5]); ctx.lineDashOffset=G.time*20;
   ctx.beginPath(); ctx.arc(p.x,yy,16,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.restore();   // 收集指示環
+  // 稀有度光環：強力道具外加一圈旋轉金環 + 環繞星塵，讓珍貴掉落一眼可辨
+  if(RAREPK[p.type]){ ctx.save(); ctx.globalCompositeOperation='lighter';
+    ctx.globalAlpha=0.55+pulse*0.3; ctx.lineWidth=2; ctx.strokeStyle='#ffd54a'; ctx.setLineDash([3,7]); ctx.lineDashOffset=-G.time*42;
+    ctx.beginPath(); ctx.arc(p.x,yy,23,0,TAU); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#fff'; for(var rs=0;rs<4;rs++){ var rsa=G.time*2.5+rs/4*TAU; ctx.globalAlpha=0.4+0.55*Math.sin(G.time*6+rs*1.7); ctx.beginPath(); ctx.arc(p.x+Math.cos(rsa)*23,yy+Math.sin(rsa)*23,1.9,0,TAU); ctx.fill(); }
+    ctx.restore(); ctx.globalAlpha=1; }
   ctx.shadowColor=pcol; ctx.shadowBlur=14; ctx.font='24px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.save(); ctx.translate(p.x,yy); var isc=1+pulse*0.08; ctx.scale(isc,isc); ctx.fillText(ic,0,0); ctx.restore(); ctx.restore(); }   // 圖示依類型色光暈 + 呼吸縮放
 
@@ -3370,7 +3379,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v265 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v266 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

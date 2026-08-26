@@ -220,6 +220,13 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   #menustats .st b{display:block;font-size:20px;font-weight:900;color:#eaf5ff;line-height:1.1}
   #menustats .st span{display:block;font-size:11px;color:#8ea0c8;letter-spacing:1px;margin-top:2px}
   #menu .btn#playbtn{font-size:25px;padding:23px;letter-spacing:4px}
+  #modesel{display:flex;gap:8px;margin-top:8px}
+  #modesel .modecard{flex:1;background:rgba(12,18,34,.6);border:2px solid rgba(255,255,255,.1);border-radius:14px;padding:10px 8px;cursor:pointer;text-align:center;transition:.14s}
+  #modesel .modecard:hover{border-color:rgba(34,230,255,.5)}
+  #modesel .modecard.on{border-color:var(--cyan);box-shadow:0 0 20px rgba(34,230,255,.35);background:rgba(34,230,255,.08)}
+  #modesel .mic{font-size:26px}
+  #modesel .mn{font-size:14px;font-weight:800;margin-top:3px;color:#fff}
+  #modesel .md{font-size:10.5px;color:#8ea0c8;margin-top:3px;line-height:1.35}
   #menustats .st b{font-size:23px} #menustats .st{padding:11px 6px}
   .btn{display:block;width:100%;border:none;border-radius:16px;padding:16px;font-size:18px;font-weight:800;letter-spacing:2px;
     cursor:pointer;color:#05070f;background:linear-gradient(135deg,#22e6ff,#5db8ff);box-shadow:0 10px 30px rgba(34,230,255,.35);
@@ -390,6 +397,8 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   <div class="charsel" id="charsel"></div>
   <div class="sellabel">選擇地圖</div>
   <div class="charsel" id="stagesel"></div>
+  <div class="sellabel">遊戲模式</div>
+  <div id="modesel"></div>
   <button class="btn" id="playbtn">開始遊戲</button>
   <div style="display:flex;gap:10px">
     <button class="btn ghost" id="dailybtn" style="flex:1">每日挑戰</button>
@@ -947,6 +956,12 @@ var STAGES=[
   {id:'inferno', name:'永劫煉獄', desc:'烈焰永燃 · 地雷陣主宰', bg:'#0e0402', grid:'rgba(255,110,50,0.15)', eHp:4.2, eSpd:1.52, spawn:2.1, bossName:'煉獄魔王', bossColor:'#ff5a2b', pattern:'minefield', locked:true, unlock:'paradox'},
 ];
 var selStage='city';
+var selMode='normal';
+var MODES={
+  normal:{ic:'♾️',name:'標準生存',desc:'經典模式：活越久越強，挑戰無盡'},
+  timeattack:{ic:'⏱️',name:'限時狂殺',desc:'120 秒內衝最高擊殺，時間到結算',dur:120},
+  bossrush:{ic:'👑',name:'首領亂鬥',desc:'無雜兵，首領接連降臨，考驗火力與走位'}
+};
 function stageUnlocked(s){ return !s.locked || DB.stages[s.id]; }
 
 // =====================================================================
@@ -1637,7 +1652,9 @@ function newRun(daily){
   G={ time:0, kills:0, level:1, xp:0, xpNeed:5, wave:1, shards:0, combo:0, comboTimer:0,
      spawnTimer:0, bossTimer:0, eliteTimer:0, over:false, paused:false,
      nextBossAt:105, usedRevive:false, luck:0.06*metaLv('luck'), stage:st, mut:mut, daily:!!daily,
-     dmgDealt:0, peakCombo:0, bossKills:0, eliteKills:0, act:1, actMul:1, flawless:true };
+     dmgDealt:0, peakCombo:0, bossKills:0, eliteKills:0, act:1, actMul:1, flawless:true,
+     mode:(daily?'normal':selMode), modeTimer:(!daily&&selMode==='timeattack'?(MODES.timeattack.dur):0) };
+  if(G.mode==='bossrush')G.nextBossAt=4;   // 首領亂鬥：快速首波首領
   player={ x:0,y:0, radius:15, hp:0, maxHp:0, speed:0, iframe:0, aimAngle:0, frenzyT:0, overdriveT:0,
     weapons:[], passives:{}, base:{}, charId:ch.id, sig:charSig(ch.id) };
   var _ci=CHARS.indexOf(ch); if(_ci>=0)player.sig.arch=_ci%6;   // 依名冊序號分派船體原型，六型平均分佈
@@ -2110,6 +2127,7 @@ function loop(ts){ if(!running)return; requestAnimationFrame(loop);
 }
 function update(dt){
   G.time+=dt;
+  if(G.mode==='timeattack'&&!G.over){ G.modeTimer-=dt; if(G.modeTimer<=0){ G.modeTimer=0; announce('⏱️ 時間到！','#ffd54a'); G.over=true; gameOver(); return; } }   // 限時狂殺：時間到結算
   // combo 衰減
   if(G.comboTimer>0){ G.comboTimer-=dt; if(G.comboTimer<=0){ if(G.combo>=15)floatText('連擊中斷 x'+G.combo,'#ff8a3a'); G.combo=0; var cb=$('combo'); cb.style.opacity='0'; cb.classList.remove('flame','inferno');} }
   // ---- 玩家移動 ----
@@ -2353,6 +2371,10 @@ function updateBlades(dt){ var w=weaponById('blades'); if(!w)return;
 
 // ---- 生成節奏 ----
 function spawnDirector(dt){
+  if(G.mode==='bossrush'){   // 首領亂鬥：無雜兵，首領接連降臨(越後期同時越多)
+    if(G.time>=G.nextBossAt){ var bn=1+Math.floor(G.time/90); for(var bi=0;bi<bn;bi++)spawnBoss(); G.nextBossAt=G.time+Math.max(14,26-G.time/40); }
+    return;
+  }
   var m=G.time/60; // 分鐘
   var rate=Math.max(m>6?0.07:0.16,0.85-m*0.10)/((G.stage?G.stage.spawn:1)*(G.mut?G.mut.spawn:1)); // 生成間隔（地圖+每日加成，後期大幅更密集）
   G.spawnTimer-=dt;
@@ -3293,7 +3315,7 @@ function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'�
 // HUD 更新
 // =====================================================================
 function updateHud(){
-  $('timer').textContent=fmtTime(G.time);
+  var tel=$('timer'); if(G.mode==='timeattack'){ tel.textContent='⏱ '+fmtTime(Math.max(0,G.modeTimer)); tel.style.color=G.modeTimer<=15?'#ff4d5e':'#ffd54a'; } else { tel.textContent=fmtTime(G.time); tel.style.color=''; }
   $('killn').textContent=G.kills; $('waven').textContent=G.wave; var acn=$('actn'); acn.textContent=G.act; acn.style.color=G.act>=15?'#ff2b5e':G.act>=8?'#ff5a3a':G.act>=4?'#ff9a3d':'#ffffff'; acn.style.textShadow=G.act>=8?'0 0 10px currentColor':'none';
   var amn=$('actmuln'); if(amn){ amn.textContent='×'+(G.actMul||1).toFixed(1); amn.style.color=G.actMul>=3?'#ff2b5e':G.actMul>=2?'#ff5a3a':'#ff9a3d'; }
   $('dpsn').textContent=Math.round((G.dmgDealt||0)/Math.max(1,G.time));
@@ -3536,7 +3558,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v294 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v295 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -3581,6 +3603,13 @@ function renderMenu(){
     el.onclick=function(){ if(!unlocked)return; selStage=s.id; renderMenu(); };
     ss.appendChild(el);
   });
+  var ms=$('modesel'); if(ms){ ms.innerHTML='';
+    ['normal','timeattack','bossrush'].forEach(function(mid){ var md=MODES[mid];
+      var el=document.createElement('div'); el.className='modecard'+(selMode===mid?' on':'');
+      el.innerHTML='<div class="mic">'+md.ic+'</div><div class="mn">'+md.name+'</div><div class="md">'+md.desc+'</div>';
+      el.onclick=function(){ selMode=mid; renderMenu(); };
+      ms.appendChild(el);
+    }); }
 }
 function renderShop(){
   $('shopshards').textContent=DB.shards;

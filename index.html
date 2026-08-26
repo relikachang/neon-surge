@@ -35,6 +35,8 @@
   #hpfill::before{content:'';position:absolute;left:0;right:0;top:0;height:45%;background:linear-gradient(180deg,rgba(255,255,255,.4),transparent)}
   #xpfill::after,#hpfill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);background-size:70px 100%;background-repeat:no-repeat;animation:hudshine 2.4s linear infinite;pointer-events:none}
   @keyframes hudshine{0%{background-position:-70px 0}100%{background-position:calc(100% + 70px) 0}}
+  #xpfill.lvflash{animation:lvflash .5s ease}
+  @keyframes lvflash{0%{filter:brightness(2.4);box-shadow:0 0 20px #ffd54a,0 0 30px #fff}100%{filter:brightness(1);box-shadow:0 0 10px #22e6ff}}
   #hpfill.low{animation:hplow .6s ease-in-out infinite}
   @keyframes hplow{0%,100%{box-shadow:0 0 10px #ff4d5e;filter:brightness(1)}50%{box-shadow:0 0 20px #ff2b3e,0 0 34px #ff2b3e;filter:brightness(1.35)}}
   #hptxt{font-size:13px;font-weight:800;margin-top:3px;color:#ffb3bb;text-align:center;text-shadow:0 0 8px rgba(0,0,0,.6)}
@@ -2021,7 +2023,8 @@ function update(dt){
     if(e.boss&&!e.enraged&&e.hp/e.maxHp<0.4){ e.enraged=true; announce('⚠ '+(e.name||'首領')+' 狂暴化！','#ff2b5e'); flashScreen('255,43,94',0.45); shake(12); }
     if(e.boss&&!e.frenzied&&e.hp/e.maxHp<0.15){ e.frenzied=true; e.enraged=true; announce('☠ '+(e.name||'首領')+' 絕命狂暴！','#ff1030'); flashScreen('255,20,48',0.55); shake(18); }
     if(e.boss){ e.summonT-=dt; if(e.summonT<=0 && enemies.length<200){ e.summonT=e.enraged?6:10; var sn=e.enraged?4:2;
-      for(var sm=0;sm<sn;sm++)spawnEnemy(chooseType(G.time/60),e.x+rand(-50,50),e.y+rand(-50,50),1.2); announce((e.name||'首領')+' 召喚增援！',e.color); } }
+      for(var sm=0;sm<sn;sm++){ var smx=e.x+rand(-50,50),smy=e.y+rand(-50,50); spawnEnemy(chooseType(G.time/60),smx,smy,1.2); ringFx(smx,smy,42,e.color); burst(smx,smy,e.color,6,160); }
+      announce((e.name||'首領')+' 召喚增援！',e.color); ringFx(e.x,e.y,120,e.color); ringFx(e.x,e.y,60,'#fff'); } }
     var stop=e.ranged?260:0;
     if(e.flee){ if(d<440){ e.x-=dx/d*espd*dt; e.y-=dy/d*espd*dt; } }   // 黃金巨獸：玩家靠近就逃跑
     else if(d>stop){ e.x+=dx/d*espd*dt; e.y+=dy/d*espd*dt; }
@@ -2247,6 +2250,7 @@ function gainXP(v){ var cb=1+Math.min(1,(G.combo||0)*0.01); G.xp+=v*player.xpMul
 function levelUp(){ G.level++; G.xpNeed=Math.floor(5+G.level*3+G.level*G.level*0.6+Math.pow(Math.max(0,G.level-15),2.3)*0.85);   // 後期(15級後)升級所需經驗漸增，放慢升級節奏
   player.hp=Math.min(player.maxHp,player.hp+6);
   for(var lr=0;lr<3;lr++)ringFx(player.x,player.y,50+lr*46,'#ffd54a'); burst(player.x,player.y,'#ffe89a',20,240); flashScreen('255,213,74',0.18);   // 升級瞬間金環爆發
+  var xf=$('xpfill'); if(xf){ xf.classList.remove('lvflash'); void xf.offsetWidth; xf.classList.add('lvflash'); }   // 經驗條升級閃光
   GAudio.level(); checkAch(); openLevelUp(); }
 
 function collectPickup(p){

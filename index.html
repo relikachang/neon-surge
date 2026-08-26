@@ -163,7 +163,13 @@
     text-align:center;cursor:pointer;transition:.15s;position:relative}
   .charcard.on{border-color:var(--cyan);box-shadow:0 0 22px rgba(34,230,255,.35)}
   .charcard.locked{opacity:.5}
-  .charcard .cface{font-size:34px}
+  .charcard .cface{font-size:34px;filter:drop-shadow(0 0 6px rgba(34,230,255,.35));transition:transform .18s}
+  .charcard:hover .cface{transform:scale(1.14) rotate(-4deg)}
+  .charcard.on .cface{animation:cfacefloat 2.6s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(34,230,255,.65))}
+  @keyframes cfacefloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px) scale(1.06)}}
+  /* 升級三選一卡片進場 */
+  #levelup.show .card{animation:cardin .34s cubic-bezier(.2,1,.4,1) both}
+  @keyframes cardin{0%{transform:translateY(22px) scale(.96);opacity:0}100%{transform:none;opacity:1}}
   .charcard .cn{font-weight:800;font-size:15px;margin-top:4px}
   .charcard .cd{font-size:11px;color:#8ea0c8;margin-top:4px;line-height:1.4}
   .charcard .clk{position:absolute;top:6px;right:8px;font-size:11px;color:var(--gold)}

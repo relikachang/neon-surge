@@ -993,11 +993,12 @@ var WDEFS={
     }
   },
   frost:{ic:'❄️',name:'冰霜新星',color:'#5deaff',tag:'減速',max:8,
-    desc:function(l){return l===0?'凍結波減速並傷害周身敵人':'範圍↑ 傷害↑';},
+    desc:function(l){return l===0?'冰爆減速周身敵人，並迸射冰晶碎片；對已凍/減速者碎冰加傷':'範圍↑ 傷害↑';},
     cd:function(l){return Math.max(1.2,2.4-l*0.15);},
-    fire:function(w){ var r=(80+w.level*14)*player.area, r2=r*r; enemyGrid.query(player.x,player.y,r,function(e){
-        if(dist2(e.x,e.y,player.x,player.y)<r2){ hitEnemy(e,dmg(8+w.level*3),player.x,player.y,0.1); e.slow=Math.max(e.slow||0,1.5); } });
-      ringFx(player.x,player.y,r,'#5deaff'); },
+    fire:function(w){ var r=(80+w.level*14)*player.area, r2=r*r, d=dmg(10+w.level*4); enemyGrid.query(player.x,player.y,r,function(e){
+        if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<r2){ var shat=((e.frozen||0)>0||(e.slow||0)>0)?1.7:1; hitEnemy(e,d*shat,player.x,player.y,0.1); e.slow=Math.max(e.slow||0,1.5); } });
+      ringFx(player.x,player.y,r,'#5deaff'); ringFx(player.x,player.y,r*0.62,'#dffbff');
+      var shn=6+w.level; for(var si=0;si<shn;si++){ var sa=si/shn*TAU; spawnBullet(player.x,player.y,Math.cos(sa),Math.sin(sa),380,dmg(5+w.level*2),'#a8f0ff',1,5,0.8); } },
     evo:{reqPassive:'parmor',ic:'🧊',name:'絕對零度',color:'#a8f0ff',desc:'凍結範圍暴增，敵人被冰封定身',
       cd:function(l){return Math.max(1.0,2.0-l*0.12);},
       fire:function(w){ var r=(140+w.level*18)*player.area, r2=r*r; enemyGrid.query(player.x,player.y,r,function(e){
@@ -1341,7 +1342,7 @@ var PDEFS={
   pthorns:{ic:'🌵',name:'荊棘',color:'#5dff9b',max:5,desc:function(){return '接觸你的敵人受到反傷';},apply:function(){recalc();}},
   pchain:{ic:'🔗',name:'連鎖電爆',color:'#ffb347',max:5,desc:function(){return '擊殺時引發在敵人間跳躍的連環電爆(跳躍數↑)';},apply:function(){recalc();}},
   pfrost:{ic:'🧊',name:'霜寒',color:'#8bd3ff',max:5,desc:function(){return '攻擊 10% 機率減速敵人';},apply:function(){recalc();}},
-  pnova:{ic:'💫',name:'新星脈衝',color:'#ffd54a',max:5,desc:function(){return '每 2 秒在身邊釋放範圍衝擊波';},apply:function(){recalc();}},
+  pnova:{ic:'💫',name:'新星脈衝',color:'#ffd54a',max:5,desc:function(){return '每 2 秒身邊爆發純傷害新星(不擊退，敵人留在爆心受轟)';},apply:function(){recalc();}},
   pfury:{ic:'🔥',name:'血怒',color:'#ff2b5e',max:5,desc:function(){return '生命越低傷害越高（滿級瀕死 +40%）';},apply:function(){recalc();}},
   pluck:{ic:'🍀',name:'幸運',color:'#5dff9b',max:5,desc:function(){return '道具掉落率↑ 碎片獲取 +15%';},apply:function(){recalc();}},
   pglass:{ic:'💎',name:'玻璃炮核心',color:'#ff6bd0',max:5,desc:function(){return '傷害 +16%，但生命上限 -7%';},apply:function(){recalc(); if(player.hp>player.maxHp)player.hp=player.maxHp;}},
@@ -2053,8 +2054,8 @@ function update(dt){
   if(G.muzzleT>0)G.muzzleT-=dt;
   if(player.regen>0&&player.hp<player.maxHp)player.hp=Math.min(player.maxHp,player.hp+player.regen*dt);
   if(player.blockInterval>0&&!player.blockReady){ player.blockT=(player.blockT||0)+dt; if(player.blockT>=player.blockInterval){ player.blockReady=true; player.blockT=0; } }   // 能量護盾再生
-  if(player.nova>0){ player.novaT=(player.novaT||0)-dt; if(player.novaT<=0){ player.novaT=2; var nvr=(120+player.nova*22)*player.area, nvr2=nvr*nvr, nvd=dmg(14+player.nova*8);   // 新星脈衝：週期範圍衝擊波
-    enemyGrid.query(player.x,player.y,nvr,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<nvr2)hitEnemy(e,nvd,player.x,player.y,0.3); }); ringFx(player.x,player.y,nvr,'#ffd54a'); } }
+  if(player.nova>0){ player.novaT=(player.novaT||0)-dt; if(player.novaT<=0){ player.novaT=2; var nvr=(120+player.nova*22)*player.area, nvr2=nvr*nvr, nvd=dmg(18+player.nova*10);   // 新星脈衝：純傷害爆(不擊退,把敵人留在爆心連續轟殺;與震盪波武器的擊退控場分工)
+    enemyGrid.query(player.x,player.y,nvr,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<nvr2)hitEnemy(e,nvd,player.x,player.y,0); }); ringFx(player.x,player.y,nvr,'#ffd54a'); ringFx(player.x,player.y,nvr*0.55,'#fff6c0'); } }
   if(player.freezeAura>0){ player.freezeT=(player.freezeT||0)-dt; if(player.freezeT<=0){ player.freezeT=3; var fzr=(130+player.freezeAura*24)*player.area, fzr2=fzr*fzr, fzd=1.0+player.freezeAura*0.2;   // 冰封力場：週期凍結周圍敵人
     enemyGrid.query(player.x,player.y,fzr,function(e){ if(e.hp>0&&!e.boss&&dist2(e.x,e.y,player.x,player.y)<fzr2)e.frozen=Math.max(e.frozen||0,fzd); }); ringFx(player.x,player.y,fzr,'#8bd3ff'); ringFx(player.x,player.y,fzr*0.6,'#dff4ff'); } }
   if(player.shock>0){ player.shockT=(player.shockT||0)-dt; if(player.shockT<=0){ player.shockT=1.4; var shr=(230+player.shock*24), shr2=shr*shr, shd=dmg(15+player.shock*9), shHit=0, shMax=2+player.shock, shpx=player.x, shpy=player.y;   // 感電力場：週期對最近數名敵人放出連鎖電弧
@@ -3430,7 +3431,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v275 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v276 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

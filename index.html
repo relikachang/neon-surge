@@ -142,6 +142,7 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   .bphase{position:absolute;top:-2px;bottom:-2px;width:2px;background:rgba(255,255,255,.8);z-index:3;pointer-events:none;box-shadow:0 0 5px rgba(255,255,255,.7)}
   .bphase::after{content:'';position:absolute;top:-5px;left:-2px;border-left:3px solid transparent;border-right:3px solid transparent;border-top:5px solid rgba(255,255,255,.85)}
   .bphase.p3{background:#ff2b5e;box-shadow:0 0 6px #ff2b5e} .bphase.p3::after{border-top-color:#ff2b5e}
+  #bosshptxt{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.85);font-variant-numeric:tabular-nums;pointer-events:none;letter-spacing:.5px}
   @keyframes enragePulse{50%{box-shadow:0 0 16px #ff2b5e}}
   #combo{position:absolute;top:104px;left:50%;transform:translateX(-50%) scale(1);transform-origin:center top;font-size:20px;font-weight:900;
     color:var(--gold);text-shadow:0 0 14px rgba(255,213,74,.7);opacity:0;transition:opacity .2s,transform .12s,color .2s}
@@ -361,7 +362,7 @@ if('serviceWorker' in navigator){ var __reloaded=false;
     <div id="timer">00:00</div>
     <div id="toprow"><div>幕 <b id="actn">1</b></div><div>難度 <b id="actmuln" style="color:#ff9a3d">×1.0</b></div><div>擊殺 <b id="killn">0</b></div><div>波 <b id="waven">1</b></div><div>DPS <b id="dpsn">0</b></div></div>
   </div>
-  <div id="bossbar"><div id="bossname">BOSS</div><div id="bosshpbg"><div id="bosshpfill"></div><i class="bphase" style="left:72%"></i><i class="bphase" style="left:40%"></i><i class="bphase p3" style="left:15%"></i></div></div>
+  <div id="bossbar"><div id="bossname">BOSS</div><div id="bosshpbg"><div id="bosshpfill"></div><i class="bphase" style="left:72%"></i><i class="bphase" style="left:40%"></i><i class="bphase p3" style="left:15%"></i><span id="bosshptxt"></span></div></div>
   <div id="lvchip">LV <span id="lvn">1</span></div>
   <div id="shardchip">◆ <span id="shardn">0</span></div>
   <div id="combo"></div>
@@ -733,7 +734,7 @@ function checkAchMile(){ DB.achMile=DB.achMile||{}; var got=Object.keys(DB.achie
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';
   el.classList.add('show'); GAudio.achieve&&GAudio.achieve(); clearTimeout(achToast._t); achToast._t=setTimeout(function(){el.classList.remove('show');},2600); }
 function dailyToast(info){ var el=$('achpop'); if(!el)return;
-  el.innerHTML='<div class="ai">📅</div><div><div class="at">每日登入 · 連續 '+info.streak+' 天'+(info.day7?' · 已封頂':'')+'</div><div class="an">+◆'+info.reward+' 碎片</div></div>';
+  el.innerHTML='<div class="ai">'+(info.perfect?'🎉':'📅')+'</div><div><div class="at">每日登入 · 連續 '+info.streak+' 天'+(info.perfect?' · 七日全勤！':(info.day7?' · 已封頂':''))+'</div><div class="an">+◆'+info.reward+' 碎片'+(info.perfect?'（含全勤 +500）':'')+'</div></div>';
   el.classList.add('show'); GAudio.achieve&&GAudio.achieve(); clearTimeout(achToast._t); achToast._t=setTimeout(function(){el.classList.remove('show');},3400); }
 
 // 每日挑戰變異詞條（依日期決定）
@@ -790,8 +791,10 @@ function checkDailyLogin(){ DB.login=DB.login||{last:'',streak:0};
   DB.login.streak=(DB.login.last===yesterday)?(DB.login.streak+1):1;
   DB.login.last=today;
   var day=Math.min(7,DB.login.streak), reward=40+(day-1)*30;   // 第1天40,每天+30,第7天封頂220
+  var perfect=(DB.login.streak%7===0);   // 每連續 7 天全勤：額外大獎
+  if(perfect)reward+=500;
   DB.shards+=reward; saveDB();
-  return {streak:DB.login.streak,reward:reward,day7:day>=7};
+  return {streak:DB.login.streak,reward:reward,day7:day>=7,perfect:perfect};
 }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
 // ===== 每日任務 =====
@@ -3297,6 +3300,7 @@ function updateHud(){
     var pfx=boss.frenzied?'☠絕命 ':boss.enraged?'⚡狂暴 ':boss.ph2?'⚔二型 ':'';
     var bn=$('bossname'); bn.textContent=pfx+(boss.name||'BOSS'); bn.style.color=boss.frenzied?'#ff1030':boss.enraged?'#ff2b5e':boss.ph2?'#ffb03a':boss.color;
     var bf=$('bosshpfill'); bf.style.width=Math.max(0,boss.hp/boss.maxHp*100)+'%'; bf.style.color=boss.frenzied?'#ff1030':boss.enraged?'#ff2b5e':boss.ph2?'#ffb03a':boss.color;
+    var bht=$('bosshptxt'); if(bht)bht.textContent=Math.max(0,Math.ceil(boss.hp)).toLocaleString()+' / '+Math.round(boss.maxHp).toLocaleString()+'　('+Math.max(0,Math.round(boss.hp/boss.maxHp*100))+'%)';
     bf.style.background=boss.enraged?'linear-gradient(90deg,#ff2b5e,#ffce54)':'linear-gradient(90deg,'+boss.color+',#ffffff)'; }
   else bb.classList.remove('show');
   // 武器列
@@ -3524,7 +3528,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v289 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v290 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

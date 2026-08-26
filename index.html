@@ -65,9 +65,11 @@
   #pausebuild .blabel{font-size:10px;letter-spacing:2px;color:#8ea0c8;margin:12px 0 6px;font-weight:700}
   #pausebuild .brow{display:flex;flex-wrap:wrap;gap:6px}
   #pausebuild .bchip{font-size:12px;font-weight:700;padding:4px 9px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.04);color:#eaf0ff}
-  #mutebtn{position:fixed;top:14px;right:14px;z-index:65;width:40px;height:40px;border-radius:10px;cursor:pointer;
+  #mutebtn,#musicbtn{position:fixed;top:14px;z-index:65;width:40px;height:40px;border-radius:10px;cursor:pointer;
     background:rgba(20,24,40,.8);border:1px solid rgba(255,255,255,.15);color:#fff;font-size:18px;backdrop-filter:blur(6px)}
-  #mutebtn:active{transform:scale(.94)}
+  #mutebtn{right:14px} #musicbtn{right:62px}
+  #mutebtn:active,#musicbtn:active{transform:scale(.94)}
+  #mutebtn.off,#musicbtn.off{opacity:.42;border-color:rgba(255,90,110,.5)}
   #autobtn{position:fixed;top:62px;right:14px;z-index:65;height:34px;padding:0 12px;border-radius:10px;cursor:pointer;
     background:rgba(20,24,40,.8);border:1px solid rgba(255,255,255,.15);color:#8a94b0;font-size:13px;font-weight:700;backdrop-filter:blur(6px);white-space:nowrap}
   #autobtn.on{color:#0a0f1e;background:#5dff9b;border-color:#5dff9b;box-shadow:0 0 14px rgba(93,255,155,.6)}
@@ -157,13 +159,19 @@
     animation:menudrift 16s ease-in-out infinite alternate}
   @keyframes menudrift{0%{transform:translateY(0) scale(1);opacity:.5}100%{transform:translateY(-24px) scale(1.06);opacity:.95}}
   #menu .panel{position:relative;z-index:1}
-  #menu .title{font-size:min(15vw,86px);font-weight:900;letter-spacing:4px;text-align:center;line-height:.95;
+  #menu .panel{max-width:820px;padding:0 6px}
+  #menu .title{font-size:min(17vw,108px);font-weight:900;letter-spacing:5px;text-align:center;line-height:.95;
     background:linear-gradient(90deg,#22e6ff,#7c5bff,#ff3df0,#22e6ff);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;
     animation:titleflow 7s linear infinite,titleglow 3.2s ease-in-out infinite}
   @keyframes titleflow{0%{background-position:0 0}100%{background-position:200% 0}}
   @keyframes titleglow{0%,100%{filter:drop-shadow(0 0 20px rgba(124,91,255,.45))}50%{filter:drop-shadow(0 0 36px rgba(34,230,255,.7))}}
   #menu .sub{text-align:center;color:#8ea0c8;letter-spacing:6px;font-size:12px;margin-top:4px;font-weight:700}
-  #menu .best{text-align:center;color:var(--gold);font-weight:700;margin-top:14px;font-size:14px;min-height:20px}
+  #menu .best{text-align:center;color:var(--gold);font-weight:700;margin-top:14px;font-size:15px;min-height:20px}
+  #menustats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px 0 2px}
+  #menustats .st{flex:1;min-width:88px;max-width:150px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:9px 6px;text-align:center}
+  #menustats .st b{display:block;font-size:20px;font-weight:900;color:#eaf5ff;line-height:1.1}
+  #menustats .st span{display:block;font-size:11px;color:#8ea0c8;letter-spacing:1px;margin-top:2px}
+  #menu .btn#playbtn{font-size:22px;padding:20px}
   .btn{display:block;width:100%;border:none;border-radius:16px;padding:16px;font-size:18px;font-weight:800;letter-spacing:2px;
     cursor:pointer;color:#05070f;background:linear-gradient(135deg,#22e6ff,#5db8ff);box-shadow:0 10px 30px rgba(34,230,255,.35);
     margin-top:12px;transition:transform .08s}
@@ -316,6 +324,8 @@
   <div class="title">NEON<br>SURGE</div>
   <div class="sub">霓 · 潮 · 倖 · 存</div>
   <div class="best" id="bestline"></div>
+  <div id="menustats"></div>
+  <div id="tiprow" style="text-align:center;color:#9fb2d8;font-size:12.5px;margin:8px 0 2px;min-height:16px"></div>
   <div id="namerow" style="display:flex;align-items:center;justify-content:center;gap:8px;margin:2px 0 10px">
     <span style="color:#8ea0c8;font-size:13px">玩家</span>
     <input id="pname" maxlength="12" placeholder="輸入暱稱" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:#eaf0ff;font-size:14px;padding:6px 10px;width:150px;text-align:center;font-family:inherit">
@@ -390,7 +400,7 @@
 </div></div>
 
 <!-- 靜音切換 -->
-<button id="mutebtn">🔊</button>
+<button id="musicbtn" title="音樂開關">🎵</button><button id="mutebtn" title="音效開關">🔊</button>
 <!-- 自動選技能(掛機)切換 -->
 <button id="autobtn" title="自動選技能(掛機)">🤖 自動 關</button>
 
@@ -1513,7 +1523,7 @@ function newRun(daily){
   var mut=daily?todaysMutator():IDENTITY_MUT;
   G={ time:0, kills:0, level:1, xp:0, xpNeed:5, wave:1, shards:0, combo:0, comboTimer:0,
      spawnTimer:0, bossTimer:0, eliteTimer:0, over:false, paused:false,
-     nextBossAt:90, usedRevive:false, luck:0.06*metaLv('luck'), stage:st, mut:mut, daily:!!daily,
+     nextBossAt:105, usedRevive:false, luck:0.06*metaLv('luck'), stage:st, mut:mut, daily:!!daily,
      dmgDealt:0, peakCombo:0, bossKills:0, eliteKills:0, act:1, actMul:1, flawless:true };
   player={ x:0,y:0, radius:15, hp:0, maxHp:0, speed:0, iframe:0, aimAngle:0, frenzyT:0, overdriveT:0,
     weapons:[], passives:{}, base:{}, charId:ch.id, sig:charSig(ch.id) };
@@ -2208,12 +2218,12 @@ function spawnDirector(dt){
   var rate=Math.max(m>6?0.07:0.16,0.85-m*0.10)/((G.stage?G.stage.spawn:1)*(G.mut?G.mut.spawn:1)); // 生成間隔（地圖+每日加成，後期大幅更密集）
   G.spawnTimer-=dt;
   if(G.spawnTimer<=0 && enemies.length<380){ G.spawnTimer=rate;
-    var mul=1+m*0.55; var batch=1+Math.floor(m*(m>6?1.5:0.8));  // 後期每波更多敵人
+    var mul=(1+m*0.55)*(m<2.5?(0.78+m*0.088):1); var batch=1+Math.floor(m*(m>6?1.5:0.8));  // 後期每波更多敵人；前 2.5 分放緩強度爬升，新手更好上手
     for(var i=0;i<batch;i++){ spawnEnemy(chooseType(m),null,null,mul); }
   }
-  // 精英/坦克群
-  G.eliteTimer-=dt; if(G.eliteTimer<=0){ G.eliteTimer=rand(14,20);
-    if(m>0.4){ var mul=1.5+m*0.7, n=randi(2,4); for(var i=0;i<n;i++)spawnEnemy('tank',null,null,mul); } }
+  // 精英/坦克群（前 3 分延後登場、數量與強度減半，避免開局就被肉盾壓制）
+  G.eliteTimer-=dt; if(G.eliteTimer<=0){ G.eliteTimer=rand(m<3?24:14,m<3?32:20);
+    if(m>1.1){ var mul=(m<3?1.2:1.5)+m*0.6, n=(m<3?randi(1,2):randi(2,4)); for(var i=0;i<n;i++)spawnEnemy('tank',null,null,mul); } }
   // 後期精英波（4 分後每 ~70 秒一次，強制生成一群精英，隨時間變多變強）
   if(G.time>240){ G.surgeT=(G.surgeT==null?rand(20,40):G.surgeT-dt); if(G.surgeT<=0){ G.surgeT=rand(42,60);
     var en=4+Math.floor((G.time-240)/55), emul=2.6+m*0.85;
@@ -2439,6 +2449,17 @@ function glow(color){ if(glowCache[color])return glowCache[color];
   var rg=g.createRadialGradient(32,32,0,32,32,32); rg.addColorStop(0,color); rg.addColorStop(0.4,color);
   rg.addColorStop(1,'rgba(0,0,0,0)'); g.globalAlpha=1; g.fillStyle=rg; g.beginPath(); g.arc(32,32,32,0,TAU); g.fill();
   glowCache[color]=c; return c; }
+var ballCache={};
+function ball(color){ if(ballCache[color])return ballCache[color];   // 體積光球：左上受光高光→本色→底部暗緣，套在敵人本體上營造立體感（依色快取，零 per-frame 成本）
+  var c=document.createElement('canvas'); c.width=c.height=64; var g=c.getContext('2d');
+  var lr=parseInt(color.slice(1,3),16),lg=parseInt(color.slice(3,5),16),lb=parseInt(color.slice(5,7),16);
+  var hi='rgb('+Math.min(255,lr+120)+','+Math.min(255,lg+120)+','+Math.min(255,lb+120)+')';
+  var lo='rgb('+((lr*0.35)|0)+','+((lg*0.35)|0)+','+((lb*0.35)|0)+')';
+  // 邊緣淡出為透明，可直接疊在本體上營造受光體積，免用昂貴的 clip()
+  var rg=g.createRadialGradient(24,22,2,32,32,32);
+  rg.addColorStop(0,hi); rg.addColorStop(0.34,color); rg.addColorStop(0.72,'rgba('+((lr*0.5)|0)+','+((lg*0.5)|0)+','+((lb*0.5)|0)+',0.55)'); rg.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=rg; g.beginPath(); g.arc(32,32,30,0,TAU); g.fill();
+  ballCache[color]=c; return c; }
 
 // ===== 圖片素材系統（可選）：img/ 內放對應 PNG 並在 SPRITE_MANIFEST 登記即自動採用，否則沿用內建向量造型 =====
 // 命名建議：玩家 img/player.png；敵人 img/enemy_<型別>.png（型別見 ETYPES，如 enemy_grunt / enemy_boss）。
@@ -2595,12 +2616,16 @@ function render(){
     ctx.globalAlpha=1; ctx.drawImage(eg,b.x-9*epul,b.y-9*epul,18*epul,18*epul);
     ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(G.time*6+b.x*0.3); ctx.fillStyle='#ffffff';
     ctx.beginPath(); ctx.moveTo(0,-4); ctx.lineTo(3,0); ctx.lineTo(0,4); ctx.lineTo(-3,0); ctx.closePath(); ctx.fill(); ctx.restore(); }   // 旋轉晶核
-  // 我方子彈（含速度方向拖尾）
+  // 我方子彈（沿速度方向拉長的曳光彈：後方漸隱尾焰 + 圓核光暈 + 白熱膠囊核心）
   for(var i=0;i<bullets.length;i++){ var b=bullets[i]; var img=glow(b.color);
-    var ts=b.r*1.7; ctx.globalAlpha=0.32; ctx.drawImage(img,b.x-b.vx*0.020-ts,b.y-b.vy*0.020-ts,ts*2,ts*2);
-    var ts2=b.r*1.2; ctx.globalAlpha=0.18; ctx.drawImage(img,b.x-b.vx*0.036-ts2,b.y-b.vy*0.036-ts2,ts2*2,ts2*2);
-    ctx.globalAlpha=1; var s=b.r*2.4; ctx.drawImage(img,b.x-s,b.y-s,s*2,s*2);
-    var wc=b.r*0.85; ctx.drawImage(glow('#ffffff'),b.x-wc,b.y-wc,wc*2,wc*2); }   // 白熱亮核，射擊更清晰
+    var bsp=Math.hypot(b.vx,b.vy)||1, bang=Math.atan2(b.vy,b.vx), tail=b.r*2.2+Math.min(b.r*5,bsp*0.02);
+    ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(bang); ctx.globalCompositeOperation='lighter';
+    ctx.globalAlpha=0.5; ctx.drawImage(img,-tail-b.r,-b.r*1.15,tail+b.r*2,b.r*2.3);   // 拉長尾焰（把柔光沿 -x 拉長）
+    ctx.globalAlpha=1; var s=b.r*2.3; ctx.drawImage(img,-s,-s,s*2,s*2);   // 圓核光暈
+    ctx.fillStyle='#ffffff';
+    ctx.beginPath(); ctx.ellipse(b.r*0.25,0,b.r*1.5,b.r*0.72,0,0,TAU); ctx.fill();   // 白熱膠囊核心（順著飛行方向，免 shadowBlur 省效能）
+    ctx.restore(); }
+  ctx.globalAlpha=1; ctx.shadowBlur=0; ctx.globalCompositeOperation='source-over';
   // 雷射光束（多層：外光暈 + 主束 + 白熱核心 + 起點閃焰）
   for(var i=0;i<beams.length;i++){ var bm=beams[i]; var bl=bm.life/bm.max; ctx.save(); ctx.translate(bm.x,bm.y); ctx.rotate(bm.ang); ctx.globalCompositeOperation='lighter';
     ctx.fillStyle=bm.color; ctx.shadowColor=bm.color; ctx.shadowBlur=22; ctx.globalAlpha=bl*0.32; ctx.fillRect(0,-bm.w,bm.len,bm.w*2);
@@ -2731,7 +2756,7 @@ function drawGrid(camx,camy){ var s=64; ctx.strokeStyle=(G&&G.stage?G.stage.grid
   ctx.stroke();
 }
 function drawEnemy(e){
-  var f=e.flash>0, r=e.r; ctx.save(); ctx.translate(e.x,e.y);
+  var f=e.flash>0, r=e.r, hi=(enemies.length<60||e.boss||e.elite); ctx.save(); ctx.translate(e.x,e.y);   // hi：細節層級(敵過多時普通敵簡化裝飾以保效能)
   // 受擊擊退尾流：被打飛的瞬間朝退後方向拖出一道漸隱速度殘影，強化打擊回饋
   var knsp=Math.hypot(e.knx||0,e.kny||0);
   if(knsp>70 && r>=8 && !e.boss){ var ka=Math.atan2(e.kny,e.knx), kl=Math.min(r*2.4,knsp*0.05);
@@ -2743,8 +2768,8 @@ function drawEnemy(e){
   if(e.r>=10){ ctx.shadowBlur=0; ctx.globalAlpha=0.22; ctx.fillStyle='#000'; ctx.beginPath(); ctx.ellipse(0,e.r*0.86,e.r*0.82,e.r*0.32,0,0,TAU); ctx.fill(); ctx.globalAlpha=1; }
   if(e.boss||e.elite){ ctx.globalCompositeOperation='lighter'; var agr=e.r*(e.boss?3.6:2.5); ctx.globalAlpha=e.boss?0.2:0.15; ctx.drawImage(glow(e.boss?e.color:'#ffffff'),-agr,e.r*0.86-agr*0.42,agr*2,agr*0.84); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1; }
   // 敵種外型輪廓：在本體後方長出該敵種專屬的肢體／尖刺／砲管／觸手／拖尾，讓剪影一眼可辨（外型多元化）
-  if(!f && r>=10 && !e.boss){ var toP=Math.atan2(player.y-e.y,player.x-e.x);
-    ctx.save(); ctx.fillStyle=e.color; ctx.strokeStyle=e.color; ctx.shadowColor=e.color; ctx.shadowBlur=5; ctx.globalAlpha=0.92; ctx.lineJoin='round';
+  if(!f && hi && r>=10 && !e.boss){ var toP=Math.atan2(player.y-e.y,player.x-e.x);
+    ctx.save(); ctx.fillStyle=e.color; ctx.strokeStyle=e.color; ctx.globalAlpha=0.92; ctx.lineJoin='round';
     if(e.titan||e.type==='brute'||e.type==='tank'||e.smasher||e.type==='golem'){   // 重甲：外凸厚甲板
       ctx.lineWidth=1.4;
       for(var pl=0;pl<6;pl++){ var pa=pl/6*TAU; ctx.save(); ctx.rotate(pa);
@@ -2775,7 +2800,7 @@ function drawEnemy(e){
   // 受擊擠壓形變：命中瞬間沿受擊軸向壓扁、垂直方向撐開，短暫回彈，強化被打的肉感（僅本體，肢體不受影響）
   if(e.flash>0.008){ var sqf=e.flash/0.08, ha=e.hitAng||0; ctx.rotate(ha); ctx.scale(1-sqf*0.26, 1+sqf*0.20); ctx.rotate(-ha); }
   if(e.shape==='arrow')ctx.rotate(Math.atan2(player.y-e.y,player.x-e.x));
-  ctx.shadowColor=e.elite?'#ffffff':e.color; ctx.shadowBlur=e.boss?26:(e.elite?20:10); ctx.fillStyle=f?'#ffffff':e.color;
+  ctx.shadowColor=e.elite?'#ffffff':e.color; ctx.shadowBlur=e.boss?26:(e.elite?20:(hi?10:3)); ctx.fillStyle=f?'#ffffff':e.color;   // 密集場面降低發光模糊以保效能
   r=e.r; ctx.beginPath();
   if(e.shape==='tri'){ for(var i=0;i<3;i++){var a=-Math.PI/2+i/3*TAU;(i?ctx.lineTo:ctx.moveTo).call(ctx,Math.cos(a)*r,Math.sin(a)*r);} }
   else if(e.shape==='dia'){ ctx.moveTo(0,-r);ctx.lineTo(r,0);ctx.lineTo(0,r);ctx.lineTo(-r,0); }
@@ -2786,15 +2811,17 @@ function drawEnemy(e){
   else if(e.shape==='boss'){ for(var i=0;i<8;i++){var a=i/8*TAU,rr=i%2?r:r*0.7;(i?ctx.lineTo:ctx.moveTo).call(ctx,Math.cos(a)*rr,Math.sin(a)*rr);} }
   else { ctx.arc(0,0,r,0,TAU); }
   ctx.closePath(); ctx.fill();
+  // 本體體積光影：疊上左上受光、邊緣淡出的立體光球，讓平面多邊形有厚度感（邊緣透明免 clip，省效能）
+  if(!f && hi && r>=9){ ctx.globalAlpha=0.8; ctx.drawImage(ball(e.color),-r*0.92,-r*0.92,r*1.84,r*1.84); ctx.globalAlpha=1; }
   // 全體輪廓描邊（讓造型更立體、有圖案辨識度）
   ctx.globalAlpha=0.85; ctx.lineWidth=e.boss?3:1.5; ctx.strokeStyle=f?'#ffffff':'rgba(255,255,255,0.4)'; ctx.stroke(); ctx.globalAlpha=1;
   // 立體高光：本體偏上加一枚柔白亮斑，營造受光體積感（全體敵人）
-  if(!f && r>=8){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.26; ctx.drawImage(glow('#ffffff'),-r*0.5,-r*0.62,r*0.95,r*0.95); ctx.restore(); ctx.globalAlpha=1; }
+  if(!f && hi && r>=8){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.26; ctx.drawImage(glow('#ffffff'),-r*0.5,-r*0.62,r*0.95,r*0.95); ctx.restore(); ctx.globalAlpha=1; }
   // 受擊火花：剛被打中時噴出白色放射火花線，增添打擊感
   if(e.flash>0.04){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.6; ctx.globalAlpha=Math.min(1,e.flash*11);
     for(var hs=0;hs<3;hs++){ var ha=e.x*0.6+hs*2.1, hl=r+7; ctx.beginPath(); ctx.moveTo(Math.cos(ha)*r*0.55,Math.sin(ha)*r*0.55); ctx.lineTo(Math.cos(ha)*hl,Math.sin(ha)*hl); ctx.stroke(); } ctx.restore(); ctx.globalAlpha=1; }
-  // 內部旋轉幾何圖案（放射骨架 + 內圈弧），讓造型更豐富；小型雜兵略過以省效能
-  if(!f && r>=11){ var gs=G.time*0.8+e.x*0.02;
+  // 內部旋轉幾何圖案（放射骨架 + 內圈弧），讓造型更豐富；小型雜兵/密集場面略過以省效能
+  if(!f && hi && r>=11){ var gs=G.time*0.8+e.x*0.02;
     var spokes=e.boss?8:(e.shape==='hex'?6:e.shape==='penta'?5:e.shape==='tri'?3:4);
     ctx.globalAlpha=0.45; ctx.lineWidth=1.3; ctx.strokeStyle='rgba(255,255,255,0.55)'; ctx.beginPath();
     for(var sp=0;sp<spokes;sp++){ var sa=gs+sp/spokes*TAU; ctx.moveTo(Math.cos(sa)*r*0.30,Math.sin(sa)*r*0.30); ctx.lineTo(Math.cos(sa)*r*0.82,Math.sin(sa)*r*0.82); }
@@ -2806,7 +2833,7 @@ function drawEnemy(e){
     if(!e.boss){ ctx.globalAlpha=0.4+0.3*Math.sin(G.time*6+e.x*0.03); ctx.lineWidth=2; ctx.strokeStyle=affCol; ctx.setLineDash([6,7]); ctx.lineDashOffset=-G.time*24;
       ctx.beginPath(); ctx.arc(0,0,r*1.55,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1; } }   // 精英脈動光環（旋轉虛線）
   // 敵種專屬造型裝飾（方向無關，讓關鍵敵人一眼可辨）
-  if(!f && r>=10){ ctx.save();
+  if(!f && hi && r>=10){ ctx.save();
     if(e.explode){ var bl=0.5+0.5*Math.sin(G.time*14+e.x); ctx.globalAlpha=0.45+bl*0.5; ctx.fillStyle='#fff'; ctx.shadowColor='#ff3b3b'; ctx.shadowBlur=8+bl*10;
       ctx.beginPath(); ctx.arc(0,0,r*0.32,0,TAU); ctx.fill(); ctx.globalAlpha=0.8*bl; ctx.strokeStyle='#ff5b5b'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(0,0,r*0.62,0,TAU); ctx.stroke(); ctx.shadowBlur=0; }   // 爆裂類：閃爍警示核心
     else if(e.type==='golden'||e.type==='vault'){ ctx.globalCompositeOperation='lighter'; ctx.fillStyle='#fff4c0'; ctx.shadowColor='#ffd54a'; ctx.shadowBlur=12;
@@ -3213,8 +3240,22 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
+var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
+  // 主頁資料統計條
+  var ms=$('menustats'); if(ms){
+    var chU=CHARS.filter(function(c){return !c.locked||DB.chars[c.unlock];}).length;
+    var acU=Object.keys(DB.achievements||{}).length, acT=(typeof ACHIEVEMENTS!=='undefined'?ACHIEVEMENTS.length:0);
+    var beU=Object.keys(DB.bestiary||{}).length;
+    ms.innerHTML=
+      '<div class="st"><b>◆ '+(DB.shards||0)+'</b><span>碎片</span></div>'+
+      '<div class="st"><b>'+chU+'/'+CHARS.length+'</b><span>角色</span></div>'+
+      '<div class="st"><b>'+acU+(acT?'/'+acT:'')+'</b><span>成就</span></div>'+
+      '<div class="st"><b>'+beU+'</b><span>圖鑑</span></div>'+
+      '<div class="st"><b>'+(b.kills||0)+'</b><span>最佳擊殺</span></div>';
+  }
+  var tr=$('tiprow'); if(tr)tr.textContent=MENU_TIPS[Math.floor((Date.now()/6000))%MENU_TIPS.length];
   if($('pname'))$('pname').value=DB.playerName||'';
   $('dailybtn').textContent='每日挑戰 · '+todaysMutator().name;
   var cs=$('charsel'); cs.innerHTML='';
@@ -3269,19 +3310,20 @@ function renderBoostShop(){
 // =====================================================================
 // 音效（WebAudio）
 // =====================================================================
-var GAudio=(function(){ var ac=null, muted=false;
+var GAudio=(function(){ var ac=null, mMusic=false, mSfx=false;
+  try{ mMusic=localStorage.getItem('neon_mMusic')==='1'; mSfx=localStorage.getItem('neon_mSfx')==='1'; }catch(e){}   // 記憶上次的音樂/音效開關
   function ctx(){ if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}} return ac; }
-  function beep(freq,dur,type,vol){ var a=ctx(); if(!a||muted)return; var o=a.createOscillator(),g=a.createGain();
+  function beep(freq,dur,type,vol,isMusic){ var a=ctx(); if(!a||(isMusic?mMusic:mSfx))return; var o=a.createOscillator(),g=a.createGain();
     o.type=type||'square'; o.frequency.value=freq; g.gain.setValueAtTime(0.0001,a.currentTime);
     g.gain.exponentialRampToValueAtTime(vol||0.12,a.currentTime+0.01); g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+dur);
     o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime+dur+0.02); }
   // 背景音樂：簡易步進音序器（低音 + 琶音）
   var musicTimer=null, step=0;
   var BASS=[55,55,73.4,65.4], LEAD=[220,277,330,277,247,330,392,330];
-  function musicStep(){ if(muted)return; var a=ctx(); if(!a)return;
-    if(step%2===0)beep(BASS[(step/2)%BASS.length],0.24,'triangle',0.085);
-    beep(LEAD[step%LEAD.length],0.14,'square',0.038);
-    if(step%8===4)beep(1320,0.05,'sine',0.025);
+  function musicStep(){ if(mMusic)return; var a=ctx(); if(!a)return;
+    if(step%2===0)beep(BASS[(step/2)%BASS.length],0.24,'triangle',0.085,true);
+    beep(LEAD[step%LEAD.length],0.14,'square',0.038,true);
+    if(step%8===4)beep(1320,0.05,'sine',0.025,true);
     step++; }
   return {
     resume:function(){ var a=ctx(); if(a&&a.state==='suspended')a.resume(); },
@@ -3298,8 +3340,11 @@ var GAudio=(function(){ var ac=null, muted=false;
     setMood:function(b,l){ if(b)BASS=b; if(l)LEAD=l; },
     startMusic:function(){ if(musicTimer)return; ctx(); step=0; try{musicTimer=setInterval(musicStep,255);}catch(e){} },
     stopMusic:function(){ if(musicTimer)clearInterval(musicTimer); musicTimer=null; },
-    toggleMute:function(){ muted=!muted; return muted; },
-    isMuted:function(){ return muted; },
+    toggleMusic:function(){ mMusic=!mMusic; try{localStorage.setItem('neon_mMusic',mMusic?'1':'0');}catch(e){} return mMusic; },
+    toggleSfx:function(){ mSfx=!mSfx; try{localStorage.setItem('neon_mSfx',mSfx?'1':'0');}catch(e){} return mSfx; },
+    isMusicMuted:function(){ return mMusic; }, isSfxMuted:function(){ return mSfx; },
+    toggleMute:function(){ var m=!(mMusic&&mSfx); mMusic=mSfx=m; try{localStorage.setItem('neon_mMusic',m?'1':'0');localStorage.setItem('neon_mSfx',m?'1':'0');}catch(e){} return m; },
+    isMuted:function(){ return mMusic&&mSfx; },
   };
 })();
 
@@ -3342,7 +3387,10 @@ $('quitbtn').onclick=function(){ G.over=true; gameOver(); $('pause').classList.r
 $('tomenubtn').onclick=function(){ $('pause').classList.remove('show'); G.paused=false; toMenu(); };
 $('againbtn').onclick=function(){ startGame(!!(G&&G.daily)); };
 $('tomenu').onclick=toMenu;
-$('mutebtn').onclick=function(){ var m=GAudio.toggleMute(); this.textContent=m?'🔇':'🔊'; };
+$('mutebtn').onclick=function(){ var m=GAudio.toggleSfx(); this.textContent=m?'🔇':'🔊'; this.classList.toggle('off',m); };
+$('musicbtn').onclick=function(){ var m=GAudio.toggleMusic(); this.classList.toggle('off',m); };
+// 依記憶狀態初始化兩顆音訊按鈕外觀
+(function(){ var sb=$('mutebtn'),mb=$('musicbtn'); if(sb){ var s=GAudio.isSfxMuted(); sb.textContent=s?'🔇':'🔊'; sb.classList.toggle('off',s); } if(mb){ mb.classList.toggle('off',GAudio.isMusicMuted()); } })();
 function refreshAutoBtn(){ var b=$('autobtn'); if(!b)return; b.textContent=DB.autopick?'🤖 自動 開':'🤖 自動 關'; b.classList.toggle('on',!!DB.autopick); }
 $('autobtn').onclick=function(){ DB.autopick=!DB.autopick; saveDB(); refreshAutoBtn();
   if(DB.autopick&&G&&!G.over&&$('levelup').classList.contains('show')){ var idx=autoPickChoice(); applyChoice(pendingChoices[idx]); closeLevelUp(); } };

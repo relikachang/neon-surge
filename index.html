@@ -183,7 +183,8 @@
     text-align:center;cursor:pointer;transition:.15s;position:relative}
   .charcard.on{border-color:var(--cyan);box-shadow:0 0 22px rgba(34,230,255,.35)}
   .charcard.locked{opacity:.5}
-  .charcard .cface{font-size:34px;filter:drop-shadow(0 0 6px rgba(34,230,255,.35));transition:transform .18s}
+  .charcard .cship{display:block;margin:0 auto -2px;width:76px;height:60px}
+  .charcard .cface{font-size:22px;filter:drop-shadow(0 0 6px rgba(34,230,255,.35));transition:transform .18s}
   .charcard:hover .cface{transform:scale(1.14) rotate(-4deg)}
   .charcard.on .cface{animation:cfacefloat 2.6s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(34,230,255,.65))}
   @keyframes cfacefloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px) scale(1.06)}}
@@ -2608,6 +2609,12 @@ function render(){
 
   // 敵人
   for(var i=0;i<enemies.length;i++){ drawEnemy(enemies[i]); }
+  // 精英／大型敵迷你血條：受損時於頭頂顯示細血條(首領另有專屬血條，普通小兵不顯示以保簡潔與效能)
+  for(var i=0;i<enemies.length;i++){ var e=enemies[i]; if(e.boss||e.hp<=0||e.hp>=e.maxHp)continue; if(!(e.elite||e.r>=20))continue;
+    var bw=Math.max(24,e.r*1.8), bh=4, bx=e.x-bw/2, by=e.y-e.r-11, hpf=Math.max(0,e.hp/e.maxHp);
+    ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.fillRect(bx-1,by-1,bw+2,bh+2);
+    ctx.fillStyle=e.elite?'#ffd54a':(hpf<0.3?'#ff4d5e':'#ff8a3a'); ctx.fillRect(bx,by,bw*hpf,bh);
+    ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=1; ctx.strokeRect(bx-1,by-1,bw+2,bh+2); }
   // 敵子彈
   ctx.globalCompositeOperation='lighter';
   for(var i=0;i<ebullets.length;i++){ var b=ebullets[i]; var eg=glow('#ff5e7a');
@@ -2900,6 +2907,27 @@ function charSig(id){ var h=charHash(id); var hue=h%360, h2=(h>>7)%360;
     col:'hsl('+hue+',85%,60%)', glow:'hsl('+hue+',90%,62%)',
     edge:'hsl('+hue+',92%,78%)', hull:'hsl('+hue+',46%,30%)', hull2:'hsl('+((hue+22)%360)+',50%,23%)',
     core:'hsl('+((hue+16)%360)+',82%,88%)', accent:'hsl('+h2+',90%,64%)' }; }
+// 選單用迷你船預覽：依角色專屬色與原型，在角色卡上畫出該角色的船（船首朝上），讓每位角色外觀一目了然
+function drawMiniShip(g,cx,cy,pr,sig){ g.save(); g.translate(cx,cy);
+  g.globalCompositeOperation='lighter'; g.globalAlpha=0.55; g.drawImage(glow(sig.glow),-pr*2.1,-pr*2.1,pr*4.2,pr*4.2);
+  g.globalCompositeOperation='source-over'; g.globalAlpha=1;
+  var edge=sig.edge,hull=sig.hull,hull2=sig.hull2,body=sig.core,arch=sig.arch; g.lineJoin='round'; g.lineWidth=1.6; g.strokeStyle=edge;
+  if(arch===0){ g.fillStyle=hull2; g.beginPath(); g.moveTo(pr*0.28,-pr*0.1); g.lineTo(pr*1.15,pr*0.75); g.lineTo(pr*0.5,pr*0.95); g.lineTo(pr*0.2,pr*0.4); g.closePath(); g.fill();
+      g.beginPath(); g.moveTo(-pr*0.28,-pr*0.1); g.lineTo(-pr*1.15,pr*0.75); g.lineTo(-pr*0.5,pr*0.95); g.lineTo(-pr*0.2,pr*0.4); g.closePath(); g.fill();
+      g.fillStyle=body; g.beginPath(); g.moveTo(0,-pr*1.25); g.lineTo(pr*0.5,pr*0.2); g.lineTo(pr*0.62,pr); g.lineTo(0,pr*0.62); g.lineTo(-pr*0.62,pr); g.lineTo(-pr*0.5,pr*0.2); g.closePath(); g.fill(); g.stroke(); }
+  else if(arch===1){ g.fillStyle=hull2; g.fillRect(-pr*1.15,-pr*0.3,pr*0.48,pr*1.0); g.fillRect(pr*0.67,-pr*0.3,pr*0.48,pr*1.0);
+      g.fillStyle=body; g.beginPath(); g.moveTo(0,-pr*1.1); g.lineTo(pr*0.72,-pr*0.48); g.lineTo(pr*0.72,pr*0.7); g.lineTo(0,pr*1.08); g.lineTo(-pr*0.72,pr*0.7); g.lineTo(-pr*0.72,-pr*0.48); g.closePath(); g.fill(); g.stroke(); }
+  else if(arch===2){ g.fillStyle=body; g.beginPath(); g.arc(0,0,pr*0.8,0,TAU); g.fill(); g.stroke();
+      g.fillStyle=sig.accent; for(var an=0;an<3;an++){ var aa=an/3*TAU-1.2; g.beginPath(); g.arc(Math.cos(aa)*pr,Math.sin(aa)*pr,pr*0.2,0,TAU); g.fill(); }
+      g.fillStyle=edge; g.beginPath(); g.moveTo(0,-pr*1.35); g.lineTo(pr*0.22,-pr*0.85); g.lineTo(-pr*0.22,-pr*0.85); g.closePath(); g.fill(); }
+  else if(arch===3){ g.fillStyle=hull2; for(var bi=0;bi<2;bi++){ g.save(); g.rotate(bi?-0.6:0.6); g.beginPath(); g.moveTo(0,-pr*1.25); g.lineTo(pr*0.32,0); g.lineTo(0,pr*1.25); g.lineTo(-pr*0.32,0); g.closePath(); g.fill(); g.stroke(); g.restore(); }
+      g.fillStyle=body; g.beginPath(); g.moveTo(0,-pr*1.35); g.lineTo(pr*0.38,pr*0.3); g.lineTo(0,pr*0.66); g.lineTo(-pr*0.38,pr*0.3); g.closePath(); g.fill(); g.stroke(); }
+  else if(arch===4){ g.fillStyle=body; g.beginPath(); g.arc(0,pr*0.15,pr*1.0,Math.PI*1.12,Math.PI*1.88); g.arc(0,-pr*0.15,pr*0.9,Math.PI*1.9,Math.PI*1.1,true); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle=sig.accent; g.beginPath(); g.arc(0,-pr*0.24,pr*0.25,0,TAU); g.fill(); }
+  else { g.fillStyle=hull2; g.beginPath(); g.moveTo(0,-pr*0.7); g.lineTo(pr*1.2,0); g.lineTo(0,pr*0.7); g.lineTo(-pr*1.2,0); g.closePath(); g.fill();
+      g.fillStyle=body; g.beginPath(); g.moveTo(0,-pr*1.35); g.lineTo(pr*0.5,0); g.lineTo(0,pr*1.1); g.lineTo(-pr*0.5,0); g.closePath(); g.fill(); g.stroke(); }
+  g.fillStyle='#ffffff'; g.globalAlpha=0.9; g.beginPath(); g.ellipse(0,arch===2?0:-pr*0.12,pr*0.22,arch===2?pr*0.22:pr*0.38,0,0,TAU); g.fill();
+  g.restore(); }
 function drawPlayer(){
   // 殘影拖尾：記錄近幾幀位置，繪製漸淡幻影（純視覺，強化移動速度感）
   if(!player.trail)player.trail=[];
@@ -3259,13 +3287,16 @@ function renderMenu(){
   if($('pname'))$('pname').value=DB.playerName||'';
   $('dailybtn').textContent='每日挑戰 · '+todaysMutator().name;
   var cs=$('charsel'); cs.innerHTML='';
-  CHARS.forEach(function(c){ var unlocked=!c.locked||DB.chars[c.unlock];
+  CHARS.forEach(function(c,ci){ var unlocked=!c.locked||DB.chars[c.unlock];
     if(c.hidden&&!unlocked)return;   // 隱藏角色：未達成隱藏任務前完全不顯示
     var el=document.createElement('div'); el.className='charcard'+(selChar===c.id?' on':'')+(unlocked?'':' locked');
-    el.innerHTML='<div class="cface">'+c.face+'</div><div class="cn">'+c.name+'</div><div class="cd">'+c.desc+'</div>'+
+    el.innerHTML='<canvas class="cship" width="76" height="60"></canvas><div class="cface">'+c.face+'</div><div class="cn">'+c.name+'</div><div class="cd">'+c.desc+'</div>'+
       (unlocked?'':'<div class="clk">🔒'+CHAR_UNLOCK[c.unlock]+'</div>');
     el.onclick=function(){ if(!unlocked)return; selChar=c.id; renderMenu(); };
     cs.appendChild(el);
+    // 畫出該角色的專屬船型預覽（色相+原型，與遊戲內一致）
+    try{ var cv=el.querySelector('.cship'), g=cv.getContext('2d'); var sig=charSig(c.id); sig.arch=ci%6;
+      if(!unlocked){ g.globalAlpha=0.4; } drawMiniShip(g,38,32,15,sig); g.globalAlpha=1; }catch(_){}
   });
   var ss=$('stagesel'); ss.innerHTML='';
   STAGES.forEach(function(s){ var unlocked=stageUnlocked(s);

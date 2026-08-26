@@ -622,6 +622,7 @@ var ACHIEVEMENTS=[
   {id:'h_jackofall',ic:'🎴',hidden:true,name:'博學者',desc:'單局擁有 15 種不同被動',rw:900,chk:function(){return Object.keys(player.passives||{}).length>=15;}},
   {id:'h_maxmeta',ic:'🏛️',hidden:true,name:'殿堂常客',desc:'永久強化總等級達 40',rw:1200,chk:function(){var t=0;for(var k in DB.meta)t+=DB.meta[k]||0;return t>=40;}},
   {id:'h_codex30',ic:'📚',hidden:true,name:'圖鑑通',desc:'圖鑑解鎖 30 種怪物',rw:1000,chk:function(){return Object.keys(DB.bestiary||{}).length>=30;}},
+  {id:'h_untouchable',ic:'🕊️',hidden:true,name:'無瑕',desc:'全程無傷存活 5 分鐘',rw:1400,chk:function(){return G.flawless&&G.time>=300;}},
 ];
 function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); }
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';
@@ -667,6 +668,7 @@ var MUTATORS=[
   {id:'onrush',    name:'突襲日',    desc:'敵人高速貼身 · 生成密集 · 你脆但猛', eSpd:1.5,eHp:0.9,spawn:1.5,elite:2,pHp:0.7,pDmg:1.5,pSpd:1.2},
   {id:'ironwall',  name:'銅牆日',    desc:'敵人極韌但緩慢 · 你攻速全開', eSpd:0.8,eHp:2.4,spawn:1,elite:2,pHp:1.1,pDmg:1,pSpd:1},
   {id:'featherfall',name:'羽落日',   desc:'萬物極脆 · 一觸即潰的爽快割草', eSpd:1.2,eHp:0.3,spawn:1.6,elite:1,pHp:0.9,pDmg:1.3,pSpd:1.15},
+  {id:'doubleedge',name:'雙刃日',    desc:'敵我傷害雙倍 · 一擊定生死的極限對拼', eSpd:1.1,eHp:1,spawn:1.1,elite:2,pHp:0.6,pDmg:2,pSpd:1.1},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
@@ -1655,7 +1657,7 @@ function spawnEnemy(type,ex,ey,mul,forceElite){
   // 精英變體：更大更肉、發光、掉更多、隨機詞綴（隨時間提高機率，每日變異可加成）
   var elite = forceElite || (mul>1 && Math.random()<Math.min(0.62,(0.015+G.time/1100)*mt.elite));
   var affix=null;
-  if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst','magnetic','trail','lunger','reflector','warlord','phaser','splitburst','artillery','healer','graviton','venomous','detonator','repulsor','frostmancer','disruptor','quaker','leech']); if(affix==='haste')sp*=1.6;
+  if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst','magnetic','trail','lunger','reflector','warlord','phaser','splitburst','artillery','healer','graviton','venomous','detonator','repulsor','frostmancer','disruptor','quaker','leech','mirror']); if(affix==='haste')sp*=1.6;
     if(G.time-(G._eliteWarn||-9)>4){ G._eliteWarn=G.time; announce('⚠ 精英出現','#ffffff'); GAudio.elite&&GAudio.elite(); } }
   var ang,rr=Math.max(W,H)*0.62;
   if(ex==null){ ang=rand(0,TAU); ex=player.x+Math.cos(ang)*rr; ey=player.y+Math.sin(ang)*rr; }
@@ -1769,6 +1771,7 @@ function hitEnemy(e,amount,fromx,fromy,knock){
   dmgNum(e.x,e.y-e.r,amount,amount>= (18*player.dmgMult) && player.crit>0);
   if(knock){ var a=Math.atan2(e.y-fromy,e.x-fromx); e.knx+=Math.cos(a)*knock*120; e.kny+=Math.sin(a)*knock*120; }
   if(e.hp>0&&e.affix==='reflector'&&Math.random()<0.3){ var rfa=Math.atan2(player.y-e.y,player.x-e.x); spawnEnemyBullet(e.x,e.y,Math.cos(rfa),Math.sin(rfa),265,e.dmg*0.5); }   // 反彈詞綴：被擊中時機率射回一發
+  if(e.hp>0&&e.affix==='mirror'&&Math.random()<0.12&&enemies.length<200){ spawnEnemy('swarm',e.x+rand(-24,24),e.y+rand(-24,24),1); ringFx(e.x,e.y,30,'#c8c8ff'); }   // 分身詞綴：被擊中時機率分裂出一隻小怪
   if(e.hp>0&&!e.boss&&player.execute>0&&e.hp<e.maxHp*player.execute){ e.hp=0; ringFx(e.x,e.y,e.r*2.2,'#ff2b5e'); }   // 處決技能：斬殺殘血普通敵
   if(e.hp<=0)killEnemy(e);
 }
@@ -2654,7 +2657,7 @@ function drawEnemy(e){
     ctx.stroke();
     ctx.globalAlpha=0.4; ctx.lineWidth=1.6; ctx.beginPath(); ctx.arc(0,0,r*0.52,-gs*1.5,-gs*1.5+4.9); ctx.stroke();
     ctx.globalAlpha=1; }
-  if(e.elite){ var affCol=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':e.affix==='reflector'?'#3df0c8':e.affix==='warlord'?'#ffd54a':e.affix==='phaser'?'#c8c8ff':e.affix==='splitburst'?'#ff9a3d':e.affix==='artillery'?'#ff6a3d':e.affix==='healer'?'#5dff9b':e.affix==='graviton'?'#8b5cf6':e.affix==='venomous'?'#9dff5d':e.affix==='detonator'?'#ff9a3d':e.affix==='repulsor'?'#5dd3ff':e.affix==='frostmancer'?'#8bd3ff':e.affix==='disruptor'?'#ff5edb':e.affix==='quaker'?'#ff8a3a':e.affix==='leech'?'#ff4d6a':'#ffffff';
+  if(e.elite){ var affCol=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':e.affix==='reflector'?'#3df0c8':e.affix==='warlord'?'#ffd54a':e.affix==='phaser'?'#c8c8ff':e.affix==='splitburst'?'#ff9a3d':e.affix==='artillery'?'#ff6a3d':e.affix==='healer'?'#5dff9b':e.affix==='graviton'?'#8b5cf6':e.affix==='venomous'?'#9dff5d':e.affix==='detonator'?'#ff9a3d':e.affix==='repulsor'?'#5dd3ff':e.affix==='frostmancer'?'#8bd3ff':e.affix==='disruptor'?'#ff5edb':e.affix==='quaker'?'#ff8a3a':e.affix==='leech'?'#ff4d6a':e.affix==='mirror'?'#c8c8ff':'#ffffff';
     ctx.lineWidth=2.8; ctx.strokeStyle=affCol; ctx.stroke();   // 精英詞綴描邊
     if(!e.boss){ ctx.globalAlpha=0.4+0.3*Math.sin(G.time*6+e.x*0.03); ctx.lineWidth=2; ctx.strokeStyle=affCol; ctx.setLineDash([6,7]); ctx.lineDashOffset=-G.time*24;
       ctx.beginPath(); ctx.arc(0,0,r*1.55,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1; } }   // 精英脈動光環（旋轉虛線）

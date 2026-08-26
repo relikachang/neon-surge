@@ -2645,7 +2645,12 @@ function render(){
     for(var pf=0;pf<5;pf++){ var pa=cl.spin*0.5+pf/5*TAU, pd=cl.r*0.45*(0.6+0.4*Math.sin(cl.t*2+pf)), bx=cl.x+Math.cos(pa)*pd, by=cl.y+Math.sin(pa)*pd, br=cl.r*(0.48+0.15*Math.sin(cl.t*3+pf*2));
       ctx.globalAlpha=0.10*ca; ctx.drawImage(glow('#9dff5d'),bx-br,by-br,br*2,br*2); }   // 飄動煙氣團
     ctx.globalAlpha=0.12*ca; ctx.drawImage(glow('#9dff5d'),cl.x-cl.r,cl.y-cl.r,cl.r*2,cl.r*2);
-    ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=0.32*ca; ctx.strokeStyle='#9dff5d'; ctx.lineWidth=2; ctx.setLineDash([8,8]); ctx.lineDashOffset=cl.spin*20; ctx.beginPath(); ctx.arc(cl.x,cl.y,cl.r,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.restore(); }
+    // 上升毒氣泡：從雲底緩緩上浮、忽大忽小的螢綠氣泡，增添「劇毒沼氣」感
+    ctx.globalCompositeOperation='source-over';
+    for(var bb=0;bb<6;bb++){ var bph=((cl.t*0.5+bb*0.37)%1), bbx=cl.x+Math.sin(cl.t*1.3+bb*2.1)*cl.r*0.55, bby=cl.y+cl.r*0.5-bph*cl.r*1.1, bbr=(1.4+bb%3)*(1-bph*0.5);
+      ctx.globalAlpha=0.5*ca*(1-bph); ctx.strokeStyle='#c8ff8a'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.arc(bbx,bby,bbr,0,TAU); ctx.stroke();
+      ctx.globalAlpha=0.25*ca*(1-bph); ctx.fillStyle='#9dff5d'; ctx.fill(); }
+    ctx.globalAlpha=0.32*ca; ctx.strokeStyle='#9dff5d'; ctx.lineWidth=2; ctx.setLineDash([8,8]); ctx.lineDashOffset=cl.spin*20; ctx.beginPath(); ctx.arc(cl.x,cl.y,cl.r,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.restore(); }
 
   // 敵人
   for(var i=0;i<enemies.length;i++){ drawEnemy(enemies[i]); }
@@ -2688,9 +2693,15 @@ function render(){
     for(var i=0;i<blades.length;i++){ var bl=blades[i],bx=player.x+Math.cos(bl.ang)*br,by=player.y+Math.sin(bl.ang)*br;
       ctx.save(); ctx.translate(bx,by);
       ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.5; ctx.drawImage(glow(bcol),-16,-16,32,32);   // 刃光暈
-      ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1; ctx.rotate(bl.ang*3); ctx.fillStyle=bcol; ctx.shadowColor=bcol; ctx.shadowBlur=12;
-      ctx.beginPath(); ctx.moveTo(0,-12); ctx.lineTo(9,0); ctx.lineTo(0,12); ctx.lineTo(-9,0); ctx.closePath(); ctx.fill();
-      ctx.shadowBlur=0; ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.5; ctx.globalAlpha=0.9; ctx.stroke(); ctx.restore(); } }   // 白刃緣
+      ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1; ctx.rotate(bl.ang*4); ctx.fillStyle=bcol; ctx.shadowColor=bcol; ctx.shadowBlur=10;
+      ctx.beginPath();   // 四刃手裏劍：四片彎鉤刀刃的旋轉暗器
+      for(var bs=0;bs<4;bs++){ var ba0=bs/4*TAU;
+        ctx.moveTo(Math.cos(ba0)*3.2,Math.sin(ba0)*3.2);
+        ctx.quadraticCurveTo(Math.cos(ba0+0.55)*8,Math.sin(ba0+0.55)*8,Math.cos(ba0+0.16)*14,Math.sin(ba0+0.16)*14);
+        ctx.quadraticCurveTo(Math.cos(ba0+0.34)*7,Math.sin(ba0+0.34)*7,Math.cos(ba0+0.78)*3.2,Math.sin(ba0+0.78)*3.2); }
+      ctx.closePath(); ctx.fill();
+      ctx.shadowBlur=0; ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.2; ctx.globalAlpha=0.85; ctx.stroke();   // 白刃緣
+      ctx.fillStyle='#0a0118'; ctx.globalAlpha=1; ctx.beginPath(); ctx.arc(0,0,2.4,0,TAU); ctx.fill(); ctx.strokeStyle=bcol; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(0,0,2.4,0,TAU); ctx.stroke(); ctx.restore(); } }   // 中心軸孔
 
   // 粒子
   ctx.globalCompositeOperation='lighter';
@@ -3352,7 +3363,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v263 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v264 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

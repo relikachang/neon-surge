@@ -122,6 +122,13 @@
     border:2px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);z-index:6}
   #joyknob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px;border-radius:50%;
     background:radial-gradient(circle at 40% 35%,#fff,var(--cyan) 70%);box-shadow:0 0 18px var(--cyan)}
+  /* --- B225 搖桿造型升級 + 暫停 bchip 美化 --- */
+  #joy{background:radial-gradient(circle,rgba(34,230,255,.10),rgba(255,255,255,.03) 70%);border-color:rgba(34,230,255,.35);box-shadow:0 0 24px rgba(34,230,255,.18),inset 0 0 20px rgba(34,230,255,.08)}
+  #joy::after{content:'';position:absolute;inset:8px;border-radius:50%;border:1px dashed rgba(34,230,255,.28);animation:joyspin 8s linear infinite}
+  @keyframes joyspin{to{transform:rotate(360deg)}}
+  #joyknob{box-shadow:0 0 22px var(--cyan),0 0 40px rgba(34,230,255,.4)}
+  #pausebuild .bchip{background:linear-gradient(135deg,rgba(22,30,54,.5),rgba(12,18,34,.5));transition:transform .1s}
+  #pausebuild .bchip:hover{transform:translateY(-2px);border-color:rgba(34,230,255,.4)}
 
   /* ---------- 覆蓋層通用 ---------- */
   .overlay{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;

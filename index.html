@@ -1405,7 +1405,7 @@ var PDEFS={
   pluck:{ic:'🍀',name:'幸運',color:'#5dff9b',max:5,desc:function(){return '道具掉落率↑ 碎片獲取 +15%';},apply:function(){recalc();}},
   pglass:{ic:'💎',name:'玻璃炮核心',color:'#ff6bd0',max:5,desc:function(){return '傷害 +16%，但生命上限 -7%';},apply:function(){recalc(); if(player.hp>player.maxHp)player.hp=player.maxHp;}},
   pfreeze:{ic:'🧊',name:'冰封力場',color:'#8bd3ff',max:5,desc:function(){return '每 3 秒凍結周圍敵人';},apply:function(){recalc();}},
-  poverpower:{ic:'⬆️',name:'壓制',color:'#ff8a3a',max:5,desc:function(){return '對高於半血的敵人 +10% 傷害';},apply:function(){recalc();}},
+  poverpower:{ic:'⬆️',name:'壓制',color:'#ff8a3a',max:5,desc:function(){return '對高於半血的敵人 +10% 傷害/級，並將其擊退震開';},apply:function(){recalc();}},
   pveteran:{ic:'🎖️',name:'百戰',color:'#ffd54a',max:5,desc:function(){return '每擊殺 100 傷害+1.5%（上限20層）';},apply:function(){recalc();}},
   pdrone:{ic:'🛰️',name:'召喚核心',color:'#5dffe0',max:5,desc:function(){return '每 5 秒召喚一台環繞無人機助陣';},apply:function(){recalc();}},
   pcleave:{ic:'🌀',name:'劈斬',color:'#ff8a3a',max:5,desc:function(){return '擊殺時對「近身」周圍必定濺射傷害';},apply:function(){recalc();}},
@@ -1416,7 +1416,7 @@ var PDEFS={
   pcoldblood:{ic:'🧊',name:'寒血',color:'#8bd3ff',max:5,desc:function(){return '對減速或凍結中的敵人 +14% 傷害';},apply:function(){recalc();}},
   pshrapnel:{ic:'💥',name:'破片',color:'#ffd54a',max:5,desc:function(){return '擊殺炸出遠距高速貫穿彈片，掃射四方';},apply:function(){recalc();}},
   psecondwind:{ic:'🌬️',name:'二度呼吸',color:'#5dff9b',max:5,desc:function(){return '生命低於 30% 時自動回復一次（有冷卻）';},apply:function(){recalc();}},
-  psharpshoot:{ic:'🎯',name:'精準射手',color:'#ffce54',max:5,desc:function(){return '對較遠的敵人（300px 外）+12% 傷害/級';},apply:function(){recalc();}},
+  psharpshoot:{ic:'🎯',name:'精準射手',color:'#ffce54',max:5,desc:function(){return '對 300px 外的遠敵增傷，且越遠越致命（距離遞增）';},apply:function(){recalc();}},
   pcharge:{ic:'⚡',name:'蓄能爆擊',color:'#ffd54a',max:5,desc:function(){return '每隔數次命中，下一擊造成暴增傷害';},apply:function(){recalc();}},
   ptenacity:{ic:'🛡️',name:'韌命',color:'#ff8a5d',max:5,desc:function(){return '生命低於 45% 時，減免 8% 傷害/級（血越低越硬）';},apply:function(){recalc();}},
 };
@@ -1948,8 +1948,8 @@ function hitEnemy(e,amount,fromx,fromy,knock){
   if(e.affix==='shielded')amount*=0.5;   // 護盾詞綴：減傷 50%
   if(e.boss&&player.bossDmg>1)amount*=player.bossDmg;   // 屠龍核心：對首領增傷
   if(player.coldblood>0&&((e.frozen||0)>0||(e.slow||0)>0))amount*=(1+0.14*player.coldblood);   // 寒血被動：對減速/凍結敵人增傷
-  if(player.overpower>0&&e.hp>e.maxHp*0.5)amount*=(1+0.10*player.overpower);   // 壓制被動：對高血敵人增傷
-  if(player.sharpshoot>0&&dist2(e.x,e.y,player.x,player.y)>90000)amount*=(1+0.12*player.sharpshoot);   // 精準射手：對 300px 外敵人增傷
+  if(player.overpower>0&&e.hp>e.maxHp*0.5){ amount*=(1+0.10*player.overpower); if(!e.boss){ var opa=Math.atan2(e.y-player.y,e.x-player.x); e.knx+=Math.cos(opa)*player.overpower*20; e.kny+=Math.sin(opa)*player.overpower*20; } }   // 壓制：對高血敵增傷 + 附加擊退(把肉盾震開)
+  if(player.sharpshoot>0){ var _ssd=dist2(e.x,e.y,player.x,player.y); if(_ssd>90000){ var _far=Math.min(3,Math.sqrt(_ssd)/300); amount*=(1+0.10*player.sharpshoot*_far); } }   // 精準射手：對遠敵增傷，且越遠越致命(距離遞增)
   if(player.charge>0){ player._hc=(player._hc||0)+1; if(player._hc>=(9-player.charge)){ player._hc=0; amount*=(1.5+0.5*player.charge); ringFx(e.x,e.y,e.r*2.2,'#ffd54a'); } }   // 蓄能爆擊：每隔數擊觸發暴增傷害
   G.dmgDealt=(G.dmgDealt||0)+Math.min(amount,e.hp); e.hp-=amount; e.flash=0.08;
   if(fromx!=null)e.hitAng=Math.atan2(e.y-fromy,e.x-fromx);   // 記錄受擊方向供擠壓形變
@@ -3511,7 +3511,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v284 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v285 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

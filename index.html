@@ -1236,9 +1236,18 @@ var WDEFS={
       cd:function(l){return Math.max(0.4,0.9-l*0.05);},
       fire:function(w){ var num=6+w.level; for(var i=0;i<num;i++)spawnBoomerang(i/num*TAU,dmg(20+w.level*7),1.6); }
     }
+  },
+  beamsweep:{ic:'📡',name:'掃描雷射',color:'#3df0c8',tag:'旋轉',max:8,
+    desc:function(l){return l===0?'如燈塔般持續旋轉掃射的雷射光束':'長度↑ 傷害↑';},
+    cd:function(l){return 0.1;},
+    fire:function(w){ if(w._a==null)w._a=0; w._a+=0.12; fireBeam(w._a,dmg(6+w.level*2.2),(400+w.level*30)*player.area,10*player.area,'#3df0c8'); },
+    evo:{reqPassive:'parea',ic:'📡',name:'環形殲滅光',color:'#5dffe0',desc:'雙向旋轉的巨型掃描光束，絞殺周身全場',
+      cd:function(l){return 0.09;},
+      fire:function(w){ if(w._a==null)w._a=0; w._a+=0.16; var len=(520+w.level*34)*player.area, d=dmg(9+w.level*3); fireBeam(w._a,d,len,13*player.area,'#5dffe0'); fireBeam(w._a+Math.PI,d,len,13*player.area,'#5dffe0'); }
+    }
   }
 };
-var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet','hornet','spiralgun','gatling','chakram'];
+var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet','hornet','spiralgun','gatling','chakram','beamsweep'];
 
 // 被動定義
 var PDEFS={
@@ -1471,6 +1480,10 @@ var FUSIONS=[
     cd:function(l){return Math.max(0.4,0.9-l*0.05);},
     fire:function(w){ var num=5+w.level; for(var i=0;i<num;i++)spawnBoomerang(i/num*TAU,dmg(18+w.level*6),1.6);
       var t=nearestEnemy(player.x,player.y,560*560); if(t)chainLightning(player.x,player.y,t,3+w.level,dmg(10+w.level*4)); }},
+  {a:'beamsweep',b:'toxic',id:'toxicsweep',ic:'📡',name:'劇毒掃描',color:'#9dff5d',desc:'旋轉毒光掃射，並在敵群間佈下擴散毒雲',max:3,
+    cd:function(l){return 0.1;},
+    fire:function(w){ if(w._a==null)w._a=0; w._a+=0.14; fireBeam(w._a,dmg(8+w.level*3),(440+w.level*30)*player.area,12*player.area,'#9dff5d');
+      if(w._ct==null)w._ct=0; w._ct++; if(w._ct%8===0){ var t=randEnemyNear(player.x,player.y,600); if(t)spawnCloud(t.x,t.y,(80+w.level*9)*player.area,dmg(5+w.level*2),2.4); } }},
 ];
 function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)return FUSIONS[i]; return null; }
 

@@ -279,7 +279,7 @@
   <div id="xpbar"><div id="xpfill"></div></div>
   <div id="topbar">
     <div id="timer">00:00</div>
-    <div id="toprow"><div>幕 <b id="actn">1</b></div><div>擊殺 <b id="killn">0</b></div><div>波 <b id="waven">1</b></div><div>DPS <b id="dpsn">0</b></div></div>
+    <div id="toprow"><div>幕 <b id="actn">1</b></div><div>難度 <b id="actmuln" style="color:#ff9a3d">×1.0</b></div><div>擊殺 <b id="killn">0</b></div><div>波 <b id="waven">1</b></div><div>DPS <b id="dpsn">0</b></div></div>
   </div>
   <div id="bossbar"><div id="bossname">BOSS</div><div id="bosshpbg"><div id="bosshpfill"></div></div></div>
   <div id="lvchip">LV <span id="lvn">1</span></div>
@@ -1570,7 +1570,7 @@ function spawnBoomerang(ang,damage,size){ var sp=560;
 function spawnWell(x,y,r,d,life,explode){ wells.push({x:x,y:y,r:r,dmg:d,life:life,max:life,t:0,explode:explode,dmgBig:d*8,spin:0}); }
 function dropMine(x,y,damage,blast,cluster){ mines.push({x:x,y:y,dmg:damage,blast:blast,trigger:44,cluster:cluster,life:14,arm:0.4}); }
 function spawnCloud(x,y,r,damage,life){ clouds.push({x:x,y:y,r:r,dmg:damage,life:life,max:life,t:0,spin:0}); }
-function detonateMine(m){ ringFx(m.x,m.y,m.blast,'#ffce54'); burst(m.x,m.y,'#ffce54',14,200); shake(4); GAudio.kill&&GAudio.kill();
+function detonateMine(m){ for(var mr=0;mr<3;mr++)ringFx(m.x,m.y,m.blast*(0.5+mr*0.28),mr?'#ff8a3a':'#fff2b0'); burst(m.x,m.y,'#ffce54',20,260); burst(m.x,m.y,'#ff8a3a',8,180); shake(6); GAudio.kill&&GAudio.kill();
   var b2=m.blast*m.blast; enemyGrid.query(m.x,m.y,m.blast,function(e){ if(e.hp>0&&dist2(e.x,e.y,m.x,m.y)<b2)hitEnemy(e,m.dmg,m.x,m.y,0.4); });
   if(m.cluster){ for(var k=0;k<3;k++){ var a=k/3*TAU, sx=m.x+Math.cos(a)*m.blast*0.6, sy=m.y+Math.sin(a)*m.blast*0.6, sb=m.blast*0.6, sb2=sb*sb;
     ringFx(sx,sy,sb,'#ffe08a'); enemyGrid.query(sx,sy,sb,function(e){ if(e.hp>0&&dist2(e.x,e.y,sx,sy)<sb2)hitEnemy(e,m.dmg*0.5,sx,sy,0.3); }); } } }
@@ -2846,7 +2846,8 @@ function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'�
 // =====================================================================
 function updateHud(){
   $('timer').textContent=fmtTime(G.time);
-  $('killn').textContent=G.kills; $('waven').textContent=G.wave; $('actn').textContent=G.act;
+  $('killn').textContent=G.kills; $('waven').textContent=G.wave; var acn=$('actn'); acn.textContent=G.act; acn.style.color=G.act>=15?'#ff2b5e':G.act>=8?'#ff5a3a':G.act>=4?'#ff9a3d':'#ffffff'; acn.style.textShadow=G.act>=8?'0 0 10px currentColor':'none';
+  var amn=$('actmuln'); if(amn){ amn.textContent='×'+(G.actMul||1).toFixed(1); amn.style.color=G.actMul>=3?'#ff2b5e':G.actMul>=2?'#ff5a3a':'#ff9a3d'; }
   $('dpsn').textContent=Math.round((G.dmgDealt||0)/Math.max(1,G.time));
   $('lvn').textContent=G.level; $('shardn').textContent=G.shards;
   $('xpfill').style.width=(G.xp/G.xpNeed*100)+'%';

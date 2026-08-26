@@ -139,6 +139,9 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   #bosshpfill::before{content:'';position:absolute;left:0;right:0;top:0;height:45%;background:linear-gradient(180deg,rgba(255,255,255,.45),transparent)}
   #bosshpfill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);background-size:80px 100%;background-repeat:no-repeat;animation:hudshine 2s linear infinite;pointer-events:none}
   #bossbar.enraged #bosshpbg{border-color:#ff2b5e;animation:enragePulse .5s infinite}
+  .bphase{position:absolute;top:-2px;bottom:-2px;width:2px;background:rgba(255,255,255,.8);z-index:3;pointer-events:none;box-shadow:0 0 5px rgba(255,255,255,.7)}
+  .bphase::after{content:'';position:absolute;top:-5px;left:-2px;border-left:3px solid transparent;border-right:3px solid transparent;border-top:5px solid rgba(255,255,255,.85)}
+  .bphase.p3{background:#ff2b5e;box-shadow:0 0 6px #ff2b5e} .bphase.p3::after{border-top-color:#ff2b5e}
   @keyframes enragePulse{50%{box-shadow:0 0 16px #ff2b5e}}
   #combo{position:absolute;top:104px;left:50%;transform:translateX(-50%) scale(1);transform-origin:center top;font-size:20px;font-weight:900;
     color:var(--gold);text-shadow:0 0 14px rgba(255,213,74,.7);opacity:0;transition:opacity .2s,transform .12s,color .2s}
@@ -358,7 +361,7 @@ if('serviceWorker' in navigator){ var __reloaded=false;
     <div id="timer">00:00</div>
     <div id="toprow"><div>幕 <b id="actn">1</b></div><div>難度 <b id="actmuln" style="color:#ff9a3d">×1.0</b></div><div>擊殺 <b id="killn">0</b></div><div>波 <b id="waven">1</b></div><div>DPS <b id="dpsn">0</b></div></div>
   </div>
-  <div id="bossbar"><div id="bossname">BOSS</div><div id="bosshpbg"><div id="bosshpfill"></div></div></div>
+  <div id="bossbar"><div id="bossname">BOSS</div><div id="bosshpbg"><div id="bosshpfill"></div><i class="bphase" style="left:72%"></i><i class="bphase" style="left:40%"></i><i class="bphase p3" style="left:15%"></i></div></div>
   <div id="lvchip">LV <span id="lvn">1</span></div>
   <div id="shardchip">◆ <span id="shardn">0</span></div>
   <div id="combo"></div>
@@ -1626,7 +1629,7 @@ function newRun(daily){
   addWeapon(ch.start);
   recalc(); player.hp=player.maxHp;
   player.iframe=1.5*metaLv('startshield');   // 啟動護盾：開局無敵
-  var gd=metaLv('guardian'); for(var gi=0;gi<gd;gi++)drones.push({x:player.x,y:player.y,ang:gi/Math.max(1,gd)*TAU,orbit:82,life:1e9,cd:rand(0,0.3),dmg:dmg(14)});   // 守護核心：開局環繞護衛無人機
+  var gd=metaLv('guardian'); for(var gi=0;gi<gd;gi++)drones.push({x:player.x,y:player.y,ang:gi/Math.max(1,gd)*TAU,orbit:82,life:1e9,cd:rand(0,0.3),dmg:dmg(14),color:'#ffd54a'});   // 守護核心：金色環繞護衛無人機
   // 局前補給：套用已購買的一次性增益後清空
   if(DB.boost){ var used=false; BOOSTS.forEach(function(b){ if(DB.boost[b.id]){ used=true; try{ b.apply(); }catch(e){} } }); if(used){ DB.boost={}; saveDB(); } }
   enemyGrid=makeGrid(96);
@@ -2099,7 +2102,7 @@ function update(dt){
     enemyGrid.query(player.x,player.y,fzr,function(e){ if(e.hp>0&&!e.boss&&dist2(e.x,e.y,player.x,player.y)<fzr2)e.frozen=Math.max(e.frozen||0,fzd); }); ringFx(player.x,player.y,fzr,'#8bd3ff'); ringFx(player.x,player.y,fzr*0.6,'#dff4ff'); } }
   if(player.shock>0){ player.shockT=(player.shockT||0)-dt; if(player.shockT<=0){ player.shockT=1.4; var shr=(230+player.shock*24), shr2=shr*shr, shd=dmg(15+player.shock*9), shHit=0, shMax=2+player.shock, shpx=player.x, shpy=player.y;   // 感電力場：週期對最近數名敵人放出連鎖電弧
     enemyGrid.query(shpx,shpy,shr,function(e){ if(shHit>=shMax||e.hp<=0)return; if(dist2(e.x,e.y,shpx,shpy)<shr2){ shHit++; var ex=e.x,ey=e.y; fxLightning(shpx,shpy,ex,ey); hitEnemy(e,shd,shpx,shpy,0.1); } }); if(shHit>0){ ringFx(shpx,shpy,44,'#c58bff'); GAudio.zap&&GAudio.zap(); } } }
-  if(player.droneP>0){ player.droneT=(player.droneT||0)-dt; if(player.droneT<=0){ player.droneT=5; var orbn=drones.filter(function(d){return !d.fixed;}).length; if(orbn<player.droneP+1+player.amount){ drones.push({x:player.x,y:player.y,ang:rand(0,TAU),orbit:82,life:6.5,cd:rand(0,0.3),dmg:dmg(14+player.droneP*5)}); ringFx(player.x,player.y,60,'#5dffe0'); } } }   // 召喚核心：週期召喚環繞無人機
+  if(player.droneP>0){ player.droneT=(player.droneT||0)-dt; if(player.droneT<=0){ player.droneT=5; var orbn=drones.filter(function(d){return !d.fixed;}).length; if(orbn<player.droneP+1+player.amount){ drones.push({x:player.x,y:player.y,ang:rand(0,TAU),orbit:82,life:6.5,cd:rand(0,0.3),dmg:dmg(14+player.droneP*5),color:'#c58bff'}); ringFx(player.x,player.y,60,'#c58bff'); } } }   // 召喚核心：紫色週期召喚環繞無人機
 
   // ---- 生成敵人 ----
   spawnDirector(dt);
@@ -3265,8 +3268,9 @@ function updateHud(){
   // 首領血條
   var boss=null; for(var bi=0;bi<enemies.length;bi++){ if(enemies[bi].boss&&enemies[bi].hp>0){boss=enemies[bi];break;} }
   var bb=$('bossbar'); if(boss){ bb.classList.add('show'); bb.classList.toggle('enraged',!!boss.enraged);
-    var bn=$('bossname'); bn.textContent=(boss.enraged?'⚡狂暴 ':'')+(boss.name||'BOSS'); bn.style.color=boss.enraged?'#ff2b5e':boss.color;
-    var bf=$('bosshpfill'); bf.style.width=Math.max(0,boss.hp/boss.maxHp*100)+'%'; bf.style.color=boss.color;
+    var pfx=boss.frenzied?'☠絕命 ':boss.enraged?'⚡狂暴 ':boss.ph2?'⚔二型 ':'';
+    var bn=$('bossname'); bn.textContent=pfx+(boss.name||'BOSS'); bn.style.color=boss.frenzied?'#ff1030':boss.enraged?'#ff2b5e':boss.ph2?'#ffb03a':boss.color;
+    var bf=$('bosshpfill'); bf.style.width=Math.max(0,boss.hp/boss.maxHp*100)+'%'; bf.style.color=boss.frenzied?'#ff1030':boss.enraged?'#ff2b5e':boss.ph2?'#ffb03a':boss.color;
     bf.style.background=boss.enraged?'linear-gradient(90deg,#ff2b5e,#ffce54)':'linear-gradient(90deg,'+boss.color+',#ffffff)'; }
   else bb.classList.remove('show');
   // 武器列
@@ -3490,7 +3494,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v282 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v283 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

@@ -1437,6 +1437,9 @@ var FUSIONS=[
     fire:function(w){ var n=2+Math.floor(w.level/2); for(var i=0;i<n;i++){ var t=randEnemyNear(player.x,player.y,760); if(!t)break; var r=(75+w.level*8)*player.area,r2=r*r,tx=t.x,ty=t.y;
       (function(tx,ty,r,r2){ enemyGrid.query(tx,ty,r,function(o){ if(o.hp>0&&dist2(o.x,o.y,tx,ty)<r2){ hitEnemy(o,dmg(26+w.level*8),tx,ty,0.2); if(!o.boss)o.frozen=Math.max(o.frozen||0,1.2); } }); })(tx,ty,r,r2);
       ringFx(tx,ty,r,'#a0e8ff'); fxLightning(tx,ty-140,tx,ty); burst(tx,ty,'#dff4ff',8,220); } }},
+  {a:'gatling',b:'lightning',id:'stormvulcan',ic:'⚡',name:'電磁機炮',color:'#c9e6ff',desc:'超高速電磁彈流連射，命中即在敵群間炸開連鎖閃電',max:3,
+    cd:function(l){return Math.max(0.05,0.12-l*0.008);},
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var a=(t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle)+rand(-0.05,0.05); spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),780,dmg(9+w.level*3),'#c9e6ff',1,4,0.9); if(t&&Math.random()<0.25)chainLightning(player.x,player.y,t,3+w.level,dmg(8+w.level*3)); }},
 ];
 function fusionById(id){ for(var i=0;i<FUSIONS.length;i++)if(FUSIONS[i].id===id)return FUSIONS[i]; return null; }
 
@@ -1816,8 +1819,8 @@ function killEnemy(e){
   // 掉落道具
   var lchance=0.02+G.luck+(player.luckBonus||0);
   if(e.boss){ spawnPickup(e.x,e.y,'bosschest'); G.bossKills=(G.bossKills||0)+1; }   // 首領：超級戰利品
-  else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','revivecharm','thunderstorm','jackpot','nuke','fullheal','repel','stasis','overdrive','purify','phaseshift','lightstorm','emppulse','turretdrop','blitz'])); }   // 精英必掉道具
-  else if(Math.random()<lchance){ spawnPickup(e.x,e.y,pick(['heal','heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','thunderstorm','overdrive','purify','phaseshift','lightstorm','emppulse','turretdrop','blitz'])); }
+  else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','revivecharm','thunderstorm','jackpot','nuke','fullheal','repel','stasis','overdrive','purify','phaseshift','lightstorm','emppulse','turretdrop','blitz','carpetbomb'])); }   // 精英必掉道具
+  else if(Math.random()<lchance){ spawnPickup(e.x,e.y,pick(['heal','heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','thunderstorm','overdrive','purify','phaseshift','lightstorm','emppulse','turretdrop','blitz','carpetbomb'])); }
   if(e.boss){ announce('首領擊破！','#ffd54a'); G.shards+=Math.floor(20*(1+0.15*metaLv('greed'))*(1+0.2*metaLv('bounty'))); }
 }
 function addCombo(){ G.combo++; G.comboTimer=2.2*(1+0.15*metaLv('combo')); if(G.combo>G.peakCombo)G.peakCombo=G.combo;
@@ -2217,6 +2220,7 @@ function collectPickup(p){
   else if(p.type==='lightstorm'){ var lcol=['#ff5e5e','#ffd54a','#5dff9b','#22e6ff','#c98bff','#ff9de0']; for(var ls=0;ls<18;ls++){ var la=ls/18*TAU+G.time; fireBeam(la,dmg(60),900,14,lcol[ls%lcol.length]); } for(var lr=0;lr<3;lr++)ringFx(player.x,player.y,150+lr*130,'#ffffff'); flashScreen('220,240,255',0.4); shake(10); floatText('🌈 光棱風暴！全向光束橫掃','#dffcff'); }
   else if(p.type==='emppulse'){ enemies.forEach(function(e){ if(e.hp>0){ if(!e.boss)e.frozen=Math.max(e.frozen||0,2); else e.frozen=Math.max(e.frozen||0,1); hitEnemy(e,dmg(40),player.x,player.y,0.2); } }); ebullets.length=0; for(var ep=0;ep<3;ep++)ringFx(player.x,player.y,200+ep*160,'#a0e8ff'); flashScreen('160,232,255',0.4); shake(12); floatText('⚡ 電磁脈衝！全場麻痺 + 電擊','#a0e8ff'); }
   else if(p.type==='turretdrop'){ for(var td=0;td<3;td++)drones.push({x:player.x+rand(-46,46),y:player.y+rand(-46,46),ang:0,orbit:0,fixed:true,color:'#5dffe0',range:640,rate:0.3,life:12,cd:rand(0,0.3),dmg:dmg(24)}); ringFx(player.x,player.y,130,'#5dffe0'); ringFx(player.x,player.y,70,'#dfffff5'); floatText('🗼 部署砲塔！3 座自動砲台助陣','#5dffe0'); }
+  else if(p.type==='carpetbomb'){ for(var cb=0;cb<12;cb++){ var ct=randEnemyNear(player.x,player.y,700)||{x:player.x+rand(-320,320),y:player.y+rand(-320,320)}; var ar=110,ar2=ar*ar,atx=ct.x,aty=ct.y; (function(atx,aty){ enemyGrid.query(atx,aty,ar,function(e){ if(e.hp>0&&dist2(e.x,e.y,atx,aty)<ar2)hitEnemy(e,dmg(50),atx,aty,0.3); }); })(atx,aty); ringFx(atx,aty,ar,'#ff5030'); burst(atx,aty,'#ff5030',10,240); } shake(16); flashScreen('255,80,48',0.4); floatText('🎆 地毯轟炸！全面炮火覆蓋','#ff5030'); }
   else if(p.type==='blitz'){ var bza=player.aimAngle, bzx=player.x, bzy=player.y; player.x+=Math.cos(bza)*260; player.y+=Math.sin(bza)*260; player.iframe=Math.max(player.iframe,1); var mzx=(bzx+player.x)/2, mzy=(bzy+player.y)/2; enemyGrid.query(mzx,mzy,170,function(e){ if(e.hp>0&&dist2(e.x,e.y,mzx,mzy)<170*170)hitEnemy(e,dmg(45),bzx,bzy,1.4); }); ringFx(bzx,bzy,80,'#5dd3ff'); ringFx(player.x,player.y,80,'#5dd3ff'); burst(mzx,mzy,'#5dd3ff',14,260); flashScreen('93,211,255',0.25); floatText('💨 突擊衝刺！貫穿並擊退敵群','#5dd3ff'); }
   else if(p.type==='shield'){ player.iframe=Math.max(player.iframe,4); ringFx(player.x,player.y,200,'#22e6ff'); floatText('無敵護盾！','#22e6ff'); }
   else if(p.type==='timefreeze'){ enemies.forEach(function(e){ if(!e.boss)e.frozen=Math.max(e.frozen||0,3); else e.frozen=Math.max(e.frozen||0,1.5); }); ringFx(player.x,player.y,420,'#7dd3ff'); flashScreen('125,211,255',0.32); floatText('時間凍結！','#7dd3ff'); }
@@ -2774,7 +2778,7 @@ function drawPlayer(){
     for(var er=0;er<2;er++){ var ph=((G.time*1.6)+er*0.5)%1; ctx.globalAlpha=(1-ph)*0.55; ctx.strokeStyle='rgba('+pcol+',1)'; ctx.lineWidth=2.5;
       ctx.beginPath(); ctx.arc(player.x,player.y,pr+8+ph*34,0,TAU); ctx.stroke(); } ctx.restore(); ctx.globalAlpha=1; }
 }
-function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️',revivecharm:'🕊️',thunderstorm:'🌩️',jackpot:'🎰',nuke:'☢️',fullheal:'💚',repel:'💨',stasis:'⏳',overdrive:'⚙️',purify:'✨',phaseshift:'🌀',lightstorm:'🌈',emppulse:'⚡',turretdrop:'🗼',blitz:'➡️'}[p.type];
+function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️',revivecharm:'🕊️',thunderstorm:'🌩️',jackpot:'🎰',nuke:'☢️',fullheal:'💚',repel:'💨',stasis:'⏳',overdrive:'⚙️',purify:'✨',phaseshift:'🌀',lightstorm:'🌈',emppulse:'⚡',turretdrop:'🗼',blitz:'➡️',carpetbomb:'🎆'}[p.type];
   var yy=p.y+Math.sin(G.time*4+p.x)*4;
   var pulse=0.5+0.5*Math.sin(G.time*5+p.x*0.1);
   // 依道具類型上色（回復=綠 / 防護=青 / 攻擊爆發=橙紅 / 財富=金 …），一眼辨識種類

@@ -2305,9 +2305,11 @@ function render(){
     ctx.globalAlpha=0.9; ctx.drawImage(orbCore,o.x-2.6,o.y-2.6,5.2,5.2);   // 亮核
     ctx.save(); ctx.translate(o.x,o.y); ctx.rotate(G.time*2+o.x*0.05); ctx.globalAlpha=0.8; ctx.fillStyle='#dffbff';
     ctx.beginPath(); ctx.moveTo(0,-3.4); ctx.lineTo(2.2,0); ctx.lineTo(0,3.4); ctx.lineTo(-2.2,0); ctx.closePath(); ctx.fill(); ctx.restore(); }   // 旋轉晶體切面（寶石感）
-  // 特效環
-  for(var i=0;i<fxRings.length;i++){ var r=fxRings[i]; ctx.globalAlpha=r.life/r.max*0.6; ctx.strokeStyle=r.color; ctx.lineWidth=4;
-    ctx.beginPath(); ctx.arc(r.x,r.y,r.r,0,TAU); ctx.stroke(); }
+  // 特效環（發光雙環 + 白色前緣）
+  for(var i=0;i<fxRings.length;i++){ var r=fxRings[i], rp=r.life/r.max;
+    ctx.globalAlpha=rp*0.5; ctx.strokeStyle=r.color; ctx.lineWidth=2+rp*4; ctx.shadowColor=r.color; ctx.shadowBlur=12; ctx.beginPath(); ctx.arc(r.x,r.y,r.r,0,TAU); ctx.stroke();
+    ctx.globalAlpha=rp*0.9; ctx.lineWidth=1.5; ctx.strokeStyle='#ffffff'; ctx.shadowBlur=6; ctx.beginPath(); ctx.arc(r.x,r.y,r.r,0,TAU); ctx.stroke(); }
+  ctx.shadowBlur=0;
   // 閃電
   for(var i=0;i<lightningSeg.length;i++){ var s=lightningSeg[i]; ctx.globalAlpha=s.life/s.max; ctx.strokeStyle='#c58bff'; ctx.lineWidth=3;
     ctx.shadowColor='#c58bff'; ctx.shadowBlur=12; ctx.beginPath(); ctx.moveTo(s.x1,s.y1);
@@ -2363,8 +2365,12 @@ function render(){
 
   // 地雷
   for(var i=0;i<mines.length;i++){ var mn=mines[i]; var blink=mn.arm>0?0.4:(0.5+0.5*Math.sin(Date.now()/120));
-    ctx.save(); ctx.globalAlpha=0.12; ctx.strokeStyle='#ffce54'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(mn.x,mn.y,mn.trigger,0,TAU); ctx.stroke();
-    ctx.globalAlpha=blink; ctx.fillStyle='#ffce54'; ctx.shadowColor='#ffce54'; ctx.shadowBlur=12; ctx.beginPath(); ctx.arc(mn.x,mn.y,5,0,TAU); ctx.fill(); ctx.restore(); }
+    ctx.save(); ctx.globalAlpha=0.1+blink*0.06; ctx.strokeStyle='#ffce54'; ctx.lineWidth=1; ctx.setLineDash([5,6]); ctx.lineDashOffset=-G.time*10; ctx.beginPath(); ctx.arc(mn.x,mn.y,mn.trigger,0,TAU); ctx.stroke(); ctx.setLineDash([]);   // 觸發範圍(流動虛線)
+    ctx.translate(mn.x,mn.y); ctx.rotate(G.time*1.2);
+    ctx.globalAlpha=0.85; ctx.strokeStyle='#ffb347'; ctx.lineWidth=2; ctx.shadowColor='#ff8a3a'; ctx.shadowBlur=8;   // 尖刺外殼
+    for(var mk=0;mk<6;mk++){ var mka=mk/6*TAU; ctx.beginPath(); ctx.moveTo(Math.cos(mka)*3.5,Math.sin(mka)*3.5); ctx.lineTo(Math.cos(mka)*8,Math.sin(mka)*8); ctx.stroke(); }
+    ctx.beginPath(); ctx.arc(0,0,4,0,TAU); ctx.stroke();
+    ctx.globalAlpha=blink; ctx.fillStyle='#fff2b0'; ctx.shadowColor='#ffce54'; ctx.shadowBlur=12; ctx.beginPath(); ctx.arc(0,0,2.6,0,TAU); ctx.fill(); ctx.restore(); }   // 脈動警示核
 
   // 毒雲
   for(var i=0;i<clouds.length;i++){ var cl=clouds[i], ca=Math.max(0,cl.life/cl.max);

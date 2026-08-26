@@ -1180,9 +1180,9 @@ var WDEFS={
   grenade:{ic:'🧨',name:'榴彈',color:'#ff9a3d',tag:'範圍',max:8,
     desc:function(l){return l===0?'拋射實體榴彈飛向敵群，命中或落地引爆範圍':'傷害↑ 爆炸範圍↑ 每3級+1發';},
     cd:function(l){return Math.max(0.5,1.1-l*0.07);},
-    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); if(!t)return; var n=1+Math.floor(w.level/3)+player.amount, er=(70+w.level*8)*player.area, dm=dmg(28+w.level*9);
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); if(!t)return; var n=1+Math.floor(w.level/3)+player.amount, er=(62+w.level*7)*player.area, dm=dmg(24+w.level*7.5);
       for(var i=0;i<n;i++){ var tt=i===0?t:(randEnemyNear(player.x,player.y,640)||t); var a=Math.atan2(tt.y-player.y,tt.x-player.x)+rand(-0.12,0.12);
-        bullets.push({x:player.x,y:player.y,vx:Math.cos(a)*380,vy:Math.sin(a)*380,dmg:dm,color:'#ff9a3d',pierce:1,r:7,life:1.5,hitset:{},homing:150,explode:er,spin:1}); } },
+        bullets.push({x:player.x,y:player.y,vx:Math.cos(a)*380,vy:Math.sin(a)*380,dmg:dm,color:'#ff9a3d',pierce:1,r:7,life:1.5,hitset:{},homing:110,explode:er,spin:1}); } },
     evo:{reqPassive:'parea',ic:'💥',name:'集束炸彈',color:'#ffca4a',desc:'一次投擲大量集束榴彈，火力覆蓋全場',
       cd:function(l){return Math.max(0.35,0.8-l*0.05);},
       fire:function(w){ var n=4+Math.floor(w.level/2)+player.amount;
@@ -3485,7 +3485,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v280 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v281 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

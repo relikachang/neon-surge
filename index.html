@@ -1410,10 +1410,10 @@ var PDEFS={
   pdrone:{ic:'🛰️',name:'召喚核心',color:'#5dffe0',max:5,desc:function(){return '每 5 秒召喚一台環繞無人機助陣';},apply:function(){recalc();}},
   pcleave:{ic:'🌀',name:'劈斬',color:'#ff8a3a',max:5,desc:function(){return '擊殺時對「近身」周圍必定濺射傷害';},apply:function(){recalc();}},
   pretaliate:{ic:'💥',name:'反擊波',color:'#ff6a3d',max:5,desc:function(){return '受傷時震開周圍敵人並造成傷害';},apply:function(){recalc();}},
-  pmomentum:{ic:'🔥',name:'動能',color:'#ffd54a',max:5,desc:function(){return '連擊越高傷害越高（滿級 200 連擊 +100%）';},apply:function(){recalc();}},
+  pmomentum:{ic:'🔥',name:'動能',color:'#ffd54a',max:5,desc:function(){return '連擊越高傷害越高，並隨連擊提升攻擊速度（越連越快）';},apply:function(){recalc();}},
   pshock:{ic:'⚡',name:'感電力場',color:'#c58bff',max:5,desc:function(){return '每 1.4 秒對周圍敵人放出連鎖電弧';},apply:function(){recalc();}},
   pburn:{ic:'🔥',name:'灼燒',color:'#ff6a2b',max:5,desc:function(){return '攻擊有機率點燃敵人，持續造成灼燒傷害';},apply:function(){recalc();}},
-  pcoldblood:{ic:'🧊',name:'寒血',color:'#8bd3ff',max:5,desc:function(){return '對減速或凍結中的敵人 +14% 傷害';},apply:function(){recalc();}},
+  pcoldblood:{ic:'🧊',name:'寒血',color:'#8bd3ff',max:5,desc:function(){return '對減速敵 +14% 傷害；對「凍結」敵額外碎冰重傷（再+20%/級）';},apply:function(){recalc();}},
   pshrapnel:{ic:'💥',name:'破片',color:'#ffd54a',max:5,desc:function(){return '擊殺炸出遠距高速貫穿彈片，掃射四方';},apply:function(){recalc();}},
   psecondwind:{ic:'🌬️',name:'二度呼吸',color:'#5dff9b',max:5,desc:function(){return '生命低於 30% 時自動回復一次（有冷卻）';},apply:function(){recalc();}},
   psharpshoot:{ic:'🎯',name:'精準射手',color:'#ffce54',max:5,desc:function(){return '對 300px 外的遠敵增傷，且越遠越致命（距離遞增）';},apply:function(){recalc();}},
@@ -1947,7 +1947,7 @@ function hitEnemy(e,amount,fromx,fromy,knock){
   if(e.hp<=0)return; if(e.phaseEnd&&e.phaseEnd>G.time){ e.flash=0.08; return; }   // 相位詞綴：無敵窗內免疫傷害
   if(e.affix==='shielded')amount*=0.5;   // 護盾詞綴：減傷 50%
   if(e.boss&&player.bossDmg>1)amount*=player.bossDmg;   // 屠龍核心：對首領增傷
-  if(player.coldblood>0&&((e.frozen||0)>0||(e.slow||0)>0))amount*=(1+0.14*player.coldblood);   // 寒血被動：對減速/凍結敵人增傷
+  if(player.coldblood>0&&((e.frozen||0)>0||(e.slow||0)>0))amount*=(1+0.14*player.coldblood+((e.frozen||0)>0?0.2*player.coldblood:0));   // 寒血：對減速敵增傷；對「凍結」敵額外碎冰重傷(每級再+20%)
   if(player.overpower>0&&e.hp>e.maxHp*0.5){ amount*=(1+0.10*player.overpower); if(!e.boss){ var opa=Math.atan2(e.y-player.y,e.x-player.x); e.knx+=Math.cos(opa)*player.overpower*20; e.kny+=Math.sin(opa)*player.overpower*20; } }   // 壓制：對高血敵增傷 + 附加擊退(把肉盾震開)
   if(player.sharpshoot>0){ var _ssd=dist2(e.x,e.y,player.x,player.y); if(_ssd>90000){ var _far=Math.min(3,Math.sqrt(_ssd)/300); amount*=(1+0.10*player.sharpshoot*_far); } }   // 精準射手：對遠敵增傷，且越遠越致命(距離遞增)
   if(player.charge>0){ player._hc=(player._hc||0)+1; if(player._hc>=(9-player.charge)){ player._hc=0; amount*=(1.5+0.5*player.charge); ringFx(e.x,e.y,e.r*2.2,'#ffd54a'); } }   // 蓄能爆擊：每隔數擊觸發暴增傷害
@@ -2131,7 +2131,7 @@ function update(dt){
   for(var wi=0;wi<player.weapons.length;wi++){ var w=player.weapons[wi];
     if(w.def.orbit)continue;
     var src=w.evolved?w.def.evo:w.def;
-    w.cd-=dt*player.fireRate*(player.frenzyT>0?1.6:1)*(player.overdriveT>0?1.5:1)*(player.jamT>0?0.5:1); if(w.cd<=0){ w.cd=src.cd(w.level)*(w.asc?0.6:1); G.muzzleT=0.06;
+    w.cd-=dt*player.fireRate*(player.frenzyT>0?1.6:1)*(player.overdriveT>0?1.5:1)*(player.jamT>0?0.5:1)*(player.momentum>0?(1+0.0015*player.momentum*Math.min(200,G.combo||0)):1); if(w.cd<=0){ w.cd=src.cd(w.level)*(w.asc?0.6:1); G.muzzleT=0.06;
       var _tg=w.def.tag; GAudio.shoot&&GAudio.shoot(_tg==='光束'||_tg==='分光'||_tg==='旋轉'?'beam':(_tg==='單體'||_tg==='貫穿'||_tg==='狙擊'||_tg==='範圍'?'heavy':'norm'));   // 節流開火音(依武器類型)
       if(w.asc){ var _d=player.dmgMult,_a=player.amount,_ar=player.area; player.dmgMult*=2.2; player.amount+=2; player.area*=1.4;
         src.fire(w); player.dmgMult=_d; player.amount=_a; player.area=_ar; }
@@ -3511,7 +3511,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v285 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v286 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

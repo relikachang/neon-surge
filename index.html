@@ -642,6 +642,7 @@ var MUTATORS=[
   {id:'locust',    name:'蝗災日',    desc:'鋪天蓋地的脆弱蟲潮 · 你也更脆', eSpd:1.3,eHp:0.35,spawn:2.0,elite:1,pHp:0.7,pDmg:1.2,pSpd:1.15},
   {id:'fortress',  name:'鐵壁日',    desc:'敵人稀少但堅如鐵壁 · 你更肉更慢', eSpd:0.85,eHp:2.6,spawn:0.7,elite:2,pHp:1.5,pDmg:1,pSpd:0.9},
   {id:'frenzyfest',name:'狂歡日',    desc:'敵我皆極速 · 精英成群 · 高風險高爽度', eSpd:1.45,eHp:0.85,spawn:1.55,elite:3,pHp:0.85,pDmg:1.45,pSpd:1.35},
+  {id:'giants',    name:'巨人日',    desc:'極少數超巨獸現世 · 你火力全開', eSpd:0.7,eHp:3.2,spawn:0.4,elite:1,pHp:1,pDmg:1.7,pSpd:1},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
@@ -1202,8 +1203,9 @@ var PDEFS={
   pshock:{ic:'⚡',name:'感電力場',color:'#c58bff',max:5,desc:function(){return '每 1.4 秒對周圍敵人放出連鎖電弧';},apply:function(){recalc();}},
   pburn:{ic:'🔥',name:'灼燒',color:'#ff6a2b',max:5,desc:function(){return '攻擊有機率點燃敵人，持續造成灼燒傷害';},apply:function(){recalc();}},
   pcoldblood:{ic:'🧊',name:'寒血',color:'#8bd3ff',max:5,desc:function(){return '對減速或凍結中的敵人 +14% 傷害';},apply:function(){recalc();}},
+  pshrapnel:{ic:'💥',name:'破片',color:'#ffd54a',max:5,desc:function(){return '擊殺敵人時炸出高速破片，波及周圍';},apply:function(){recalc();}},
 };
-var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck','pglass','pfreeze','poverpower','pveteran','pdrone','pcleave','pretaliate','pmomentum','pshock','pburn','pcoldblood'];
+var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck','pglass','pfreeze','poverpower','pveteran','pdrone','pcleave','pretaliate','pmomentum','pshock','pburn','pcoldblood','pshrapnel'];
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -1452,6 +1454,7 @@ function recalc(){
   player.shock=(p.pshock||0);   // 感電力場：週期連鎖電弧
   player.burn=(p.pburn||0);   // 灼燒：攻擊機率點燃，持續傷害
   player.coldblood=(p.pcoldblood||0);   // 寒血：對減速/凍結敵人增傷
+  player.shrapnel=(p.pshrapnel||0);   // 破片：擊殺炸出高速破片
   player.fury=0.08*(p.pfury||0);   // 血怒：依失血比例提升傷害
   player.luckBonus=0.05*(p.pluck||0);   // 幸運：提升道具掉落率
   player.shardMul=1+0.15*(p.pluck||0);  // 幸運：提升碎片獲取
@@ -1692,6 +1695,7 @@ function killEnemy(e){
   e.dead=true; G.kills++; if(e.elite){G.eliteKills=(G.eliteKills||0)+1; GAudio.elite&&GAudio.elite();} addCombo();
   if(player.lifesteal>0&&player.hp<player.maxHp){ player.hp=Math.min(player.maxHp,player.hp+player.lifesteal); }   // 吸血被動：擊殺回血
   if(player.cleave>0&&(G._clv||0)<4){ G._clv=(G._clv||0)+1; var clr=(50+player.cleave*14)*player.area, clr2=clr*clr, cvd=dmg(8+player.cleave*5); enemyGrid.query(e.x,e.y,clr,function(o){ if(o.hp>0&&o!==e&&dist2(o.x,o.y,e.x,e.y)<clr2)hitEnemy(o,cvd,e.x,e.y,0.1); }); ringFx(e.x,e.y,clr,'#ff8a3a'); G._clv--; }   // 劈斬：擊殺濺射(深度上限4防爆棧)
+  if(player.shrapnel>0){ var shn=2+player.shrapnel, shd=dmg(6+player.shrapnel*4); for(var shi=0;shi<shn;shi++){ var sha=shi/shn*TAU+rand(-0.3,0.3); spawnBullet(e.x,e.y,Math.cos(sha),Math.sin(sha),540,shd,'#ffd54a',1,4,0.5); } }   // 破片：擊殺炸出高速破片
   if(player.chain>0&&!e.boss&&(G._chd||0)<3&&Math.random()<player.chain){ G._chd=(G._chd||0)+1; var chr=90*player.area, chr2=chr*chr, cx=e.x, cy=e.y;   // 連鎖爆破：擊殺引發範圍爆炸(深度上限3防止無限遞迴)
     ringFx(cx,cy,chr,'#ffb347'); burst(cx,cy,'#ffb347',10,200); enemyGrid.query(cx,cy,chr,function(o){ if(o!==e&&o.hp>0&&dist2(o.x,o.y,cx,cy)<chr2)hitEnemy(o,dmg(22),cx,cy,0.25); }); G._chd--; }
   if(e.type&&!DB.bestiary[e.type]){ DB.bestiary[e.type]=true; saveDB(); }   // 怪物圖鑑：首次擊殺即解鎖
@@ -1736,8 +1740,8 @@ function killEnemy(e){
   // 掉落道具
   var lchance=0.02+G.luck+(player.luckBonus||0);
   if(e.boss){ spawnPickup(e.x,e.y,'bosschest'); G.bossKills=(G.bossKills||0)+1; }   // 首領：超級戰利品
-  else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','revivecharm','thunderstorm','jackpot','nuke','fullheal','repel','stasis','overdrive','purify','phaseshift','lightstorm'])); }   // 精英必掉道具
-  else if(Math.random()<lchance){ spawnPickup(e.x,e.y,pick(['heal','heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','thunderstorm','overdrive','purify','phaseshift','lightstorm'])); }
+  else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','revivecharm','thunderstorm','jackpot','nuke','fullheal','repel','stasis','overdrive','purify','phaseshift','lightstorm','emppulse'])); }   // 精英必掉道具
+  else if(Math.random()<lchance){ spawnPickup(e.x,e.y,pick(['heal','heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','thunderstorm','overdrive','purify','phaseshift','lightstorm','emppulse'])); }
   if(e.boss){ announce('首領擊破！','#ffd54a'); G.shards+=Math.floor(20*(1+0.15*metaLv('greed'))*(1+0.2*metaLv('bounty'))); }
 }
 function addCombo(){ G.combo++; G.comboTimer=2.2*(1+0.15*metaLv('combo')); if(G.combo>G.peakCombo)G.peakCombo=G.combo;
@@ -2127,6 +2131,7 @@ function collectPickup(p){
   else if(p.type==='purify'){ ebullets.length=0; player.iframe=Math.max(player.iframe,1.5); for(var pf=0;pf<3;pf++)ringFx(player.x,player.y,180+pf*120,'#dffcff'); flashScreen('223,252,255',0.3); floatText('✨ 淨化領域！清空敵彈 + 短暫無敵','#dffcff'); }
   else if(p.type==='phaseshift'){ var pst=nearestEnemy(player.x,player.y,9999); var psa=pst?Math.atan2(player.y-pst.y,player.x-pst.x):rand(0,TAU); ringFx(player.x,player.y,60,'#c98bff'); player.x+=Math.cos(psa)*300; player.y+=Math.sin(psa)*300; player.iframe=Math.max(player.iframe,1.2); ringFx(player.x,player.y,80,'#c98bff'); ringFx(player.x,player.y,40,'#fff'); flashScreen('201,139,255',0.28); floatText('🌀 相位閃現！瞬移脫離險境','#c98bff'); }
   else if(p.type==='lightstorm'){ var lcol=['#ff5e5e','#ffd54a','#5dff9b','#22e6ff','#c98bff','#ff9de0']; for(var ls=0;ls<18;ls++){ var la=ls/18*TAU+G.time; fireBeam(la,dmg(60),900,14,lcol[ls%lcol.length]); } for(var lr=0;lr<3;lr++)ringFx(player.x,player.y,150+lr*130,'#ffffff'); flashScreen('220,240,255',0.4); shake(10); floatText('🌈 光棱風暴！全向光束橫掃','#dffcff'); }
+  else if(p.type==='emppulse'){ enemies.forEach(function(e){ if(e.hp>0){ if(!e.boss)e.frozen=Math.max(e.frozen||0,2); else e.frozen=Math.max(e.frozen||0,1); hitEnemy(e,dmg(40),player.x,player.y,0.2); } }); ebullets.length=0; for(var ep=0;ep<3;ep++)ringFx(player.x,player.y,200+ep*160,'#a0e8ff'); flashScreen('160,232,255',0.4); shake(12); floatText('⚡ 電磁脈衝！全場麻痺 + 電擊','#a0e8ff'); }
   else if(p.type==='shield'){ player.iframe=Math.max(player.iframe,4); ringFx(player.x,player.y,200,'#22e6ff'); floatText('無敵護盾！','#22e6ff'); }
   else if(p.type==='timefreeze'){ enemies.forEach(function(e){ if(!e.boss)e.frozen=Math.max(e.frozen||0,3); else e.frozen=Math.max(e.frozen||0,1.5); }); ringFx(player.x,player.y,420,'#7dd3ff'); flashScreen('125,211,255',0.32); floatText('時間凍結！','#7dd3ff'); }
   else if(p.type==='xpgem'){ gainXP(G.xpNeed*0.8); ringFx(player.x,player.y,180,'#22e6ff'); floatText('經驗寶石！','#22e6ff'); }
@@ -2676,7 +2681,7 @@ function drawPlayer(){
     for(var er=0;er<2;er++){ var ph=((G.time*1.6)+er*0.5)%1; ctx.globalAlpha=(1-ph)*0.55; ctx.strokeStyle='rgba('+pcol+',1)'; ctx.lineWidth=2.5;
       ctx.beginPath(); ctx.arc(player.x,player.y,pr+8+ph*34,0,TAU); ctx.stroke(); } ctx.restore(); ctx.globalAlpha=1; }
 }
-function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️',revivecharm:'🕊️',thunderstorm:'🌩️',jackpot:'🎰',nuke:'☢️',fullheal:'💚',repel:'💨',stasis:'⏳',overdrive:'⚙️',purify:'✨',phaseshift:'🌀',lightstorm:'🌈'}[p.type];
+function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'🎁',bosschest:'👑',frenzy:'🔥',shield:'🛡️',timefreeze:'⏱️',xpgem:'💎',shardbag:'🪙',heart:'💗',quake:'💠',clover:'🍀',squad:'🛰️',vortex:'🕳️',airstrike:'✈️',revivecharm:'🕊️',thunderstorm:'🌩️',jackpot:'🎰',nuke:'☢️',fullheal:'💚',repel:'💨',stasis:'⏳',overdrive:'⚙️',purify:'✨',phaseshift:'🌀',lightstorm:'🌈',emppulse:'⚡'}[p.type];
   var yy=p.y+Math.sin(G.time*4+p.x)*4;
   var pulse=0.5+0.5*Math.sin(G.time*5+p.x*0.1);
   // 依道具類型上色（回復=綠 / 防護=青 / 攻擊爆發=橙紅 / 財富=金 …），一眼辨識種類

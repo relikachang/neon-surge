@@ -118,6 +118,10 @@
   #combo{position:absolute;top:104px;left:50%;transform:translateX(-50%) scale(1);transform-origin:center top;font-size:20px;font-weight:900;
     color:var(--gold);text-shadow:0 0 14px rgba(255,213,74,.7);opacity:0;transition:opacity .2s,transform .12s,color .2s}
   #combo.pop{transform:translateX(-50%) scale(1.28)}
+  #combo.flame{background:linear-gradient(0deg,#ff2b2b 8%,#ff7a2b 42%,#ffd54a 74%,#fff6c0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent!important;
+    filter:drop-shadow(0 0 12px rgba(255,120,40,.95));animation:comboflame .42s ease-in-out infinite alternate}
+  #combo.flame.inferno{background:linear-gradient(0deg,#ff1f6d 6%,#ff2bd0 30%,#ff6a2b 62%,#ffe14a 88%,#fff)}
+  @keyframes comboflame{from{filter:drop-shadow(0 0 8px rgba(255,80,30,.8)) drop-shadow(0 2px 3px rgba(255,40,20,.5))}to{filter:drop-shadow(0 0 20px rgba(255,190,70,1)) drop-shadow(0 -2px 4px rgba(255,120,30,.7))}}
   #announce2{position:absolute;top:36%;left:50%;transform:translateX(-50%);font-size:min(8vw,52px);font-weight:900;
     letter-spacing:3px;text-align:center;opacity:0;pointer-events:none;text-shadow:0 0 30px currentColor}
   #bossintro{position:absolute;top:30%;left:0;width:100%;text-align:center;pointer-events:none;opacity:0;z-index:60}
@@ -1912,6 +1916,7 @@ function addCombo(){ G.combo++; G.comboTimer=2.2*(1+0.15*metaLv('combo')); if(G.
   if(G.combo>=5){ var c=$('combo'); c.textContent='連擊 x'+G.combo+'  XP+'+Math.round(Math.min(1,G.combo*0.01)*100)+'%'; c.style.opacity='1';
     var cc=G.combo>=200?'#ff2bd0':G.combo>=100?'#ff5a3a':G.combo>=50?'#ff9a3d':G.combo>=25?'#ffd54a':'#ffe89a';   // 連擊分級變色
     c.style.color=cc; c.style.textShadow='0 0 16px '+cc;
+    c.classList.toggle('flame',G.combo>=50); c.classList.toggle('inferno',G.combo>=150);   // 高連擊：燃燒火焰數字
     c.classList.add('pop'); clearTimeout(addCombo._pt); addCombo._pt=setTimeout(function(){c.classList.remove('pop');},120); }   // 每次增擊彈跳
   if(G.combo>=10)GAudio.comboBlip&&GAudio.comboBlip(G.combo);   // 高連擊：音高遞增回饋
   if(G.combo===25||G.combo===50||G.combo===100||G.combo===200||G.combo===350||G.combo===500){ // 連擊里程碑：狂化 + 碎片獎勵 + 華麗特效
@@ -1982,7 +1987,7 @@ function loop(ts){ if(!running)return; requestAnimationFrame(loop);
 function update(dt){
   G.time+=dt;
   // combo 衰減
-  if(G.comboTimer>0){ G.comboTimer-=dt; if(G.comboTimer<=0){ if(G.combo>=15)floatText('連擊中斷 x'+G.combo,'#ff8a3a'); G.combo=0;$('combo').style.opacity='0';} }
+  if(G.comboTimer>0){ G.comboTimer-=dt; if(G.comboTimer<=0){ if(G.combo>=15)floatText('連擊中斷 x'+G.combo,'#ff8a3a'); G.combo=0; var cb=$('combo'); cb.style.opacity='0'; cb.classList.remove('flame','inferno');} }
   // ---- 玩家移動 ----
   var mx=0,my=0;
   if(keys.KeyW||keys.ArrowUp)my-=1; if(keys.KeyS||keys.ArrowDown)my+=1;
@@ -2871,6 +2876,16 @@ function drawEnemy(e){
   if(e.boss&&e.enraged){ ctx.save(); ctx.globalCompositeOperation='lighter'; var eaug=e.frenzied?'#ff1030':'#ff2b5e', eap=0.28+0.24*Math.abs(Math.sin(G.time*(e.frenzied?12:7)));
     ctx.globalAlpha=eap; ctx.drawImage(glow(eaug),-r*2.4,-r*2.4,r*4.8,r*4.8);
     ctx.strokeStyle=eaug; ctx.lineWidth=2.5; ctx.globalAlpha=0.6; for(var ek=0;ek<10;ek++){ var eka=G.time*(e.frenzied?4:2)+ek/10*TAU, el=r*(1.4+0.3*Math.sin(G.time*8+ek)); ctx.beginPath(); ctx.moveTo(Math.cos(eka)*r,Math.sin(eka)*r); ctx.lineTo(Math.cos(eka)*el,Math.sin(eka)*el); ctx.stroke(); } ctx.restore(); }
+  // 首領外型差異化：依攻擊型態賦予各異外形結構，讓每種首領一眼可辨
+  if(e.boss){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.strokeStyle=e.color; ctx.fillStyle=e.color; ctx.shadowColor=e.color; ctx.shadowBlur=10; var pt=e.pattern, bsp=(e.spin||0);
+    if(pt==='spiral'||pt==='pulsar'){ ctx.globalAlpha=0.4; ctx.lineWidth=3; for(var q=0;q<3;q++){ ctx.beginPath(); for(var aa=0;aa<22;aa++){ var ta=aa/22*4+bsp+q/3*TAU, rr=r*0.5+aa*r*0.055; (aa?ctx.lineTo:ctx.moveTo).call(ctx,Math.cos(ta)*rr,Math.sin(ta)*rr);} ctx.stroke(); } }   // 螺旋臂
+    else if(pt==='twin'){ ctx.globalAlpha=0.55; for(var s2=0;s2<2;s2++){ var sx=(s2?1:-1)*r*1.2; ctx.beginPath(); ctx.ellipse(sx,0,r*0.4,r*0.72,0,0,TAU); ctx.fill(); } }   // 雙砲艙
+    else if(pt==='cross'||pt==='radial'){ ctx.globalAlpha=0.5; ctx.lineWidth=r*0.18; ctx.lineCap='round'; ctx.save(); ctx.rotate(bsp*0.5); for(var c2=0;c2<4;c2++){ ctx.rotate(TAU/4); ctx.beginPath(); ctx.moveTo(0,-r*0.4); ctx.lineTo(0,-r*1.7); ctx.stroke(); } ctx.restore(); }   // 十字利刃
+    else if(pt==='gravity'||pt==='paradoxnova'){ ctx.globalAlpha=0.4; ctx.lineWidth=2.4; for(var g2=0;g2<3;g2++){ ctx.beginPath(); ctx.ellipse(0,0,r*(1.2+g2*0.28),r*(0.5+g2*0.14),bsp*(g2%2?1:-1),0,TAU); ctx.stroke(); } }   // 環繞軌道環
+    else if(pt==='seeker'||pt==='aimburst'){ ctx.globalAlpha=0.55; ctx.lineWidth=2.4; ctx.save(); ctx.rotate(Math.atan2(player.y-e.y,player.x-e.x)); ctx.beginPath(); ctx.moveTo(r*0.6,-r*0.5); ctx.lineTo(r*1.7,0); ctx.lineTo(r*0.6,r*0.5); ctx.closePath(); ctx.stroke(); ctx.beginPath(); ctx.arc(r*1.15,0,r*0.2,0,TAU); ctx.stroke(); ctx.restore(); }   // 索敵探頭
+    else if(pt==='wall'||pt==='charge'){ ctx.globalAlpha=0.5; ctx.lineWidth=r*0.16; for(var w2=0;w2<5;w2++){ var wa=-0.62+w2*0.31; ctx.beginPath(); ctx.arc(0,0,r*1.35,wa-0.11,wa+0.11); ctx.stroke(); } }   // 前方盾板
+    else { ctx.globalAlpha=0.6; for(var m2=0;m2<5;m2++){ var ma=bsp*0.6+m2/5*TAU; ctx.beginPath(); ctx.arc(Math.cos(ma)*r*1.42,Math.sin(ma)*r*1.42,r*0.2,0,TAU); ctx.fill(); } }   // 環繞岩塊/地雷(meteor/minefield 等)
+    ctx.restore(); }
   // 首領：威壓尖冠 + 旋轉裝飾光環
   if(e.boss){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.strokeStyle=e.color; ctx.globalAlpha=0.45; ctx.lineWidth=2; ctx.shadowColor=e.color; ctx.shadowBlur=10;
     var spk=12, sr=r*1.42+4*Math.sin(G.time*3); ctx.beginPath(); for(var spi=0;spi<=spk;spi++){ var sa2=(e.spin||0)*0.5+spi/spk*TAU, ri=(spi%2?sr*1.16:sr); (spi?ctx.lineTo:ctx.moveTo).call(ctx,Math.cos(sa2)*ri,Math.sin(sa2)*ri);} ctx.stroke();

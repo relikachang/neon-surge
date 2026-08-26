@@ -1869,6 +1869,10 @@ function bossIntro(name,color){ var el=$('bossintro'); if(!el)return; el.style.c
   var nm=el.querySelector('.bi-name'), wn=el.querySelector('.bi-warn'); if(nm){nm.textContent=name; nm.style.color=color;} if(wn)wn.style.color=color;
   el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
 function bossAttack(e,dx,dy){
+  // 階段專屬加招：狂暴/絕命後在原招之上額外疊加更兇的攻擊(節流,越後期越密集)
+  if(e.enraged){ e._sp=(e._sp||0)+1;
+    if(e.frenzied && e._sp%2===0){ for(var fk=0;fk<24;fk++){ var fka=fk/24*TAU+rand(-0.04,0.04); spawnEnemyBullet(e.x,e.y,Math.cos(fka),Math.sin(fka),240,e.dmg*0.5); } ringFx(e.x,e.y,130,e.color); ringFx(e.x,e.y,70,'#fff'); }   // 絕命：全環彈幕爆
+    else if(e._sp%3===0){ var eba=Math.atan2(dy,dx); for(var sk=-1;sk<=1;sk++)spawnEnemyBullet(e.x,e.y,Math.cos(eba+sk*0.26),Math.sin(eba+sk*0.26),190,e.dmg*0.55,1.5); ringFx(e.x,e.y,50,e.color); } }   // 狂暴：朝玩家追蹤三連
   if(e.pattern==='spiral'){ e.spin+=0.6; for(var k=0;k<12;k++){var a=k/12*TAU+e.spin; spawnEnemyBullet(e.x,e.y,Math.cos(a),Math.sin(a),215,e.dmg*0.55);}
     e.tp++; if(e.tp%4===0){ var ta=rand(0,TAU); e.x=player.x+Math.cos(ta)*330; e.y=player.y+Math.sin(ta)*330; ringFx(e.x,e.y,70,e.color); } }
   else if(e.pattern==='charge'){ for(var k=0;k<8;k++){var a=k/8*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(a),Math.sin(a),200,e.dmg*0.5);}
@@ -3520,7 +3524,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v288 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v289 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

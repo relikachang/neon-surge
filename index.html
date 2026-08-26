@@ -2317,16 +2317,28 @@ function render(){
   // 環境危害：熔岩池
   for(var i=0;i<hazards.length;i++){ var hz=hazards[i], ha=Math.max(0,hz.life/hz.max);
     if(hz.kind==='strike'){ ctx.save();
-      if(hz.warn>0){ var wp=1-hz.warn/1.1; ctx.globalAlpha=0.15+wp*0.25; ctx.fillStyle='#3df0c8'; ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r,0,TAU); ctx.fill();
-        ctx.globalAlpha=0.6+0.4*Math.sin(G.time*20); ctx.lineWidth=3; ctx.strokeStyle='#3df0c8'; ctx.setLineDash([9,7]); ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r,0,TAU); ctx.stroke(); ctx.setLineDash([]); }
-      else { ctx.globalAlpha=Math.max(0,hz.life/0.3)*0.7; ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r,0,TAU); ctx.fill(); }
+      if(hz.warn>0){ var wp=1-hz.warn/1.1;   // 收縮瞄準 + 十字準星 + 危險紅底，倒數更明確
+        ctx.globalCompositeOperation='lighter';
+        ctx.globalAlpha=0.10+wp*0.22; ctx.fillStyle='#ff4d5e'; ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r,0,TAU); ctx.fill();
+        var tr=hz.r*(1.85-wp*0.85); ctx.globalAlpha=0.5+0.4*Math.sin(G.time*20); ctx.lineWidth=3; ctx.strokeStyle='#ff9a3d'; ctx.setLineDash([9,7]); ctx.beginPath(); ctx.arc(hz.x,hz.y,tr,0,TAU); ctx.stroke(); ctx.setLineDash([]);
+        ctx.globalAlpha=0.7; ctx.lineWidth=2; ctx.strokeStyle='#ffce54'; ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r,0,TAU); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(hz.x-hz.r,hz.y); ctx.lineTo(hz.x+hz.r,hz.y); ctx.moveTo(hz.x,hz.y-hz.r); ctx.lineTo(hz.x,hz.y+hz.r); ctx.stroke(); }
+      else { var ff=Math.max(0,hz.life/0.3); ctx.globalCompositeOperation='lighter';   // 命中：白熱閃焰 + 擴張衝擊環 + 放射
+        ctx.globalAlpha=ff*0.85; ctx.drawImage(glow('#ffffff'),hz.x-hz.r,hz.y-hz.r,hz.r*2,hz.r*2);
+        ctx.globalAlpha=ff*0.9; ctx.strokeStyle='#ffd08a'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r*(1.15-ff*0.35),0,TAU); ctx.stroke();
+        ctx.strokeStyle='#ffffff'; ctx.lineWidth=2; for(var sk=0;sk<6;sk++){ var ska=sk/6*TAU+hz.x*0.1; ctx.beginPath(); ctx.moveTo(hz.x+Math.cos(ska)*hz.r*0.3,hz.y+Math.sin(ska)*hz.r*0.3); ctx.lineTo(hz.x+Math.cos(ska)*hz.r*1.15,hz.y+Math.sin(ska)*hz.r*1.15); ctx.stroke(); } }
       ctx.restore(); continue; }
     var hzPull=hz.kind==='pull', hzC=hzPull?'#8b5cf6':'#ff5a2b', hzE=hzPull?'#c98bff':'#ffb347';
-    ctx.save(); ctx.globalAlpha=0.34*ha; ctx.fillStyle=hzC; ctx.shadowColor=hzC; ctx.shadowBlur=22;
-    ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r,0,TAU); ctx.fill();
-    if(hzPull){ ctx.globalAlpha=0.8*ha; ctx.lineWidth=3; ctx.strokeStyle=hzE;
-      for(var k=0;k<3;k++){ ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r*(0.35+k*0.22),(G.time*2+k)%TAU,(G.time*2+k)%TAU+4.4); ctx.stroke(); } }
-    else { ctx.globalAlpha=0.7*ha; ctx.lineWidth=3; ctx.strokeStyle=hzE; ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r,0,TAU); ctx.stroke(); }
+    ctx.save();
+    if(hzPull){ ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.3*ha; ctx.fillStyle=hzC; ctx.shadowColor=hzC; ctx.shadowBlur=22; ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r,0,TAU); ctx.fill();
+      ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=0.5*ha; ctx.fillStyle='#160428'; ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r*0.3,0,TAU); ctx.fill();
+      ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.85*ha; ctx.lineWidth=3; ctx.strokeStyle=hzE; ctx.shadowBlur=0;
+      for(var k=0;k<3;k++){ ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r*(0.35+k*0.22),(G.time*2+k)%TAU,(G.time*2+k)%TAU+4.4); ctx.stroke(); }
+      ctx.lineWidth=2; for(var sp=0;sp<8;sp++){ var spa=-G.time*3+sp/8*TAU, r1=hz.r*0.95, r2=hz.r*(0.55+0.2*Math.sin(G.time*4+sp)); ctx.globalAlpha=0.5*ha; ctx.beginPath(); ctx.moveTo(hz.x+Math.cos(spa)*r1,hz.y+Math.sin(spa)*r1); ctx.lineTo(hz.x+Math.cos(spa)*r2,hz.y+Math.sin(spa)*r2); ctx.stroke(); } }
+    else { ctx.globalAlpha=0.32*ha; ctx.fillStyle=hzC; ctx.shadowColor=hzC; ctx.shadowBlur=22; ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r,0,TAU); ctx.fill();
+      ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.5*ha; ctx.fillStyle=hzE; ctx.shadowBlur=0;
+      for(var bb=0;bb<4;bb++){ var bang=(hz.x*0.3+bb*1.7), bd=hz.r*(0.2+0.5*((Math.sin(G.time*2.5+bb*2+hz.x)+1)/2)), brad=hz.r*(0.1+0.07*Math.sin(G.time*5+bb)); ctx.beginPath(); ctx.arc(hz.x+Math.cos(bang)*bd,hz.y+Math.sin(bang)*bd,Math.max(1,brad),0,TAU); ctx.fill(); }
+      ctx.globalAlpha=0.7*ha; ctx.lineWidth=3; ctx.strokeStyle=hzE; ctx.beginPath(); ctx.arc(hz.x,hz.y,hz.r,0,TAU); ctx.stroke(); }
     ctx.restore(); }
 
   // 黑洞重力井
@@ -2555,11 +2567,12 @@ function drawPlayer(){
   G._pf=(G._pf||0)+1;
   var lastp=player.trail.length?player.trail[player.trail.length-1]:null;
   var movedFar=!lastp||Math.hypot(player.x-lastp.x,player.y-lastp.y)>4;
-  if(G._pf%2===0){ if(movedFar){ player.trail.push({x:player.x,y:player.y,ang:player.aimAngle}); if(player.trail.length>7)player.trail.shift(); } else if(player.trail.length){ player.trail.shift(); } }
-  var trFren=player.frenzyT>0, trPr=player.radius;
+  if(G._pf%2===0){ if(movedFar){ player.trail.push({x:player.x,y:player.y,ang:player.aimAngle}); if(player.trail.length>9)player.trail.shift(); } else if(player.trail.length){ player.trail.shift(); } }
+  var trFren=player.frenzyT>0, trOv=player.overdriveT>0, trCol=trFren?'#ff5e5e':(trOv?'#ffe14a':'#22e6ff'), trPr=player.radius;
   ctx.save(); ctx.globalCompositeOperation='lighter';
-  for(var ti=0;ti<player.trail.length;ti++){ var tp=player.trail[ti]; var tal=(ti+1)/player.trail.length*0.26;
-    ctx.save(); ctx.translate(tp.x,tp.y); ctx.rotate(tp.ang+Math.PI/2); ctx.globalAlpha=tal; ctx.fillStyle=trFren?'#ff5e5e':'#22e6ff';
+  for(var ti=0;ti<player.trail.length;ti++){ var tp=player.trail[ti]; var tf=(ti+1)/player.trail.length, tal=tf*0.26;
+    ctx.globalAlpha=tf*0.20; var gsz=trPr*(1.3+tf*0.6); ctx.drawImage(glow(trCol),tp.x-gsz,tp.y-gsz,gsz*2,gsz*2);   // 柔光殘影球
+    ctx.save(); ctx.translate(tp.x,tp.y); ctx.rotate(tp.ang+Math.PI/2); ctx.globalAlpha=tal; ctx.fillStyle=trCol;
     ctx.beginPath(); ctx.moveTo(0,-trPr-2); ctx.lineTo(trPr*0.9,trPr); ctx.lineTo(0,trPr*0.5); ctx.lineTo(-trPr*0.9,trPr); ctx.closePath(); ctx.fill();
     ctx.restore(); }
   ctx.restore(); ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';

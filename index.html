@@ -1003,9 +1003,9 @@ var WDEFS={
     fire:function(w){ var ang=player.aimAngle, n=5+w.level+player.amount;
       for(var i=0;i<n;i++){ var a=ang+rand(-0.62,0.62);
         spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),rand(540,700),dmg(8+w.level*3),'#ffd54a',1,6,0.34);}
-      // 近身錐形衝擊：前方扇形強力擊退並附加傷害，賦予散彈招牌的近身爆發手感
-      var br=(120+w.level*8)*player.area, br2=br*br, bd=dmg(6+w.level*2);
-      enemyGrid.query(player.x,player.y,br,function(o){ if(o.hp>0){ var oa=Math.atan2(o.y-player.y,o.x-player.x), da=Math.abs(((oa-ang+Math.PI*3)%(Math.PI*2))-Math.PI); if(da<0.85&&dist2(o.x,o.y,player.x,player.y)<br2)hitEnemy(o,bd,player.x,player.y,0.7); } });
+      // 近身錐形衝擊：前方窄扇形擊退並附加傷害，賦予散彈招牌的近身爆發手感(主要靠彈丸輸出，衝擊偏控場)
+      var br=(100+w.level*6)*player.area, br2=br*br, bd=dmg(5+w.level*1.6);
+      enemyGrid.query(player.x,player.y,br,function(o){ if(o.hp>0){ var oa=Math.atan2(o.y-player.y,o.x-player.x), da=Math.abs(((oa-ang+Math.PI*3)%(Math.PI*2))-Math.PI); if(da<0.74&&dist2(o.x,o.y,player.x,player.y)<br2)hitEnemy(o,bd,player.x,player.y,0.7); } });
       ringFx(player.x,player.y,br*0.55,'#ffe08a'); },
     evo:{reqPassive:'pdmg',ic:'☄️',name:'殲滅者',color:'#ffd54a',desc:'向四面八方噴發高傷散彈風暴',
       cd:function(l){return Math.max(0.42,0.7-l*0.03);},
@@ -3528,7 +3528,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v290 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v291 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

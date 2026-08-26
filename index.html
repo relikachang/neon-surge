@@ -946,11 +946,11 @@ var WDEFS={
     }
   },
   missiles:{ic:'🚀',name:'追蹤飛彈',color:'#5dff9b',tag:'追蹤',max:8,
-    desc:function(l){return l===0?'自動鎖定的追蹤飛彈':'飛彈數↑ 傷害↑';},
-    cd:function(l){return Math.max(0.7,1.8-l*0.14);},
-    fire:function(w){ var n=1+Math.floor((w.level+1)/2)+player.amount;
+    desc:function(l){return l===0?'少量重型追蹤飛彈，命中引爆範圍傷害':'飛彈數↑ 傷害↑';},
+    cd:function(l){return Math.max(0.75,1.9-l*0.14);},
+    fire:function(w){ var n=1+Math.floor(w.level/3)+player.amount;
       for(var i=0;i<n;i++){ var a=rand(0,TAU);
-        spawnMissile(player.x,player.y,Math.cos(a),Math.sin(a),dmg(16+w.level*7));} },
+        spawnMissile(player.x,player.y,Math.cos(a),Math.sin(a),dmg(26+w.level*9));} },
     evo:{reqPassive:'ppick',ic:'💥',name:'飛彈風暴',color:'#7dff5d',desc:'成群追蹤飛彈齊射，命中引爆範圍傷害',
       cd:function(l){return Math.max(0.35,0.7-l*0.04);},
       fire:function(w){ var n=4+Math.floor(w.level/2); for(var i=0;i<n;i++){ var a=rand(0,TAU);
@@ -1149,19 +1149,17 @@ var WDEFS={
           ringFx(ex,ey,er,'#ffca4a'); burst(ex,ey,'#ffca4a',6,180); } shake(6); }
     }
   },
-  tesla:{ic:'⚡',name:'電磁線圈',color:'#7df9ff',tag:'連鎖',max:8,
-    desc:function(l){return l===0?'持續對周圍多個敵人放電':'放電目標數↑ 傷害↑ 範圍↑';},
-    cd:function(l){return Math.max(0.18,0.4-l*0.03);},
-    fire:function(w){ var num=2+Math.floor(w.level/2), r=(320+w.level*20)*player.area, r2=r*r, hit=[];
-      enemyGrid.query(player.x,player.y,r,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<r2)hit.push(e); });
-      hit.sort(function(a,b){return dist2(a.x,a.y,player.x,player.y)-dist2(b.x,b.y,player.x,player.y);});
-      for(var i=0;i<num&&i<hit.length;i++){ hitEnemy(hit[i],dmg(12+w.level*4),player.x,player.y,0.1); fxLightning(player.x,player.y,hit[i].x,hit[i].y); } },
-    evo:{reqPassive:'pamount',ic:'🌩️',name:'雷霆線圈',color:'#aef4ff',desc:'放電目標倍增，範圍與傷害全面壓制',
-      cd:function(l){return 0.16;},
-      fire:function(w){ var num=5+w.level, r=(420+w.level*24)*player.area, r2=r*r, hit=[];
-        enemyGrid.query(player.x,player.y,r,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<r2)hit.push(e); });
-        hit.sort(function(a,b){return dist2(a.x,a.y,player.x,player.y)-dist2(b.x,b.y,player.x,player.y);});
-        for(var i=0;i<num&&i<hit.length;i++){ hitEnemy(hit[i],dmg(18+w.level*6),player.x,player.y,0.1); fxLightning(player.x,player.y,hit[i].x,hit[i].y); } }
+  tesla:{ic:'🌀',name:'電磁線圈',color:'#7df9ff',tag:'電場',max:8,
+    desc:function(l){return l===0?'環身持續電場，電擊範圍內所有敵人':'範圍↑ 傷害↑';},
+    cd:function(l){return Math.max(0.16,0.34-l*0.024);},
+    fire:function(w){ var r=(150+w.level*14)*player.area, r2=r*r, d=dmg(5+w.level*2.4), cnt=0, near=null, nd=r2;
+      enemyGrid.query(player.x,player.y,r,function(e){ if(cnt<18&&e.hp>0){ var dd=dist2(e.x,e.y,player.x,player.y); if(dd<r2){ cnt++; hitEnemy(e,d,player.x,player.y,0.04); if(dd<nd){nd=dd;near=e;} } } });
+      if(cnt>0){ ringFx(player.x,player.y,r,'#7df9ff'); if(near&&Math.random()<0.6)fxLightning(player.x,player.y,near.x,near.y); } },
+    evo:{reqPassive:'pamount',ic:'🌩️',name:'雷霆風暴場',color:'#aef4ff',desc:'化為壓制全場的雷霆力場，範圍與傷害全面碾壓',
+      cd:function(l){return 0.14;},
+      fire:function(w){ var r=(260+w.level*24)*player.area, r2=r*r, d=dmg(9+w.level*3.4), cnt=0;
+        enemyGrid.query(player.x,player.y,r,function(e){ if(cnt<40&&e.hp>0&&dist2(e.x,e.y,player.x,player.y)<r2){ cnt++; hitEnemy(e,d,player.x,player.y,0.06); } });
+        if(cnt>0){ ringFx(player.x,player.y,r,'#aef4ff'); ringFx(player.x,player.y,r*0.6,'#fff'); for(var k=0;k<2;k++){ if(!enemies.length)break; var e=enemies[randi(0,enemies.length-1)]; if(e&&e.hp>0&&dist2(e.x,e.y,player.x,player.y)<r2)fxLightning(player.x,player.y,e.x,e.y); } } }
     }
   },
   starburst:{ic:'🎇',name:'星爆',color:'#ffcf5d',tag:'環射',max:8,
@@ -1206,14 +1204,14 @@ var WDEFS={
       fire:function(w){ var num=3+Math.floor(w.level/2)+player.amount; for(var i=0;i<num;i++){ var tg=randEnemyNear(player.x,player.y,800)||{x:player.x+rand(-260,260),y:player.y+rand(-260,260)}; var mx=tg.x+rand(-40,40),my=tg.y+rand(-40,40),mr=(110+w.level*10)*player.area,mr2=mr*mr,md=dmg(38+w.level*10); (function(mx,my,mr,mr2,md){ enemyGrid.query(mx,my,mr,function(o){ if(o.hp>0&&dist2(o.x,o.y,mx,my)<mr2)hitEnemy(o,md,mx,my,0.3); }); })(mx,my,mr,mr2,md); ringFx(mx,my,mr,'#ffca4a'); burst(mx,my,'#ffca4a',8,200); } shake(4); }
     }
   },
-  prismbeam:{ic:'🔺',name:'稜光炮',color:'#ff9de0',tag:'光束',max:8,
-    desc:function(l){return l===0?'朝敵群射出折射扇形光束':'光束數↑ 傷害↑';},
+  prismbeam:{ic:'🌈',name:'稜光炮',color:'#8bd0ff',tag:'分光',max:8,
+    desc:function(l){return l===0?'朝敵群折射出多道七彩分光束':'光束數↑ 傷害↑';},
     cd:function(l){return Math.max(0.3,0.6-l*0.04);},
     fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var ang=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle;
-      var num=3+Math.floor(w.level/2); for(var i=0;i<num;i++){ var a=ang+(i-(num-1)/2)*0.22; fireBeam(a,dmg(10+w.level*4),(440+w.level*24)*player.area,10*player.area,'#ff9de0'); } },
-    evo:{reqPassive:'pamount',ic:'🌈',name:'虹光稜鏡',color:'#c8f0ff',desc:'全方位彩虹光束綻放，籠罩全場',
+      var num=3+Math.floor(w.level/2); for(var i=0;i<num;i++){ var a=ang+(i-(num-1)/2)*0.2, hue=(i/num*300+G.time*60)%360; fireBeam(a,dmg(10+w.level*4),(440+w.level*24)*player.area,9*player.area,'hsl('+hue+',100%,66%)'); } },
+    evo:{reqPassive:'pamount',ic:'🌈',name:'虹光稜鏡',color:'#c8f0ff',desc:'全方位七彩光束綻放，籠罩全場',
       cd:function(l){return Math.max(0.22,0.5-l*0.03);},
-      fire:function(w){ var num=8+w.level; if(w._a==null)w._a=0; w._a+=0.25; for(var i=0;i<num;i++){ var a=w._a+i/num*TAU; fireBeam(a,dmg(12+w.level*4),(480+w.level*26)*player.area,11*player.area,'#c8f0ff'); } }
+      fire:function(w){ var num=8+w.level; if(w._a==null)w._a=0; w._a+=0.25; for(var i=0;i<num;i++){ var a=w._a+i/num*TAU, hue=(i/num*360+G.time*90)%360; fireBeam(a,dmg(12+w.level*4),(480+w.level*26)*player.area,10*player.area,'hsl('+hue+',100%,68%)'); } }
     }
   },
   shockwave:{ic:'🌊',name:'震盪波',color:'#7dd3ff',tag:'環繞',max:8,
@@ -1335,7 +1333,7 @@ var PDEFS={
   pexec:{ic:'☠️',name:'處決',color:'#ff2b5e',max:5,desc:function(){return '低於 4% 生命的普通敵人直接處決';},apply:function(){recalc();}},
   pshield:{ic:'🔰',name:'能量護盾',color:'#5dd3ff',max:5,desc:function(){return '定期生成護盾抵擋一次攻擊';},apply:function(){recalc();}},
   pthorns:{ic:'🌵',name:'荊棘',color:'#5dff9b',max:5,desc:function(){return '接觸你的敵人受到反傷';},apply:function(){recalc();}},
-  pchain:{ic:'💥',name:'連鎖爆破',color:'#ffb347',max:5,desc:function(){return '擊殺時 10% 機率引發範圍爆炸';},apply:function(){recalc();}},
+  pchain:{ic:'🔗',name:'連鎖電爆',color:'#ffb347',max:5,desc:function(){return '擊殺時引發在敵人間跳躍的連環電爆(跳躍數↑)';},apply:function(){recalc();}},
   pfrost:{ic:'🧊',name:'霜寒',color:'#8bd3ff',max:5,desc:function(){return '攻擊 10% 機率減速敵人';},apply:function(){recalc();}},
   pnova:{ic:'💫',name:'新星脈衝',color:'#ffd54a',max:5,desc:function(){return '每 2 秒在身邊釋放範圍衝擊波';},apply:function(){recalc();}},
   pfury:{ic:'🔥',name:'血怒',color:'#ff2b5e',max:5,desc:function(){return '生命越低傷害越高（滿級瀕死 +40%）';},apply:function(){recalc();}},
@@ -1345,13 +1343,13 @@ var PDEFS={
   poverpower:{ic:'⬆️',name:'壓制',color:'#ff8a3a',max:5,desc:function(){return '對高於半血的敵人 +10% 傷害';},apply:function(){recalc();}},
   pveteran:{ic:'🎖️',name:'百戰',color:'#ffd54a',max:5,desc:function(){return '每擊殺 100 傷害+1.5%（上限20層）';},apply:function(){recalc();}},
   pdrone:{ic:'🛰️',name:'召喚核心',color:'#5dffe0',max:5,desc:function(){return '每 5 秒召喚一台環繞無人機助陣';},apply:function(){recalc();}},
-  pcleave:{ic:'🌀',name:'劈斬',color:'#ff8a3a',max:5,desc:function(){return '擊殺敵人時對周圍造成濺射傷害';},apply:function(){recalc();}},
+  pcleave:{ic:'🌀',name:'劈斬',color:'#ff8a3a',max:5,desc:function(){return '擊殺時對「近身」周圍必定濺射傷害';},apply:function(){recalc();}},
   pretaliate:{ic:'💥',name:'反擊波',color:'#ff6a3d',max:5,desc:function(){return '受傷時震開周圍敵人並造成傷害';},apply:function(){recalc();}},
   pmomentum:{ic:'🔥',name:'動能',color:'#ffd54a',max:5,desc:function(){return '連擊越高傷害越高（滿級 200 連擊 +100%）';},apply:function(){recalc();}},
   pshock:{ic:'⚡',name:'感電力場',color:'#c58bff',max:5,desc:function(){return '每 1.4 秒對周圍敵人放出連鎖電弧';},apply:function(){recalc();}},
   pburn:{ic:'🔥',name:'灼燒',color:'#ff6a2b',max:5,desc:function(){return '攻擊有機率點燃敵人，持續造成灼燒傷害';},apply:function(){recalc();}},
   pcoldblood:{ic:'🧊',name:'寒血',color:'#8bd3ff',max:5,desc:function(){return '對減速或凍結中的敵人 +14% 傷害';},apply:function(){recalc();}},
-  pshrapnel:{ic:'💥',name:'破片',color:'#ffd54a',max:5,desc:function(){return '擊殺敵人時炸出高速破片，波及周圍';},apply:function(){recalc();}},
+  pshrapnel:{ic:'💥',name:'破片',color:'#ffd54a',max:5,desc:function(){return '擊殺炸出遠距高速貫穿彈片，掃射四方';},apply:function(){recalc();}},
   psecondwind:{ic:'🌬️',name:'二度呼吸',color:'#5dff9b',max:5,desc:function(){return '生命低於 30% 時自動回復一次（有冷卻）';},apply:function(){recalc();}},
   psharpshoot:{ic:'🎯',name:'精準射手',color:'#ffce54',max:5,desc:function(){return '對較遠的敵人（300px 外）+12% 傷害/級';},apply:function(){recalc();}},
   pcharge:{ic:'⚡',name:'蓄能爆擊',color:'#ffd54a',max:5,desc:function(){return '每隔數次命中，下一擊造成暴增傷害';},apply:function(){recalc();}},
@@ -1655,7 +1653,8 @@ function spawnBullet(x,y,dx,dy,sp,damage,color,pierce,r,life){
   bullets.push({x:x,y:y,vx:dx*sp,vy:dy*sp,dmg:damage,color:color,pierce:(pierce||1)+(player.pierceBonus||0),r:r||5,life:life||1.4,hitset:{},homing:0});
 }
 function spawnMissile(x,y,dx,dy,damage){
-  bullets.push({x:x,y:y,vx:dx*260,vy:dy*260,dmg:damage,color:'#5dff9b',pierce:1,r:5,life:3,hitset:{},homing:520,trail:0});
+  // 重型追蹤飛彈：體型大、飛行較穩、命中引爆範圍傷害（與蜂群的輕快小蜂彈區隔）
+  bullets.push({x:x,y:y,vx:dx*210,vy:dy*210,dmg:damage,color:'#5dff9b',pierce:1,r:7,life:3.4,hitset:{},homing:430,trail:0,explode:56});
 }
 function spawnEnemyBullet(x,y,dx,dy,sp,damage,home){ ebullets.push({x:x,y:y,vx:dx*sp,vy:dy*sp,dmg:damage,r:6,life:4,home:home||0,sp:sp}); }
 function spawnBoomerang(ang,damage,size){ var sp=560;
@@ -1898,9 +1897,9 @@ function killEnemy(e){
   e.dead=true; G.kills++; if(e.elite){G.eliteKills=(G.eliteKills||0)+1; GAudio.elite&&GAudio.elite();} addCombo();
   if(player.lifesteal>0&&player.hp<player.maxHp){ player.hp=Math.min(player.maxHp,player.hp+player.lifesteal); }   // 吸血被動：擊殺回血
   if(player.cleave>0&&(G._clv||0)<4){ G._clv=(G._clv||0)+1; var clr=(50+player.cleave*14)*player.area, clr2=clr*clr, cvd=dmg(8+player.cleave*5); enemyGrid.query(e.x,e.y,clr,function(o){ if(o.hp>0&&o!==e&&dist2(o.x,o.y,e.x,e.y)<clr2)hitEnemy(o,cvd,e.x,e.y,0.1); }); ringFx(e.x,e.y,clr,'#ff8a3a'); G._clv--; }   // 劈斬：擊殺濺射(深度上限4防爆棧)
-  if(player.shrapnel>0){ var shn=2+player.shrapnel, shd=dmg(6+player.shrapnel*4); for(var shi=0;shi<shn;shi++){ var sha=shi/shn*TAU+rand(-0.3,0.3); spawnBullet(e.x,e.y,Math.cos(sha),Math.sin(sha),540,shd,'#ffd54a',1,4,0.5); } }   // 破片：擊殺炸出高速破片
-  if(player.chain>0&&!e.boss&&(G._chd||0)<3&&Math.random()<player.chain){ G._chd=(G._chd||0)+1; var chr=90*player.area, chr2=chr*chr, cx=e.x, cy=e.y;   // 連鎖爆破：擊殺引發範圍爆炸(深度上限3防止無限遞迴)
-    ringFx(cx,cy,chr,'#ffb347'); burst(cx,cy,'#ffb347',10,200); enemyGrid.query(cx,cy,chr,function(o){ if(o!==e&&o.hp>0&&dist2(o.x,o.y,cx,cy)<chr2)hitEnemy(o,dmg(22),cx,cy,0.25); }); G._chd--; }
+  if(player.shrapnel>0){ var shn=3+player.shrapnel, shd=dmg(7+player.shrapnel*4); for(var shi=0;shi<shn;shi++){ var sha=shi/shn*TAU+rand(-0.2,0.2); spawnBullet(e.x,e.y,Math.cos(sha),Math.sin(sha),640,shd,'#ffd54a',2,4,1.5); } }   // 破片：擊殺炸出遠距高速貫穿彈片(可穿透、飛更遠)
+  if(player.chain>0&&!e.boss&&(G._chd||0)<2&&Math.random()<0.5+player.chain*0.08){ G._chd=(G._chd||0)+1;   // 連鎖爆破：擊殺引發在敵人間跳躍的連環電爆(深度上限2防遞迴)
+    var ct=nearestEnemy(e.x,e.y,240*240); if(ct){ chainLightning(e.x,e.y,ct,2+player.chain,dmg(16+player.chain*6)); } else { ringFx(e.x,e.y,60,'#ffb347'); burst(e.x,e.y,'#ffb347',8,180); } G._chd--; }
   if(e.type&&!DB.bestiary[e.type]){ DB.bestiary[e.type]=true; saveDB(); }   // 怪物圖鑑：首次擊殺即解鎖
   if(e.type==='phantom')G.rareKills=(G.rareKills||0)+1;
   if(e.type==='golden'){ // 黃金巨獸：大量碎片 + 保底道具 + 華麗特效
@@ -3407,7 +3406,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v269 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v270 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

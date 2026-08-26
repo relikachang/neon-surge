@@ -2599,10 +2599,16 @@ function render(){
     if(dr.mz>0){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=Math.max(0,dr.mz/0.1)*0.9; var mzs=10; ctx.drawImage(glow('#ffffff'),dr.x+Math.cos(dr.mza||0)*8-mzs,dr.y+Math.sin(dr.mza||0)*8-mzs,mzs*2,mzs*2); ctx.restore(); }   // 開火槍口閃光
     ctx.save(); ctx.translate(dr.x,dr.y);
     ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=da*0.5; ctx.drawImage(glow(dcol),-13,-13,26,26);
-    ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=da; ctx.rotate(dr.ang*2);
-    ctx.strokeStyle=dcol; ctx.lineWidth=2; ctx.shadowColor=dcol; ctx.shadowBlur=8; ctx.beginPath(); ctx.moveTo(-8,0); ctx.lineTo(8,0); ctx.moveTo(0,-8); ctx.lineTo(0,8); ctx.stroke();   // 旋翼
-    ctx.fillStyle=dcol; ctx.beginPath(); ctx.moveTo(0,-5); ctx.lineTo(4,0); ctx.lineTo(0,5); ctx.lineTo(-4,0); ctx.closePath(); ctx.fill();   // 機身
-    ctx.shadowBlur=0; ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(0,0,1.6,0,TAU); ctx.fill(); ctx.restore(); }   // 核心燈
+    ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=da;
+    // 六角機殼（緩轉）
+    ctx.save(); ctx.rotate(dr.ang*0.6); ctx.fillStyle='rgba(8,16,26,0.72)'; ctx.strokeStyle=dcol; ctx.lineWidth=1.6; ctx.shadowColor=dcol; ctx.shadowBlur=7;
+    ctx.beginPath(); for(var hh=0;hh<6;hh++){ var ha=hh/6*TAU; (hh?ctx.lineTo:ctx.moveTo).call(ctx,Math.cos(ha)*7,Math.sin(ha)*7);} ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+    // 四角旋翼（快轉短線）
+    ctx.strokeStyle=dcol; ctx.lineWidth=1.4; ctx.globalAlpha=da*0.85; ctx.shadowBlur=4;
+    for(var rt=0;rt<4;rt++){ var rta=rt/4*TAU+0.78; ctx.save(); ctx.translate(Math.cos(rta)*8,Math.sin(rta)*8); ctx.rotate(dr.ang*6); ctx.beginPath(); ctx.moveTo(-3.6,0); ctx.lineTo(3.6,0); ctx.stroke(); ctx.restore(); }
+    // 中央掃描眼（脈動）
+    ctx.shadowBlur=0; var dp=0.6+0.4*Math.sin(G.time*6+dr.x*0.1); ctx.fillStyle='#ffffff'; ctx.globalAlpha=da*dp; ctx.beginPath(); ctx.arc(0,0,2.5,0,TAU); ctx.fill();
+    ctx.fillStyle=dcol; ctx.globalAlpha=da; ctx.beginPath(); ctx.arc(0,0,1.3,0,TAU); ctx.fill(); ctx.restore(); }   // 核心燈
 
   // 地雷
   for(var i=0;i<mines.length;i++){ var mn=mines[i]; var blink=mn.arm>0?0.4:(0.5+0.5*Math.sin(Date.now()/120));
@@ -2775,6 +2781,21 @@ function drawGrid(camx,camy){ var s=64; ctx.strokeStyle=(G&&G.stage?G.stage.grid
   for(var x=x0;x<camx+W+s;x+=s){ ctx.moveTo(x,camy); ctx.lineTo(x,camy+H); }
   for(var y=y0;y<camy+H+s;y+=s){ ctx.moveTo(camx,y); ctx.lineTo(camx+W,y); }
   ctx.stroke();
+  // 關卡地面母題：依地圖類型於格點稀疏鋪上專屬地紋，讓每張地圖地面各具氛圍（每 2 格一個、低透明、低成本）
+  var st=G&&G.stage; if(st){ var id=st.id, ac=st.bossColor||'#6a86c8';
+    var motif=(id==='tundra')?'ice':(id==='inferno'||id==='core')?'lava':(id==='city'||id==='fortress')?'circuit':(id==='wastes'||id==='meteorite')?'crack':(id==='maelstrom'||id==='genesis'||id==='eventhorizon')?'swirl':'void';
+    var st2=s*2, bx=Math.floor(camx/st2)*st2, by=Math.floor(camy/st2)*st2;
+    ctx.save();
+    if(motif==='lava'){ ctx.globalCompositeOperation='lighter'; }
+    for(var gx=bx;gx<camx+W+st2;gx+=st2)for(var gy=by;gy<camy+H+st2;gy+=st2){ var seed=Math.sin(gx*0.021+gy*0.013)*43758.5, rn=seed-Math.floor(seed);
+      var ox=gx+((rn*40)|0)-20, oy=gy+(((rn*90)|0)%40)-20; ctx.beginPath();
+      if(motif==='ice'){ ctx.globalAlpha=0.16; ctx.strokeStyle='#bfe8ff'; ctx.lineWidth=1; for(var ic=0;ic<3;ic++){ var ia=ic/3*Math.PI+rn*2; ctx.moveTo(ox-Math.cos(ia)*7,oy-Math.sin(ia)*7); ctx.lineTo(ox+Math.cos(ia)*7,oy+Math.sin(ia)*7);} ctx.stroke(); }
+      else if(motif==='lava'){ ctx.globalAlpha=0.12+0.06*Math.sin(G.time*2+gx); ctx.strokeStyle='#ff6a2b'; ctx.lineWidth=1.6; ctx.moveTo(ox-8,oy-3); ctx.lineTo(ox-2,oy+2); ctx.lineTo(ox+6,oy-1); ctx.stroke(); ctx.fillStyle='#ffb04a'; ctx.globalAlpha*=1.2; ctx.beginPath(); ctx.arc(ox+6,oy-1,1.6,0,TAU); ctx.fill(); }
+      else if(motif==='circuit'){ ctx.globalAlpha=0.14; ctx.strokeStyle=ac; ctx.lineWidth=1; ctx.strokeRect(ox-4,oy-4,8,8); ctx.moveTo(ox+4,oy); ctx.lineTo(ox+14,oy); ctx.stroke(); ctx.fillStyle=ac; ctx.beginPath(); ctx.arc(ox+14,oy,1.5,0,TAU); ctx.fill(); }
+      else if(motif==='crack'){ ctx.globalAlpha=0.13; ctx.strokeStyle=ac; ctx.lineWidth=1.1; ctx.moveTo(ox,oy-7); ctx.lineTo(ox+2,oy); ctx.lineTo(ox-3,oy+3); ctx.lineTo(ox+1,oy+8); ctx.stroke(); }
+      else if(motif==='swirl'){ ctx.globalAlpha=0.13; ctx.strokeStyle=ac; ctx.lineWidth=1.2; ctx.arc(ox,oy,7,rn*6,rn*6+3.4); ctx.stroke(); }
+      else { ctx.globalAlpha=0.4*rn+0.15; ctx.fillStyle=ac; ctx.beginPath(); ctx.arc(ox,oy,rn>0.7?1.8:1,0,TAU); ctx.fill(); } }
+    ctx.restore(); ctx.globalAlpha=1; }
 }
 function drawEnemy(e){
   var f=e.flash>0, r=e.r, hi=(enemies.length<60||e.boss||e.elite); ctx.save(); ctx.translate(e.x,e.y);   // hi：細節層級(敵過多時普通敵簡化裝飾以保效能)

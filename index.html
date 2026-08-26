@@ -463,8 +463,8 @@ var TAU=Math.PI*2;
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false,enigma:false,spiralist:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{}};
-  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{}};
+  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
 // 使用者只需在 firebase.google.com 建免費 Realtime Database、規則設 {".read":true,".write":true}，把資料庫網址貼在下面即可上線；留空則自動退回本機榜。
@@ -600,6 +600,7 @@ var ACHIEVEMENTS=[
   {id:'h_codex25', ic:'🔬',hidden:true,name:'萬物圖鑑',desc:'圖鑑解鎖 25 種怪物',rw:800,chk:function(){return Object.keys(DB.bestiary||{}).length>=25;}},
   {id:'h_deepact', ic:'🌀',hidden:true,name:'深淵行者',desc:'單局抵達第 10 幕',rw:900,chk:function(){return (G.act||1)>=10;}},
   {id:'h_paradox', ic:'🌌',hidden:true,name:'悖論行者',desc:'踏入悖論深淵',rw:1000,chk:function(){return G.stage&&G.stage.id==='paradox';}},
+  {id:'h_inferno', ic:'🔥',hidden:true,name:'煉獄行者',desc:'踏入永劫煉獄',rw:1100,chk:function(){return G.stage&&G.stage.id==='inferno';}},
   {id:'h_hoarder', ic:'🎒',hidden:true,name:'軍火收藏家',desc:'單局同時擁有 8 種武器',rw:700,chk:function(){return player.weapons.length>=8;}},
   {id:'h_evolver', ic:'🧬',hidden:true,name:'進化大師',desc:'單局進化 3 把武器',rw:800,chk:function(){return player.weapons.filter(function(w){return w.evolved;}).length>=3;}},
   {id:'h_alchemist',ic:'⚗️',hidden:true,name:'煉金術士',desc:'單局合成 2 把武器',rw:800,chk:function(){return player.weapons.filter(function(w){return w.fused;}).length>=2;}},
@@ -644,6 +645,7 @@ var MUTATORS=[
   {id:'fortress',  name:'鐵壁日',    desc:'敵人稀少但堅如鐵壁 · 你更肉更慢', eSpd:0.85,eHp:2.6,spawn:0.7,elite:2,pHp:1.5,pDmg:1,pSpd:0.9},
   {id:'frenzyfest',name:'狂歡日',    desc:'敵我皆極速 · 精英成群 · 高風險高爽度', eSpd:1.45,eHp:0.85,spawn:1.55,elite:3,pHp:0.85,pDmg:1.45,pSpd:1.35},
   {id:'giants',    name:'巨人日',    desc:'極少數超巨獸現世 · 你火力全開', eSpd:0.7,eHp:3.2,spawn:0.4,elite:1,pHp:1,pDmg:1.7,pSpd:1},
+  {id:'blackout',  name:'黑霧日',    desc:'敵潮兇猛且韌 · 你移速銳減但傷害爆表', eSpd:1.15,eHp:1.5,spawn:1.3,elite:2,pHp:1,pDmg:1.8,pSpd:0.75},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
@@ -773,6 +775,7 @@ var STAGES=[
   {id:'maelstrom',name:'湮滅風暴', desc:'狂暴亂流 · 螺旋絞殺首領', bg:'#0d0508', grid:'rgba(200,90,120,0.15)', eHp:3.35, eSpd:1.38, spawn:1.95, bossName:'風暴煞星', bossColor:'#ff3d7a', pattern:'spiral',  locked:true, unlock:'nebula'},
   {id:'genesis', name:'創世終焉', desc:'萬物歸零 · 全模式主宰',   bg:'#040308', grid:'rgba(255,210,120,0.13)', eHp:3.6,  eSpd:1.44, spawn:2.0,  bossName:'終焉主宰', bossColor:'#ffd24a', pattern:'pulsar',  locked:true, unlock:'maelstrom'},
   {id:'paradox', name:'悖論深淵', desc:'因果崩壞 · 雙旋干涉主宰', bg:'#060410', grid:'rgba(160,120,255,0.15)', eHp:3.9,  eSpd:1.5,  spawn:2.05, bossName:'悖論主宰', bossColor:'#c8a0ff', pattern:'paradoxnova', locked:true, unlock:'genesis'},
+  {id:'inferno', name:'永劫煉獄', desc:'烈焰永燃 · 地雷陣主宰', bg:'#0e0402', grid:'rgba(255,110,50,0.15)', eHp:4.2, eSpd:1.52, spawn:2.1, bossName:'煉獄魔王', bossColor:'#ff5a2b', pattern:'minefield', locked:true, unlock:'paradox'},
 ];
 var selStage='city';
 function stageUnlocked(s){ return !s.locked || DB.stages[s.id]; }

@@ -2161,8 +2161,13 @@ function update(dt){
     if(e.boss&&e.frenzied)espd*=2.2; else if(e.boss&&e.enraged)espd*=1.5;   // 狂暴/絕命移速大增
     if(e.affix==='berserk'&&e.hp<e.maxHp*0.5)espd*=1.7;   // 狂亂詞綴：半血後暴衝
     if(e.rally>0){ espd*=1.45; e.rally-=dt; }   // 被統帥鼓舞：移速大增
-    if(e.boss&&!e.enraged&&e.hp/e.maxHp<0.4){ e.enraged=true; announce('⚠ '+(e.name||'首領')+' 狂暴化！','#ff2b5e'); flashScreen('255,43,94',0.45); shake(12); }
-    if(e.boss&&!e.frenzied&&e.hp/e.maxHp<0.15){ e.frenzied=true; e.enraged=true; announce('☠ '+(e.name||'首領')+' 絕命狂暴！','#ff1030'); flashScreen('255,20,48',0.55); shake(18); }
+    if(e.boss&&!e.ph2&&e.hp/e.maxHp<0.72){ e.ph2=true; e.shoot=0.25;   // 第二型態：換式加速 + 立即放射彈幕逼走位
+      announce('⚔ '+(e.name||'首領')+' 第二型態！','#ffb03a'); flashScreen('255,176,58',0.32); shake(8); GAudio.boss&&GAudio.boss();
+      for(var pk2=0;pk2<20;pk2++){ var pk2a=pk2/20*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(pk2a),Math.sin(pk2a),220,e.dmg*0.5); } ringFx(e.x,e.y,150,'#ffb03a'); ringFx(e.x,e.y,84,'#fff'); }
+    if(e.boss&&!e.enraged&&e.hp/e.maxHp<0.4){ e.enraged=true; e.shoot=0.2; announce('⚠ '+(e.name||'首領')+' 狂暴化！','#ff2b5e'); flashScreen('255,43,94',0.45); shake(12); GAudio.boss&&GAudio.boss();
+      for(var pk3=0;pk3<28;pk3++){ var pk3a=pk3/28*TAU+0.11; spawnEnemyBullet(e.x,e.y,Math.cos(pk3a),Math.sin(pk3a),245,e.dmg*0.5); } ringFx(e.x,e.y,180,'#ff2b5e'); ringFx(e.x,e.y,100,'#fff'); }
+    if(e.boss&&!e.frenzied&&e.hp/e.maxHp<0.15){ e.frenzied=true; e.enraged=true; e.shoot=0.15; announce('☠ '+(e.name||'首領')+' 絕命狂暴！','#ff1030'); flashScreen('255,20,48',0.55); shake(18); GAudio.boss&&GAudio.boss();
+      for(var pk4=0;pk4<3;pk4++)ringFx(e.x,e.y,120+pk4*80,'#ff1030'); for(var pk5=0;pk5<36;pk5++){ var pk5a=pk5/36*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(pk5a),Math.sin(pk5a),260,e.dmg*0.55); } }
     if(e.boss){ e.summonT-=dt; if(e.summonT<=0 && enemies.length<200){ e.summonT=e.enraged?6:10; var sn=e.enraged?4:2;
       for(var sm=0;sm<sn;sm++){ var smx=e.x+rand(-50,50),smy=e.y+rand(-50,50); spawnEnemy(chooseType(G.time/60),smx,smy,1.2); ringFx(smx,smy,42,e.color); burst(smx,smy,e.color,6,160); }
       announce((e.name||'首領')+' 召喚增援！',e.color); ringFx(e.x,e.y,120,e.color); ringFx(e.x,e.y,60,'#fff'); } }
@@ -3485,7 +3490,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v281 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v282 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

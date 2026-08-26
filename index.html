@@ -577,7 +577,7 @@ try{ var _fx=localStorage.getItem('neon_fx'); if(_fx==='med')fxScale=0.6; else i
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false,enigma:false,spiralist:false,gunslinger:false,ronin:false,warden2:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0}};
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0},weekly:{week:-1,done:false}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
@@ -828,6 +828,22 @@ function todaysMissions(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*3
 function checkMissions(){ if(!G)return; var today=dayKey(); if(!DB.missions||DB.missions.date!==today)DB.missions={date:today,done:{}};
   var all=true; todaysMissions().forEach(function(m){ if(!DB.missions.done[m.id]){ try{ if(m.chk()){ DB.missions.done[m.id]=true; DB.shards+=m.rw; saveDB(); achToast({ic:m.ic,name:'每日任務完成'},m.rw); } }catch(e){} } if(!DB.missions.done[m.id])all=false; });
   if(all && !DB.missions.done.__bonus){ DB.missions.done.__bonus=true; DB.shards+=300; saveDB(); achToast({ic:'📋',name:'每日任務全清！'},300); } }
+// 每週挑戰：每週固定一道高難目標，達成給大獎
+var WEEKLY=[
+  {id:'wtime15',ic:'🏆',desc:'單局存活 15 分鐘',rw:800,chk:function(){return G.time>=900;}},
+  {id:'wkill5k', ic:'💀',desc:'單局擊殺 5000 敵人',rw:800,chk:function(){return G.kills>=5000;}},
+  {id:'wlv50',  ic:'🌟',desc:'單局達到 Lv50',rw:700,chk:function(){return G.level>=50;}},
+  {id:'wboss3', ic:'👑',desc:'單局擊敗 3 個首領',rw:700,chk:function(){return (G.bossKills||0)>=3;}},
+  {id:'wcombo300',ic:'🔥',desc:'單局達成 300 連擊',rw:700,chk:function(){return (G.peakCombo||0)>=300;}},
+  {id:'welite50',ic:'✨',desc:'單局擊殺 50 隻精英',rw:750,chk:function(){return (G.eliteKills||0)>=50;}},
+  {id:'wdmg1m', ic:'💥',desc:'單局造成 100 萬傷害',rw:800,chk:function(){return (G.dmgDealt||0)>=1000000;}},
+];
+function weekKey(){ return Math.floor(Date.now()/604800000); }   // 週序號(epoch 起算)
+function thisWeekMission(){ return WEEKLY[weekKey()%WEEKLY.length]; }
+function checkWeekly(){ if(!G)return; DB.weekly=DB.weekly||{week:-1,done:false}; var wk=weekKey();
+  if(DB.weekly.week!==wk){ DB.weekly={week:wk,done:false}; }
+  if(DB.weekly.done)return; var m=thisWeekMission();
+  try{ if(m.chk()){ DB.weekly.done=true; DB.shards+=m.rw; saveDB(); achToast({ic:m.ic,name:'每週挑戰完成！'},m.rw); } }catch(e){} }
 function saveDB(){ localStorage.setItem(SAVE,JSON.stringify(DB)); }
 
 // 永久強化定義
@@ -3368,6 +3384,7 @@ function gameOver(){
   if(G.daily){ var dk=dayKey(); if(DB.daily.date!==dk||G.time>DB.daily.time)DB.daily={date:dk,time:Math.round(G.time),kills:G.kills}; }
   checkAch();
   checkMissions();
+  checkWeekly();
   saveDB();
   $('o-time').textContent=fmtTime(G.time); $('o-kills').textContent=G.kills;
   $('o-level').textContent=G.level; $('o-wave').textContent=G.wave;
@@ -3494,7 +3511,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v283 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v284 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -3669,6 +3686,9 @@ function renderMissions(){ var today=dayKey(); var done=(DB.missions&&DB.mission
     return '<div class="tutrow" style="'+(ok?'opacity:.65':'')+'"><span class="tutic">'+(ok?'✅':m.ic)+'</span><div><b>'+(ok?'已完成':'進行中')+' · +◆'+m.rw+'</b>'+m.desc+'</div></div>'; }).join('');
   var alldone=todaysMissions().every(function(m){return done[m.id];});
   html+='<div class="tutrow" style="'+(alldone?'opacity:.65':'')+'"><span class="tutic">'+(alldone?'🏆':'📋')+'</span><div><b>全清獎勵 · +◆300</b>'+(alldone?'已領取':'完成上方全部 3 項任務')+'</div></div>';
+  // 每週挑戰
+  var wm=thisWeekMission(), wdone=(DB.weekly&&DB.weekly.week===weekKey()&&DB.weekly.done);
+  html+='<div class="tutrow" style="margin-top:8px;border-top:1px solid rgba(255,213,74,.25);padding-top:10px;'+(wdone?'opacity:.65':'')+'"><span class="tutic">'+(wdone?'✅':'🏆')+'</span><div><b style="color:#ffd54a">每週挑戰 · +◆'+wm.rw+'</b>'+(wdone?'本週已完成！':wm.desc+'（本週限定，達成得大獎）')+'</div></div>';
   $('missionlist').innerHTML=html; }
 $('missionbtn').onclick=function(){ renderMissions(); $('menu').classList.remove('show'); $('missions').classList.add('show'); };
 $('missionclose').onclick=function(){ $('missions').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };

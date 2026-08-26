@@ -1138,13 +1138,11 @@ var WDEFS={
     }
   },
   grenade:{ic:'🧨',name:'榴彈',color:'#ff9a3d',tag:'範圍',max:8,
-    desc:function(l){return l===0?'朝敵群拋射榴彈，命中引爆範圍傷害':'傷害↑ 爆炸範圍↑ 每3級+1發';},
+    desc:function(l){return l===0?'拋射實體榴彈飛向敵群，命中或落地引爆範圍':'傷害↑ 爆炸範圍↑ 每3級+1發';},
     cd:function(l){return Math.max(0.5,1.1-l*0.07);},
-    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); if(!t)return; var n=1+Math.floor(w.level/3)+player.amount;
-      for(var i=0;i<n;i++){ var tt=i===0?t:(randEnemyNear(player.x,player.y,640)||t);
-        var ex=tt.x+rand(-20,20),ey=tt.y+rand(-20,20),er=(70+w.level*8)*player.area,er2=er*er,dm=dmg(28+w.level*9);
-        (function(ex,ey,er,er2,dm){ enemyGrid.query(ex,ey,er,function(e){ if(e.hp>0&&dist2(e.x,e.y,ex,ey)<er2)hitEnemy(e,dm,ex,ey,0.3); }); })(ex,ey,er,er2,dm);
-        ringFx(ex,ey,er,'#ff9a3d'); burst(ex,ey,'#ff9a3d',8,200); } },
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); if(!t)return; var n=1+Math.floor(w.level/3)+player.amount, er=(70+w.level*8)*player.area, dm=dmg(28+w.level*9);
+      for(var i=0;i<n;i++){ var tt=i===0?t:(randEnemyNear(player.x,player.y,640)||t); var a=Math.atan2(tt.y-player.y,tt.x-player.x)+rand(-0.12,0.12);
+        bullets.push({x:player.x,y:player.y,vx:Math.cos(a)*380,vy:Math.sin(a)*380,dmg:dm,color:'#ff9a3d',pierce:1,r:7,life:1.5,hitset:{},homing:150,explode:er,spin:1}); } },
     evo:{reqPassive:'parea',ic:'💥',name:'集束炸彈',color:'#ffca4a',desc:'一次投擲大量集束榴彈，火力覆蓋全場',
       cd:function(l){return Math.max(0.35,0.8-l*0.05);},
       fire:function(w){ var n=4+Math.floor(w.level/2)+player.amount;
@@ -1243,15 +1241,17 @@ var WDEFS={
     }
   },
   scythe:{ic:'🌙',name:'鐮月斬',color:'#b8f0ff',tag:'扇形',max:8,
-    desc:function(l){return l===0?'朝敵群揮出扇形月刃光束':'刃數↑ 弧度↑ 傷害↑';},
+    desc:function(l){return l===0?'朝敵群揮出實體扇形月刃，橫掃斬擊':'弧度↑ 範圍↑ 傷害↑';},
     cd:function(l){return Math.max(0.5,1.1-l*0.07);},
     fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var ang=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle;
-      var nb=3+Math.floor(w.level/2)+player.amount, spread=0.85+w.level*0.05, len=(150+w.level*15)*player.area, d=dmg(15+w.level*7);
-      for(var i=0;i<nb;i++){ var a=ang+(i-(nb-1)/2)/Math.max(1,nb-1)*spread*2; fireBeam(a,d,len,10,'#b8f0ff'); } },
+      var half=Math.min(1.4,0.55+w.level*0.06+player.amount*0.08), reach=(150+w.level*15)*player.area, reach2=reach*reach, d=dmg(15+w.level*7);
+      enemyGrid.query(player.x,player.y,reach,function(e){ if(e.hp>0){ var ea=Math.atan2(e.y-player.y,e.x-player.x), da=Math.abs(((ea-ang+Math.PI*3)%(Math.PI*2))-Math.PI); if(da<half&&dist2(e.x,e.y,player.x,player.y)<reach2)hitEnemy(e,d,player.x,player.y,0.3); } });
+      slashArc(player.x,player.y,ang,reach,half,'#b8f0ff'); },
     evo:{reqPassive:'parea',ic:'🌕',name:'滅月',color:'#e6faff',desc:'環身揮出 360° 死亡月環，撕裂周身一切',
       cd:function(l){return Math.max(0.4,0.8-l*0.04);},
-      fire:function(w){ var n=12, len=(200+w.level*16)*player.area, d=dmg(28+w.level*9);
-        for(var i=0;i<n;i++){ var a=i/n*TAU+G.time*0.6; fireBeam(a,d,len,12,'#e6faff'); } ringFx(player.x,player.y,len*0.55,'#e6faff'); }
+      fire:function(w){ var reach=(200+w.level*16)*player.area, reach2=reach*reach, d=dmg(28+w.level*9);
+        enemyGrid.query(player.x,player.y,reach,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<reach2)hitEnemy(e,d,player.x,player.y,0.4); });
+        slashArc(player.x,player.y,G.time*3,reach,Math.PI,'#e6faff'); ringFx(player.x,player.y,reach*0.6,'#e6faff'); }
     }
   },
   comet:{ic:'☄️',name:'彗星炮',color:'#ff9a5d',tag:'貫穿',max:8,
@@ -1878,6 +1878,8 @@ var lightningSeg=[];
 function fxLightning(x1,y1,x2,y2){ lightningSeg.push({x1:x1,y1:y1,x2:x2,y2:y2,life:0.14,max:0.14}); }
 var sawSeg=[];
 function sawSlash(x1,y1,x2,y2){ sawSeg.push({x1:x1,y1:y1,x2:x2,y2:y2,life:0.16,max:0.16}); }   // 環鋸彈跳：鋼刃切割軌跡(非閃電)
+var arcSeg=[];
+function slashArc(x,y,ang,radius,half,color){ arcSeg.push({x:x,y:y,ang:ang,r:radius,half:half,color:color,life:0.22,max:0.22}); }   // 鐮月斬：實體弧形月刃橫掃
 
 // =====================================================================
 // 命中 / 死亡
@@ -2247,6 +2249,7 @@ function update(dt){
   for(var i=fxRings.length-1;i>=0;i--){ var r=fxRings[i]; r.life-=dt; r.r+=(r.tr-r.r)*Math.min(1,dt*14); if(r.life<=0)fxRings.splice(i,1); }
   for(var i=lightningSeg.length-1;i>=0;i--){ lightningSeg[i].life-=dt; if(lightningSeg[i].life<=0)lightningSeg.splice(i,1); }
   for(var i=sawSeg.length-1;i>=0;i--){ sawSeg[i].life-=dt; if(sawSeg[i].life<=0)sawSeg.splice(i,1); }
+  for(var i=arcSeg.length-1;i>=0;i--){ arcSeg[i].life-=dt; if(arcSeg[i].life<=0)arcSeg.splice(i,1); }
 
   if(shakeAmt>0)shakeAmt*=Math.pow(0.001,dt);
   if(hurtFlash>0)hurtFlash-=dt*2.5;
@@ -2599,6 +2602,11 @@ function render(){
     ctx.globalAlpha=sa; ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.2; ctx.shadowBlur=3; ctx.beginPath(); ctx.moveTo(ss.x1,ss.y1); ctx.lineTo(ss.x2,ss.y2); ctx.stroke();
     ctx.save(); ctx.translate(ss.x2,ss.y2); ctx.rotate(G.time*20+ss.x2); ctx.globalAlpha=sa; ctx.fillStyle='#e6e9ff'; ctx.shadowColor='#c8c8ff'; ctx.shadowBlur=7;
     for(var sb=0;sb<8;sb++){ var sba=sb/8*TAU; ctx.beginPath(); ctx.moveTo(Math.cos(sba)*4,Math.sin(sba)*4); ctx.lineTo(Math.cos(sba+0.2)*9,Math.sin(sba+0.2)*9); ctx.lineTo(Math.cos(sba+0.4)*4,Math.sin(sba+0.4)*4); ctx.closePath(); ctx.fill(); } ctx.restore(); }
+  // 鐮月斬：實體弧形月刃橫掃(掃過的弧帶 + 白熱刃緣)，明顯有別於雷射光束
+  for(var i=0;i<arcSeg.length;i++){ var ac=arcSeg[i], aa=ac.life/ac.max, gr=ac.r*(0.72+(1-aa)*0.4);
+    ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=aa*0.5; ctx.fillStyle=ac.color; ctx.shadowColor=ac.color; ctx.shadowBlur=12;
+    ctx.beginPath(); ctx.arc(ac.x,ac.y,gr,ac.ang-ac.half,ac.ang+ac.half); ctx.arc(ac.x,ac.y,gr*0.62,ac.ang+ac.half,ac.ang-ac.half,true); ctx.closePath(); ctx.fill();
+    ctx.globalAlpha=aa; ctx.strokeStyle='#ffffff'; ctx.lineWidth=2.4; ctx.shadowBlur=6; ctx.beginPath(); ctx.arc(ac.x,ac.y,gr,ac.ang-ac.half,ac.ang+ac.half); ctx.stroke(); ctx.restore(); }
   ctx.shadowBlur=0; ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
 
   // 環境危害：熔岩池
@@ -3422,7 +3430,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v274 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v275 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

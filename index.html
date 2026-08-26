@@ -2092,7 +2092,8 @@ function update(dt){
   for(var i=drones.length-1;i>=0;i--){ var dr=drones[i]; dr.life-=dt; dr.ang+=dt*2.2;
     if(!dr.fixed){ var tx=player.x+Math.cos(dr.ang)*dr.orbit, ty=player.y+Math.sin(dr.ang)*dr.orbit;
       dr.x+=(tx-dr.x)*Math.min(1,dt*8); dr.y+=(ty-dr.y)*Math.min(1,dt*8); }   // 固定砲塔不移動
-    dr.cd-=dt; if(dr.cd<=0){ var t=nearestEnemy(dr.x,dr.y,(dr.range||520)*(dr.range||520)); if(t){ dr.cd=dr.rate||0.5; var a=Math.atan2(t.y-dr.y,t.x-dr.x); spawnBullet(dr.x,dr.y,Math.cos(a),Math.sin(a),700,dr.dmg,dr.color||'#5dffe0',2,4,1.0); } }
+    if(dr.mz>0)dr.mz-=dt;
+    dr.cd-=dt; if(dr.cd<=0){ var t=nearestEnemy(dr.x,dr.y,(dr.range||520)*(dr.range||520)); if(t){ dr.cd=dr.rate||0.5; var a=Math.atan2(t.y-dr.y,t.x-dr.x); spawnBullet(dr.x,dr.y,Math.cos(a),Math.sin(a),700,dr.dmg,dr.color||'#5dffe0',2,4,1.0); dr.mz=0.1; dr.mza=a; } }
     if(dr.life<=0)drones.splice(i,1); }
 
   // ---- 環刃碰撞 ----
@@ -2499,6 +2500,7 @@ function render(){
 
   // 哨衛無人機
   for(var i=0;i<drones.length;i++){ var dr=drones[i], da=Math.min(1,dr.life/1.2); var dcol=dr.color||'#5dffe0';
+    if(dr.mz>0){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=Math.max(0,dr.mz/0.1)*0.9; var mzs=10; ctx.drawImage(glow('#ffffff'),dr.x+Math.cos(dr.mza||0)*8-mzs,dr.y+Math.sin(dr.mza||0)*8-mzs,mzs*2,mzs*2); ctx.restore(); }   // 開火槍口閃光
     ctx.save(); ctx.translate(dr.x,dr.y);
     ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=da*0.5; ctx.drawImage(glow(dcol),-13,-13,26,26);
     ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=da; ctx.rotate(dr.ang*2);
@@ -2586,6 +2588,7 @@ function render(){
     var txt=n.hurt?('-'+n.val):(''+n.val);
     var col=n.hurt?'#ff3b4e':(n.crit?'#ffe14a':(n.val>=150?'#ff5a3a':n.val>=50?'#ff9a3d':'#ffffff'));
     ctx.save(); ctx.globalAlpha=da; ctx.translate(n.x,n.y); ctx.scale(pop,pop);
+    if(n.crit&&pop>1.05){ ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=da*(pop-1)*2.2; ctx.strokeStyle='#ffd54a'; ctx.lineWidth=2; for(var cr=0;cr<6;cr++){ var cra=cr/6*TAU+n.x; ctx.beginPath(); ctx.moveTo(Math.cos(cra)*sz*0.5,Math.sin(cra)*sz*0.5); ctx.lineTo(Math.cos(cra)*sz*1.1,Math.sin(cra)*sz*1.1); ctx.stroke(); } ctx.restore(); }   // 暴擊放射閃光
     ctx.font='900 '+sz.toFixed(0)+'px system-ui';
     ctx.shadowColor=col; ctx.shadowBlur=n.crit?18:9;   // 全部數字加彩色光暈，混戰中更醒目
     ctx.lineWidth=3.5; ctx.strokeStyle='rgba(0,0,0,0.65)'; ctx.strokeText(txt,0,0);

@@ -574,7 +574,7 @@ try{ var _fx=localStorage.getItem('neon_fx'); if(_fx==='med')fxScale=0.6; else i
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false,enigma:false,spiralist:false,gunslinger:false,ronin:false,warden2:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{}};
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
@@ -726,6 +726,9 @@ var ACHIEVEMENTS=[
 function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); }
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';
   el.classList.add('show'); GAudio.achieve&&GAudio.achieve(); clearTimeout(achToast._t); achToast._t=setTimeout(function(){el.classList.remove('show');},2600); }
+function dailyToast(info){ var el=$('achpop'); if(!el)return;
+  el.innerHTML='<div class="ai">📅</div><div><div class="at">每日登入 · 連續 '+info.streak+' 天'+(info.day7?' · 已封頂':'')+'</div><div class="an">+◆'+info.reward+' 碎片</div></div>';
+  el.classList.add('show'); GAudio.achieve&&GAudio.achieve(); clearTimeout(achToast._t); achToast._t=setTimeout(function(){el.classList.remove('show');},3400); }
 
 // 每日挑戰變異詞條（依日期決定）
 var IDENTITY_MUT={id:'none',name:'',eSpd:1,eHp:1,spawn:1,elite:1,pHp:1,pDmg:1,pSpd:1};
@@ -773,6 +776,17 @@ var MUTATORS=[
   {id:'colossus2', name:'泰坦潮日',  desc:'巨獸成群 · 極肉高傷 · 你火力全開', eSpd:0.75,eHp:2.6,spawn:1.2,elite:3,pHp:1,pDmg:1.5,pSpd:1},
 ];
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function dayKeyAt(ts){ var d=new Date(ts); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+// 每日登入獎勵：每天首次進遊戲領碎片，連續登入遞增(斷簽重置)
+function checkDailyLogin(){ DB.login=DB.login||{last:'',streak:0};
+  var today=dayKey(); if(DB.login.last===today)return null;
+  var yesterday=dayKeyAt(Date.now()-86400000);
+  DB.login.streak=(DB.login.last===yesterday)?(DB.login.streak+1):1;
+  DB.login.last=today;
+  var day=Math.min(7,DB.login.streak), reward=40+(day-1)*30;   // 第1天40,每天+30,第7天封頂220
+  DB.shards+=reward; saveDB();
+  return {streak:DB.login.streak,reward:reward,day7:day>=7};
+}
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
 // ===== 每日任務 =====
 var MISSIONS=[
@@ -3456,7 +3470,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v277 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v278 · 2026-08-26';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -3470,7 +3484,8 @@ function renderMenu(){
       '<div class="st"><b>'+chU+'/'+CHARS.length+'</b><span>角色</span></div>'+
       '<div class="st"><b>'+acU+(acT?'/'+acT:'')+'</b><span>成就</span></div>'+
       '<div class="st"><b>'+beU+'</b><span>圖鑑</span></div>'+
-      '<div class="st"><b>'+(b.kills||0)+'</b><span>最佳擊殺</span></div>';
+      '<div class="st"><b>'+(b.kills||0)+'</b><span>最佳擊殺</span></div>'+
+      '<div class="st"><b>📅 '+((DB.login&&DB.login.streak)||0)+'</b><span>連續登入</span></div>';
   }
   var tr=$('tiprow'); if(tr)tr.textContent=MENU_TIPS[Math.floor((Date.now()/6000))%MENU_TIPS.length];
   var vl=$('verline'); if(vl)vl.textContent='版本 '+BUILD+' · 自動更新';
@@ -3637,6 +3652,7 @@ refreshAutoBtn();
 
 // 啟動
 renderMenu();
+(function(){ try{ var _di=checkDailyLogin(); if(_di){ renderMenu(); setTimeout(function(){ dailyToast(_di); },700); } }catch(e){} })();   // 每日登入獎勵
 // 首次遊玩自動彈出新手教學
 if(!DB.seenTutorial){ DB.seenTutorial=true; saveDB(); $('menu').classList.remove('show'); $('tutorial').classList.add('show'); }
 

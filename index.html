@@ -929,7 +929,10 @@ var RELICS=[
   // —— B390 遺物擴充 ——
   {id:'turbocore', ic:'⚡', r:'epic',   name:'疾風之核', rw:360, lore:'在一切都快到失真的疾速狂飆中撐過五分鐘。當世界加速，唯有你的心跳依舊沉穩如常。', chk:function(){return G.mode==='turbo'&&(G.time||0)>=300;}},
   {id:'elitehunter',ic:'❖', r:'epic',  name:'精英獵魂', rw:420, lore:'單局獵殺五十名精英。牠們身上的每一道詞綴，都成了你收藏中閃爍的戰績。', chk:function(){return (G.eliteKills||0)>=50;}},
-  {id:'ageless',   ic:'⧖', r:'legend', name:'不朽者', rw:750, lore:'單局存活十五分鐘。時間早已放棄了你——它流過你身邊，卻再也無法將你帶走。', chk:function(){return (G.time||0)>=900;}}
+  {id:'ageless',   ic:'⧖', r:'legend', name:'不朽者', rw:750, lore:'單局存活十五分鐘。時間早已放棄了你——它流過你身邊，卻再也無法將你帶走。', chk:function(){return (G.time||0)>=900;}},
+  // —— B398 遺物擴充（呼應療靈 / 天罰審判）——
+  {id:'menderbane', ic:'🟢', r:'epic',   name:'療者終結', rw:440, lore:'單局斬滅二十具療靈。你比誰都明白——想終結一場永不結束的拉鋸，就要先讓那雙縫補傷口的手停下。', chk:function(){return (G.menderKills||0)>=20;}},
+  {id:'arbiter',    ic:'⚖', r:'legend', name:'裁決之秤', rw:520, lore:'將天罰審判淬煉為神罰裁決。從此戰場上最龐然的存在，都逃不過那道從天而降的稱量。', chk:function(){try{return player.weapons.some(function(w){return w.id==='judgment'&&w.evolved;});}catch(e){return false;}}}
 ];
 function relicToast(rel){ var el=$('achpop'); if(!el)return; var rc=RELIC_RARITY[rel.r]||RELIC_RARITY.common;
   el.innerHTML='<div class="ai" style="color:'+rc.c+';text-shadow:0 0 12px '+rc.c+'">'+rel.ic+'</div><div><div class="at" style="color:'+rc.c+'">遺物出土 · '+rc.name+' · +'+(rel.rw||100)+' ◆</div><div class="an">'+rel.name+'</div></div>';
@@ -4601,7 +4604,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v397 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v398 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

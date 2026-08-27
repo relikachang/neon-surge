@@ -2683,6 +2683,7 @@ var ETYPES={
   mender:{r:17,hp:110,sp:60,dmg:10,color:'#5dffb0',xp:7,shape:'penta',mender:true},   // 療靈：常規支援兵，週期大範圍治療周圍受傷敵人並自癒，逼你優先擊殺
   detonaut:{r:16,hp:60,sp:66,dmg:16,color:'#ff7a2a',xp:4,shape:'tri',detonaut:true},   // 崩解獸：死亡時原地留下延遲+預警的爆炸，懲罰貼身擊殺，逼你保持距離或速離
   scatterer:{r:16,hp:78,sp:50,dmg:14,color:'#ff9a5a',xp:4,shape:'sq'},   // 散射獸：週期朝玩家噴射 5 發扇形散彈，逼你別站在正面錐形內
+  warcaller:{r:18,hp:95,sp:52,dmg:12,color:'#ffb347',xp:5,shape:'penta'},   // 戰吼獸：週期鼓舞周圍敵人移速大增，逼你優先擊殺以免敵潮暴走
   // 稀有怪物（特定條件才會出現）
   phantom:{r:15,hp:54,sp:124,dmg:16,color:'#b98cff',xp:8,shape:'dia',rare:true},   // 幽影：8 分後成群高速幽靈
   golden:{r:20,hp:120,sp:56,dmg:8,color:'#ffd54a',xp:18,shape:'hex',rare:true,flee:true},   // 黃金巨獸：會逃跑的寶獸
@@ -2725,6 +2726,7 @@ var MONSTER_INFO={
   mender:{n:'療靈',d:'後期登場的支援兵，週期釋放大範圍治療波,替周圍受傷敵人回血並自我修復。牠本身脆弱、傷害也低,卻能讓整群敵人變得極難清光——看到綠色治療環,務必優先擊殺牠。'},
   detonaut:{n:'崩解獸',d:'後期登場的自爆型敵人，血量偏低但擊殺後不會立即爆炸——而是在原地留下一圈延遲的預警爆炸。貼身擊殺牠等於把炸彈埋在自己腳下，務必保持距離擊破、或殺完立刻拉開。'},
   scatterer:{n:'散射獸',d:'後期登場的霰彈手，週期朝你噴射一片扇形散彈。正對牠時整片錐形都是死亡區，側移繞到牠的側翼才能安全輸出。'},
+  warcaller:{n:'戰吼獸',d:'後期登場的鼓舞型支援兵，週期發出戰吼讓周圍敵人移速大增。放任牠不管，整片敵潮都會加速撲來變得難以拉開——聽到戰吼、看到金色光環，優先解決牠。'},
   phantom:{n:'幽影',d:'第 8 分鐘後浮現的高速幽靈，成群出沒、經驗豐厚。',rare:true},
   golden:{n:'黃金巨獸',d:'膽小會逃跑的稀有寶獸，追上擊殺可獲大量碎片與道具。',rare:true},
   warden:{n:'監視者',d:'第 6 分鐘後偶爾降臨的稀有精英射手，血厚傷高。',rare:true},
@@ -2752,6 +2754,7 @@ var MONSTER_LORE={
   mender:'牠不為殺戮而生,只為延續。每一道綠光都在對抗你的努力——你擊碎的,牠一次次補回。要終結這場拉鋸,先讓治療者自己失去心跳。',
   detonaut:'牠的死亡不是結束,而是倒數的開始。急著補刀的獵人,往往和牠一起被那圈遲來的火光吞沒——耐心與距離,才是拆彈的唯一手法。',
   scatterer:'牠不瞄準單一目標,只把死亡潑灑成一整片扇形。站在牠正前方的人,沒有閃避的縫隙,只有被彈幕填滿的空間。',
+  warcaller:'牠一聲怒吼,懦弱的殘骸都成了亡命的野獸。牠自己或許不足為懼,但牠喚醒的,是整片沉睡的敵潮。',
   pouncer:'牠把自己拋向空中的那一瞬,是最安全也最危險的——你打不到牠,牠也還沒落下。真正的殺意,藏在牠著地的那一擊裡。',
   titan:'行走的災厄,每一步都讓大地為之震顫。',
   stalker:'從你的盲點裡誕生,你看見牠時,刃已及身。',
@@ -3236,6 +3239,7 @@ function update(dt){
     if(e.stormRare){ e.scT=(e.scT==null?2.4:e.scT-dt); if(e.scT<=0){ e.scT=3; for(var sc=0;sc<3;sc++){ if(hazards.length<80)hazards.push({kind:'strike',x:player.x+rand(-165,165),y:player.y+rand(-165,165),r:66,life:1.8,max:1.8,warn:1.05,fired:false,dtk:0}); } ringFx(e.x,e.y,64,'#ffe08a'); } }  // 風暴使徒：週期在玩家周圍召喚雷暴預警轟炸
     if(e.affix==='lunger'&&e.dash<=0){ e.luT=(e.luT==null?rand(1.5,2.5):e.luT-dt); if(e.luT<=0){ e.luT=rand(2.8,3.8); var lua=Math.atan2(dy,dx); e.dash=0.4; e.dvx=Math.cos(lua)*560; e.dvy=Math.sin(lua)*560; ringFx(e.x,e.y,e.r*2,'#ffca54'); } }  // 突襲詞綴：週期朝玩家猛衝
     if(e.affix==='warlord'){ e.wlT=(e.wlT==null?4:e.wlT-dt); if(e.wlT<=0){ e.wlT=5; ringFx(e.x,e.y,180,'#ffd54a'); (function(ex,ey){ enemyGrid.query(ex,ey,190,function(o){ if(o.hp>0&&dist2(o.x,o.y,ex,ey)<190*190)o.rally=2.5; }); })(e.x,e.y); } }  // 統帥詞綴：週期鼓舞周圍敵人移速大增
+    if(e.type==='warcaller'){ e.wcT=(e.wcT==null?2.4:e.wcT-dt); if(e.wcT<=0){ e.wcT=3.2; ringFx(e.x,e.y,200,'#ffb347'); ringFx(e.x,e.y,120,'#ffe0a0'); (function(ex,ey){ enemyGrid.query(ex,ey,210,function(o){ if(o.hp>0&&dist2(o.x,o.y,ex,ey)<210*210)o.rally=Math.max(o.rally||0,3); }); })(e.x,e.y); } }  // 戰吼獸型別：週期鼓舞周圍敵人移速大增，逼你優先擊殺
     if(e.affix==='phaser'){ e.phT=(e.phT==null?3:e.phT-dt); if(e.phT<=0){ e.phT=3.6; e.phaseEnd=G.time+1.0; ringFx(e.x,e.y,e.r*2.2,'#ffffff'); } }  // 相位詞綴：週期進入 1 秒無敵
     if(e.affix==='artillery'){ e.arT=(e.arT==null?2.5:e.arT-dt); if(e.arT<=0 && hazards.length<80){ e.arT=3.2; hazards.push({kind:'strike',x:player.x+rand(-46,46),y:player.y+rand(-46,46),r:62,life:1.6,max:1.6,warn:0.95,fired:false,dtk:0}); ringFx(e.x,e.y,52,'#ff6a3d'); } }  // 砲擊手詞綴：週期在玩家腳下呼叫預警轟炸
     if(e.affix==='quaker'){ e.qkT=(e.qkT==null?2.5:e.qkT-dt); if(e.qkT<=0 && hazards.length<80){ e.qkT=3; hazards.push({kind:'strike',x:e.x,y:e.y,r:92,life:1.6,max:1.6,warn:1.0,fired:false,dtk:0}); ringFx(e.x,e.y,66,'#ff8a3a'); } }  // 震地詞綴：週期在自身腳下震地爆擊，懲罰貼身繞圈
@@ -3472,7 +3476,7 @@ function chooseType(m){ var r=Math.random();
   if(m<0.8)return r<0.45?'grunt':r<0.7?'swarm':r<0.85?'ranged':'charger';
   if(m<1.6)return r<0.32?'grunt':r<0.52?'swarm':r<0.66?'ranged':r<0.78?'bomber':r<0.9?'charger':'splitter';
   if(m<3.5)return r<0.24?'grunt':r<0.42?'swarm':r<0.56?'ranged':r<0.68?'bomber':r<0.8?'charger':r<0.9?'splitter':'tank';
-  if(m<6)return r<0.15?'grunt':r<0.28?'swarm':r<0.39?'ranged':r<0.49?'bomber':r<0.58?'charger':r<0.67?'splitter':r<0.76?'tank':r<0.85?'brute':r<0.9?'wraith':r<0.92?'mortar':r<0.94?'orbiter':r<0.96?'mender':r<0.98?'detonaut':'scatterer';   // 後期(3.5分後)出現蠻兵/厲魂/砲兵/環行者/療靈/崩解獸/散射獸
+  if(m<6)return r<0.15?'grunt':r<0.28?'swarm':r<0.39?'ranged':r<0.49?'bomber':r<0.58?'charger':r<0.67?'splitter':r<0.76?'tank':r<0.85?'brute':r<0.9?'wraith':r<0.92?'mortar':r<0.94?'orbiter':r<0.955?'mender':r<0.97?'detonaut':r<0.985?'scatterer':'warcaller';   // 後期(3.5分後)出現蠻兵/厲魂/砲兵/環行者/療靈/崩解獸/散射獸/戰吼獸
   return r<0.11?'grunt':r<0.19?'swarm':r<0.28?'ranged':r<0.37?'charger':r<0.45?'splitter':r<0.53?'tank':r<0.61?'brute':r<0.68?'wraith':r<0.72?'mortar':r<0.75?'orbiter':r<0.78?'pouncer':r<0.83?'titan':r<0.87?'stalker':r<0.91?'bombard':r<0.91?'marksman':r<0.935?'smasher':r<0.955?'weaver':r<0.97?'phaseknight':r<0.982?'impaler':r<0.983?'voidreaper':r<0.988?'sentinel':r<0.992?'warlock':r<0.994?'suppressor':r<0.996?'hexer':r<0.998?'mender':'shade';   // 深後期(6分後)出現泰坦/潛襲者/重砲手/狙擊手/碎擊者/織網者/相位騎士/穿刺者/虛空收割者/哨戒者/虛空祭司/壓制者/幻影領主
 }
 
@@ -4726,7 +4730,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v431 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v432 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

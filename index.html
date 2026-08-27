@@ -706,6 +706,19 @@ var ACHIEVEMENTS=[
   {id:'bossslay',ic:'👑',name:'弒君者',  desc:'單局擊敗 3 首領',rw:150,chk:function(){return (G.bossKills||0)>=3;}},
   {id:'combo100',ic:'🔥',name:'連擊狂人',desc:'達成 100 連擊',rw:120,chk:function(){return G.combo>=100;}},
   {id:'lv30',    ic:'🌟',name:'滿級戰神',desc:'單局達到 Lv30',rw:200,chk:function(){return G.level>=30;}},
+  // —— B315 新系統成就 ——
+  {id:'rebirth1', ic:'✦', name:'初次轉生', desc:'完成第一次轉生',rw:300,chk:function(){return (DB.prestige&&DB.prestige.count||0)>=1;}},
+  {id:'rebirth5', ic:'🌌',name:'輪迴者',   desc:'累計轉生 5 次',rw:800,chk:function(){return (DB.prestige&&DB.prestige.count||0)>=5;}},
+  {id:'starcore', ic:'⭐',name:'星核初綻', desc:'購買任一星核加成',rw:250,chk:function(){return DB.prestige&&DB.prestige.upg&&Object.keys(DB.prestige.upg).length>=1;}},
+  {id:'skin10',   ic:'🎨',name:'塗裝收藏家',desc:'擁有 10 款皮膚',rw:300,chk:function(){return Object.keys(DB.skins||{}).length>=10;}},
+  {id:'skinlegend',ic:'🌈',name:'傳奇之姿',desc:'裝備一款傳奇皮膚',rw:400,chk:function(){try{return skinTier(skinById(DB.equippedSkin))>=4;}catch(e){return false;}}},
+  {id:'charskin_all',ic:'🚀',name:'本色齊備',desc:'集齊全部 32 款角色專屬皮膚',rw:1500,chk:function(){try{return CHAR_SKINS.every(function(s){return DB.skins[s.id];});}catch(e){return false;}}},
+  {id:'relic_all',ic:'💎',name:'萬象收藏', desc:'集齊所有遺物',rw:1200,chk:function(){try{return Object.keys(DB.relics||{}).length>=RELICS.length;}catch(e){return false;}}},
+  {id:'hardcore3',ic:'💀',name:'一命三分', desc:'一命限定模式存活 3 分鐘',rw:500,chk:function(){return G.mode==='hardcore'&&G.time>=180;}},
+  {id:'bossrush5',ic:'👹',name:'亂鬥屠王', desc:'首領亂鬥單局擊敗 5 首領',rw:400,chk:function(){return G.mode==='bossrush'&&(G.bossKills||0)>=5;}},
+  {id:'timeatk',  ic:'⏱️',name:'限時高手', desc:'限時狂殺單局得分破 8000',rw:350,chk:function(){return G.mode==='timeattack'&&(G.score||0)>=8000;}},
+  {id:'code1',    ic:'🎟️',name:'幸運兌換', desc:'兌換任一創作者代碼',rw:150,chk:function(){return Object.keys(DB.codes||{}).length>=1;}},
+  {id:'allstages',ic:'🗺️',name:'走遍霓虹', desc:'解鎖全部 15 張地圖',rw:600,chk:function(){try{return STAGES.every(function(s){return !s.locked||DB.stages[s.id];});}catch(e){return false;}}},
   {id:'wave25',  ic:'🌊',name:'波瀾不驚',desc:'抵達第 25 波',rw:150,chk:function(){return G.wave>=25;}},
   {id:'fortress',ic:'🏰',name:'要塞征服',desc:'機械要塞存活 3 分',rw:250,chk:function(){return G.stage&&G.stage.id==='fortress'&&G.time>=180;}},
   {id:'score5k', ic:'🏆',name:'高分玩家',desc:'單局達 5000 分',rw:200,chk:function(){return (G.score||0)>=5000;}},
@@ -3995,7 +4008,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v314 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v315 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

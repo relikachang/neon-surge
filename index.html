@@ -1394,7 +1394,12 @@ var SKINS=[
   {id:'quantum',  name:'量子躍遷', price:400,  r:'rare',      arch:1, pal:{col:'#4ad8ff',glow:'#7ae8ff',edge:'#d0f8ff',hull:'#0e2438',hull2:'#08182a',core:'#eafcff',accent:'#c98bff'}, desc:'在機率雲中閃現的量子機體，於虛實之間穿梭'},
   {id:'crimsontide',name:'赤潮怒濤', price:800, r:'superrare', arch:5, pal:{col:'#ff4a3a',glow:'#ff6a4a',edge:'#ffc0a0',hull:'#3a0e08',hull2:'#280805',core:'#ffe0d0',accent:'#ffca3a'}, sfx:'deep', desc:'赤紅怒濤翻湧的機體 · 擊殺轟出沉雷般的潮聲'},
   {id:'obsidianx',name:'裂界黑曜', price:1400, r:'epic',       arch:4, pal:{col:'#2affa0',glow:'#5affc0',edge:'#c0ffe0',hull:'#0a1410',hull2:'#05100a',core:'#eafff4',accent:'#2affa0'}, sfx:'arc', atkCol:'#5affc0', desc:'漆黑機體的裂縫中滲出幽綠能量 · 開火迸裂螢綠光痕'},
-  {id:'polaris',  name:'極星虹光', price:2500, r:'legend',     arch:3, pal:{col:'#5affd0',glow:'#7cf0ff',edge:'#e0fff8',hull:'#0a2028',hull2:'#0c1420',core:'#ffffff',accent:'#c98bff'}, sfx:'crystal', atkCol:'#7cf0ff', killCol:'#5affd0', desc:'北天極星折射的虹光機體 · 登場如極光垂天、收割灑落星屑'}
+  {id:'polaris',  name:'極星虹光', price:2500, r:'legend',     arch:3, pal:{col:'#5affd0',glow:'#7cf0ff',edge:'#e0fff8',hull:'#0a2028',hull2:'#0c1420',core:'#ffffff',accent:'#c98bff'}, sfx:'crystal', atkCol:'#7cf0ff', killCol:'#5affd0', desc:'北天極星折射的虹光機體 · 登場如極光垂天、收割灑落星屑'},
+  // —— B383 皮膚擴充 ——
+  {id:'emberwing', name:'燼羽',     price:400,  r:'rare',      arch:0, pal:{col:'#ff6a3a',glow:'#ff8f4a',edge:'#ffd0a0',hull:'#3a1608',hull2:'#280e04',core:'#fff0e0',accent:'#ffca4a'}, desc:'餘燼中振翅的赤羽機體，越燃越烈'},
+  {id:'frostbite', name:'霜噬',     price:800,  r:'superrare', arch:2, pal:{col:'#8ad8ff',glow:'#b0e8ff',edge:'#e8faff',hull:'#0e2838',hull2:'#081826',core:'#f0fcff',accent:'#5affe0'}, sfx:'crystal', desc:'凜冽霜噬的冰藍機體 · 擊殺清響如寒冰崩裂'},
+  {id:'plasmatic', name:'電漿脈動', price:1400, r:'epic',      arch:1, pal:{col:'#4affe0',glow:'#7affe8',edge:'#d0fff8',hull:'#0a2830',hull2:'#06181e',core:'#eafffa',accent:'#ff5edb'}, sfx:'arc', atkCol:'#7affe8', desc:'電漿脈動纏身的機體 · 開火迸射青紫電弧'},
+  {id:'goldenaether',name:'黃金以太', price:2500, r:'legend',  arch:2, pal:{col:'#ffd66a',glow:'#fff0a0',edge:'#fffbe0',hull:'#3a2e0c',hull2:'#281f06',core:'#ffffff',accent:'#7cf0ff'}, sfx:'crystal', atkCol:'#fff0a0', killCol:'#ffd66a', desc:'流淌黃金以太的機體 · 登場如聖光普照、收割灑落金塵'}
 ];
 var LIMITED_SKINS=[   // 限量皮膚一律傳奇級（全特效）
   {id:'ltd_prism', name:'虹光稜鏡', price:3000, r:'legend', arch:2, dyn:true, sfx:'crystal', atkCol:'#7cf0ff', killCol:'#ff5edb', desc:'色相不斷流轉的稜鏡機體 · 限量傳奇，僅此檔期'},
@@ -4526,7 +4531,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v382 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v383 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

@@ -2249,7 +2249,16 @@ var EVENTS=[
     spawnPickup(s.x,s.y,'heart'); for(var x=0;x<2;x++)spawnPickup(s.x+rand(-44,44),s.y+rand(-44,44),'heal'); markSpot(s.x,s.y,'#ff6b8a'); }},
   {w:5,  fn:function(s){   // 👑 首領懸賞：空降一名首領，擊破爆厚賞(高風險高回報)
     announce('👑 首領懸賞降臨！擊破爆厚賞','#ff2b5e'); flashScreen('255,43,94',0.3); shake(10);
-    spawnBoss(); spawnPickup(s.x,s.y,'jackpot'); for(var b=0;b<4;b++)spawnPickup(s.x+rand(-54,54),s.y+rand(-54,54),'shardbag'); markSpot(s.x,s.y,'#ff2b5e'); }}
+    spawnBoss(); spawnPickup(s.x,s.y,'jackpot'); for(var b=0;b<4;b++)spawnPickup(s.x+rand(-54,54),s.y+rand(-54,54),'shardbag'); markSpot(s.x,s.y,'#ff2b5e'); }},
+  {w:8,  fn:function(s){   // 🌈 光棱盛宴：全向光束橫掃 + 碎片
+    announce('🌈 光棱盛宴！','#dffcff');
+    spawnPickup(s.x,s.y,'lightstorm'); for(var b=0;b<3;b++)spawnPickup(s.x+rand(-48,48),s.y+rand(-48,48),'shardbag'); markSpot(s.x,s.y,'#dffcff'); }},
+  {w:8,  fn:function(s){   // 🛰️ 機動支援：援護小隊 + 部署砲塔
+    announce('🛰️ 機動支援抵達！','#5dffe0');
+    spawnPickup(s.x,s.y,'squad'); spawnPickup(s.x+rand(-40,40),s.y+rand(-40,40),'turretdrop'); markSpot(s.x,s.y,'#5dffe0'); }},
+  {w:7,  fn:function(s){   // 🌀 奇點風暴：奇點吸入絞殺 + 靈魂收割
+    announce('🌀 奇點風暴成形！','#b06bff');
+    spawnPickup(s.x,s.y,'vortex'); spawnPickup(s.x+rand(-40,40),s.y+rand(-40,40),'soulharvest'); markSpot(s.x,s.y,'#b06bff'); }}
 ];
 function triggerRandomEvent(){
   if(!G||G.over)return;
@@ -4223,7 +4232,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v333 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v334 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

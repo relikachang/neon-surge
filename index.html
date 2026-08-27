@@ -667,7 +667,7 @@ try{ var _fx=localStorage.getItem('neon_fx'); if(_fx==='med')fxScale=0.6; else i
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false,enigma:false,spiralist:false,gunslinger:false,ronin:false,warden2:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0,total:0,mile:{}},weekly:{week:-1,done:false},achMile:{},modeBest:{},relics:{},skins:{default:1},equippedSkin:'default',codes:{},prestige:{cores:0,count:0,upg:{}}};
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0,total:0,mile:{}},weekly:{week:-1,done:false},achMile:{},modeBest:{},relics:{},skins:{default:1},equippedSkin:'default',codes:{},prestige:{cores:0,count:0,upg:{}},wpnSeen:{},psvSeen:{}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
@@ -2177,7 +2177,8 @@ function dmg(base){ var d=base*player.dmgMult*(player.frenzyT>0?1.4:1)*((G.curse
 
 function weaponById(id){ return player.weapons.find(function(w){return w.id===id;}); }
 function addWeapon(id){ if(weaponById(id))return;
-  player.weapons.push({id:id,def:WDEFS[id],level:0,cd:0,evolved:false}); if(id==='blades')rebuildBlades(); }
+  player.weapons.push({id:id,def:WDEFS[id],level:0,cd:0,evolved:false}); if(id==='blades')rebuildBlades();
+  DB.wpnSeen=DB.wpnSeen||{}; if(!DB.wpnSeen[id]){ DB.wpnSeen[id]=1; saveDB(); } }   // 武器圖鑑：首次取得即解鎖
 function rebuildBlades(){ blades=[]; var w=weaponById('blades'); if(!w)return;
   var n=(w.evolved?8:3)+w.level+(w.asc?4:0); for(var i=0;i<n;i++)blades.push({ang:i/n*TAU}); }
 
@@ -3065,7 +3066,7 @@ function applyChoice(c){
     for(var er2=0;er2<4;er2++)ringFx(player.x,player.y,110+er2*85,ecol); ringFx(player.x,player.y,160,'#ffffff'); burst(player.x,player.y,ecol,52,300); }
   else if(c.kind==='wnew'){ addWeapon(c.id); }
   else if(c.kind==='wup'){ var w=weaponById(c.id); w.level++; if(c.id==='blades')rebuildBlades(); }
-  else if(c.kind==='passive'){ player.passives[c.id]=(player.passives[c.id]||0)+1; PDEFS[c.id].apply(); }
+  else if(c.kind==='passive'){ player.passives[c.id]=(player.passives[c.id]||0)+1; PDEFS[c.id].apply(); DB.psvSeen=DB.psvSeen||{}; if(!DB.psvSeen[c.id]){ DB.psvSeen[c.id]=1; saveDB(); } }   // 被動圖鑑：首次取得即解鎖
   else { player.hp=Math.min(player.maxHp,player.hp+player.maxHp*0.4); }
   recalc(); checkAch();
 }
@@ -4079,7 +4080,11 @@ function renderAch(){ var got=0, lgTotal=0, lgGot=0, hidGot=0, hidTotal=0; var h
   $('achlist').innerHTML='<div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:10px">已解鎖 '+got+' / '+ACHIEVEMENTS.length+'　·　🏆 傳說 '+lgGot+' / '+lgTotal+'　·　❔ 隱藏 '+hidGot+' / '+hidTotal+'</div>'+mileHtml+html;
 }
 function renderCodex(){
-  var html=WORDER.map(function(id){ var d=WDEFS[id];
+  var ws=DB.wpnSeen||{}, ps=DB.psvSeen||{}, wSeen=0, pSeen=0;
+  var html=WORDER.map(function(id){ var d=WDEFS[id]; var seen=!!ws[id]; if(seen)wSeen++;
+    if(!seen)return '<div class="cxitem"><div class="cxic" style="color:#3a4568">❔</div>'+
+      '<div class="cxmain"><div class="cxn" style="color:#6b7ba0">？？？ <span class="cxtag">'+d.tag+'</span></div>'+
+      '<div class="cxd" style="color:#4a5578">尚未取得 — 局中拾得此武器後解鎖</div></div></div>';
     var line='';
     if(d.evo){ var rp=PDEFS[d.evo.reqPassive]; line+='<div class="cxsub">⚡ 進化 → <b style="color:'+d.evo.color+'">'+d.evo.name+'</b>（滿級 + '+(rp?rp.name:d.evo.reqPassive)+'）</div>'; }
     var fus=FUSIONS.filter(function(f){return f.a===id||f.b===id;});
@@ -4089,12 +4094,16 @@ function renderCodex(){
       '<div class="cxmain"><div class="cxn" style="color:'+d.color+'">'+d.name+' <span class="cxtag">'+d.tag+'</span></div>'+
       '<div class="cxd">'+d.desc(0)+'</div>'+lore+line+'</div></div>'; }).join('');
   // 被動強化區塊(含世界觀敘事)
-  var phtml=PORDER.map(function(id){ var p=PDEFS[id]; if(!p)return ''; var pl=PASSIVE_LORE[id]?'<div class="cxlore">「'+PASSIVE_LORE[id]+'」</div>':'';
+  var phtml=PORDER.map(function(id){ var p=PDEFS[id]; if(!p)return ''; var seen=!!ps[id]; if(seen)pSeen++;
+    if(!seen)return '<div class="cxitem"><div class="cxic" style="color:#3a4568">❔</div>'+
+      '<div class="cxmain"><div class="cxn" style="color:#6b7ba0">？？？ <span class="cxtag">被動</span></div>'+
+      '<div class="cxd" style="color:#4a5578">尚未取得 — 升級選到此被動後解鎖</div></div></div>';
+    var pl=PASSIVE_LORE[id]?'<div class="cxlore">「'+PASSIVE_LORE[id]+'」</div>':'';
     return '<div class="cxitem"><div class="cxic" style="color:'+p.color+'">'+p.ic+'</div>'+
       '<div class="cxmain"><div class="cxn" style="color:'+p.color+'">'+p.name+'</div>'+
       '<div class="cxd">'+p.desc(0)+'</div>'+pl+'</div></div>'; }).join('');
-  $('codexlist').innerHTML='<div class="cxsec">⚔️ 武器 · '+WORDER.length+' 種</div>'+html+
-    '<div class="cxsec">🧬 被動強化 · '+PORDER.length+' 種</div>'+phtml;
+  $('codexlist').innerHTML='<div class="cxsec">⚔️ 武器 · 已發現 '+wSeen+' / '+WORDER.length+'</div>'+html+
+    '<div class="cxsec">🧬 被動強化 · 已發現 '+pSeen+' / '+PORDER.length+'</div>'+phtml;
 }
 function renderBestiary(){ var order=['grunt','swarm','tank','ranged','bomber','splitter','charger','brute','wraith','mortar','titan','stalker','bombard','marksman','smasher','weaver','phaseknight','impaler','voidreaper','sentinel','warlock','suppressor','hexer','shade','phantom','golden','warden','conjurer','harbinger','revenant','gargantua','stormcaller','vault','boss'];
   var seen=0; var html=order.map(function(id){ var mi=MONSTER_INFO[id]||{n:id,d:''}; var d=(id==='boss'?{color:'#ffd54a',shape:''}:ETYPES[id])||{color:'#888'};
@@ -4155,7 +4164,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v327 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v328 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

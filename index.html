@@ -664,7 +664,7 @@ try{ var _fx=localStorage.getItem('neon_fx'); if(_fx==='med')fxScale=0.6; else i
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false,enigma:false,spiralist:false,gunslinger:false,ronin:false,warden2:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0},weekly:{week:-1,done:false},achMile:{},modeBest:{},relics:{},skins:{default:1},equippedSkin:'default',codes:{},prestige:{cores:0,count:0,upg:{}}};
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0,total:0,mile:{}},weekly:{week:-1,done:false},achMile:{},modeBest:{},relics:{},skins:{default:1},equippedSkin:'default',codes:{},prestige:{cores:0,count:0,upg:{}}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
@@ -989,16 +989,20 @@ var MUTATORS=[
 function dayKey(){ var d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 function dayKeyAt(ts){ var d=new Date(ts); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
 // 每日登入獎勵：每天首次進遊戲領碎片，連續登入遞增(斷簽重置)
+var LOGIN_MILE=[{n:7,rw:300},{n:30,rw:1200},{n:60,rw:2500},{n:100,rw:5000},{n:200,rw:12000},{n:365,rw:30000}];   // 累計登入天數里程碑一次性大獎
 function checkDailyLogin(){ DB.login=DB.login||{last:'',streak:0};
   var today=dayKey(); if(DB.login.last===today)return null;
   var yesterday=dayKeyAt(Date.now()-86400000);
   DB.login.streak=(DB.login.last===yesterday)?(DB.login.streak+1):1;
   DB.login.last=today;
+  DB.login.total=(DB.login.total||0)+1; DB.login.mile=DB.login.mile||{};   // 累計登入天數
   var day=Math.min(7,DB.login.streak), reward=40+(day-1)*30;   // 第1天40,每天+30,第7天封頂220
   var perfect=(DB.login.streak%7===0);   // 每連續 7 天全勤：額外大獎
   if(perfect)reward+=500;
+  var mile=null;   // 累計里程碑(一次性)
+  for(var i=0;i<LOGIN_MILE.length;i++){ var m=LOGIN_MILE[i]; if(DB.login.total>=m.n && !DB.login.mile[m.n]){ DB.login.mile[m.n]=1; DB.shards+=m.rw; mile=m; } }
   DB.shards+=reward; saveDB();
-  return {streak:DB.login.streak,reward:reward,day7:day>=7,perfect:perfect};
+  return {streak:DB.login.streak,reward:reward,day7:day>=7,perfect:perfect,total:DB.login.total,mile:mile};
 }
 function todaysMutator(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0; return MUTATORS[h%MUTATORS.length]; }
 // ===== 每日任務 =====
@@ -4069,7 +4073,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v322 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v323 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -4333,7 +4337,8 @@ renderMenu();
     else { toast('❌','無效的代碼',code,false); }
   },900);
 }catch(e){} })();
-(function(){ try{ var _di=checkDailyLogin(); if(_di){ renderMenu(); setTimeout(function(){ dailyToast(_di); },700); } }catch(e){} })();   // 每日登入獎勵
+(function(){ try{ var _di=checkDailyLogin(); if(_di){ renderMenu(); setTimeout(function(){ dailyToast(_di); },700);
+  if(_di.mile){ setTimeout(function(){ try{ var el=$('achpop'); if(el){ el.innerHTML='<div class="ai">🎉</div><div><div class="at">累計登入 '+_di.mile.n+' 天！ +◆'+_di.mile.rw+'</div><div class="an">登入里程碑達成</div></div>'; el.classList.add('show'); GAudio.achieve&&GAudio.achieve(); setTimeout(function(){el.classList.remove('show');},3600); } }catch(e){} },4200); } } }catch(e){} })();   // 每日登入獎勵 + 累計里程碑
 // 首次遊玩自動彈出新手教學
 if(!DB.seenTutorial){ DB.seenTutorial=true; saveDB(); $('menu').classList.remove('show'); $('tutorial').classList.add('show'); }
 

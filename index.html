@@ -250,6 +250,10 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   .charcard .cn{font-weight:800;font-size:15px;margin-top:4px}
   .charcard .cd{font-size:11px;color:#8ea0c8;margin-top:4px;line-height:1.4}
   .charcard .clk{position:absolute;top:6px;right:8px;font-size:11px;color:var(--gold)}
+  #charlore{margin-top:10px;padding:11px 14px;border-radius:12px;background:linear-gradient(135deg,rgba(34,230,255,.07),rgba(124,91,255,.06));border:1px solid rgba(34,230,255,.22);position:relative;overflow:hidden}
+  #charlore .clname{font-weight:800;font-size:13px;letter-spacing:1px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+  #charlore .cltxt{font-size:12.5px;line-height:1.65;color:#c3d2ee;font-style:italic}
+  #charlore::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--cyan),#7c5bff)}
   /* --- B206 選單卡片/按鈕美化（hover 浮起 + 掃光 + 選中脈動） --- */
   .btn{position:relative;overflow:hidden;transition:transform .12s,box-shadow .12s}
   .btn:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(34,230,255,.5)}
@@ -395,6 +399,7 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   </div>
   <div class="sellabel">選擇角色</div>
   <div class="charsel" id="charsel"></div>
+  <div id="charlore"></div>
   <div class="sellabel">選擇地圖</div>
   <div class="charsel" id="stagesel"></div>
   <div class="sellabel">遊戲模式</div>
@@ -979,6 +984,41 @@ var CHARS=[
   {id:'warden2',  face:'📡',name:'守燈人', desc:'環場掃射 · 起手掃描雷射', start:'beamsweep', locked:true, unlock:'warden2', stat:{fireRate:1.06,maxHp:1.08,pickup:1.1}},
 ];
 var selChar='ranger';
+// 角色背景故事（世界觀敘事，選角時顯示）
+var CHAR_LORE={
+  ranger:'霓潮爆發那夜，最先衝出避難所的巡邏兵。他不是最強的，卻是唯一沒有回頭的。',
+  blade:'曾是霓虹劇院的首席舞者，如今用同一副身段收割敵潮——每一刀都像謝幕。',
+  storm:'雷雨中誕生的孤兒，能聽見電流的低語。她說，閃電從不瞄準，只是選擇。',
+  gunner:'把整座軍械庫背在身上的男人。走得慢，但他所到之處再無敵人站立。',
+  cryo:'極地研究站唯一的倖存者。她凍結了吞噬同伴的怪物，也凍結了自己的眼淚。',
+  void:'凝視深淵太久，深淵在他掌心開了一扇門。他借虛空之力，也償還虛空之債。',
+  sniper:'一發，一命。他在三公里外看著世界崩塌，決定親手校正每一個座標。',
+  engineer:'廢墟裡的造物者，用敵人的殘骸佈下陷阱。他相信，最好的防禦是讓敵人後悔前進。',
+  pyro:'焚燒祭司的最後傳人。烈焰之環是他的信仰，灰燼是他留給世界的禱文。',
+  demo:'礦場爆破工出身，如今把整片戰場當成待拆的岩壁。「退後，這裡要塌了。」',
+  thundergod:'自稱從雷雲降臨的存在。無人知其真名，只知他抬手，天便落罰。',
+  blazer:'體內封著一座休眠火山的女子。她每一次呼吸，都在克制不把世界燒成焦土。',
+  plaguer:'瘟疫爆發區走出的醫者。她治不好這個世界，便決定讓敵人陪它一起腐爛。',
+  rover:'流浪於各座遺跡之間的拾荒客。他的回力刃去而復返，正如他總會回到戰場。',
+  breaker:'城牆倒下時仍站在最前線的士兵。地刺是他的話語：想過去，先踏過我。',
+  duelist:'霓虹鬥技場的無敗冠軍。能量鞭在她手中，是禮儀，也是判決。',
+  shredder:'解體工廠的環鋸，被他改造成貼身武裝。切割聲對他而言，是最安心的搖籃曲。',
+  fortifier:'最後一座哨塔的守望者。他從不追擊，因為他守的地方，敵人永遠攻不進來。',
+  gambler:'把命運壓在骰子上的男人。每一發榴彈都是一次豪賭——而他從不算牌。',
+  electromancer:'把自己接進電網的瘋狂學者。他的血管裡流的不是血，是三萬伏特。',
+  judicator:'手持光矛的裁決者。他不審判對錯，只審判——誰擋在了正義的軌跡上。',
+  novacaster:'觀星台的末代祭司。她把超新星的爆發，收攏成掌心一次次的環射。',
+  prismancer:'折射光線為刃的稜鏡師。他說，真理和光一樣，會在最意外的角度轉彎。',
+  shockmancer:'深海基地的倖存工程師。震盪波是他對抗孤獨的方式——讓世界感受到他還在。',
+  bombardier:'防空陣地最後的炮手。天空曾是他的戰場，如今他把彈幕潑向四面八方。',
+  cometeer:'追逐墜落彗星的觀測員。他終於明白，自己才是那顆貫穿黑夜的火。',
+  lunar:'月蝕之夜覺醒的刃客。她的鐮月斬如潮汐，盈虧之間，收割一整片敵影。',
+  enigma:'沒有人見過他的臉，只在無傷通關的紀錄裡，見過那抹一閃而過的影子。',
+  spiralist:'把混沌織成秩序的螺旋師。她的彈幕看似雜亂，實則是宇宙運行的縮影。',
+  gunslinger:'舊時代的槍手，拒絕承認火力已被魔法取代。加特林的轟鳴是他的證明。',
+  ronin:'失去主家的流浪劍者。迴旋輪刃去而復返，正如他無處安放的忠誠。',
+  warden2:'孤島燈塔最後的守燈人。掃描雷射是他日夜不熄的燈——為所有迷途者指路。'
+};
 var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕',lunar:'單局擊殺1200敵人',enigma:'？？？ 隱藏任務',spiralist:'單局擊殺2500敵人',gunslinger:'單局造成100萬傷害',ronin:'單局擊殺60精英',warden2:'單局存活12分'};
 
 // =====================================================================
@@ -3685,7 +3725,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v298 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v299 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -3718,6 +3758,10 @@ function renderMenu(){
     try{ var cv=el.querySelector('.cship'), g=cv.getContext('2d'); var sig=charSig(c.id); sig.arch=ci%6;
       if(!unlocked){ g.globalAlpha=0.4; } drawMiniShip(g,38,32,15,sig); g.globalAlpha=1; }catch(_){}
   });
+  // 角色背景故事框（顯示當前選中角色）
+  var clb=$('charlore'); if(clb){ var sc=CHARS.find(function(x){return x.id===selChar;})||CHARS[0]; var lore=CHAR_LORE[selChar]||'';
+    clb.innerHTML='<div class="clname" style="color:#8ff">'+sc.face+' '+sc.name+'　<span style="font-size:11px;font-weight:600;color:#8ea0c8;font-style:normal">'+sc.desc+'</span></div><div class="cltxt">「'+lore+'」</div>';
+  }
   var ss=$('stagesel'); ss.innerHTML='';
   STAGES.forEach(function(s){ var unlocked=stageUnlocked(s);
     var el=document.createElement('div'); el.className='charcard'+(selStage===s.id?' on':'')+(unlocked?'':' locked');

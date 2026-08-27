@@ -273,6 +273,15 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   .skinbtn.buy.no{opacity:.4;cursor:not-allowed}
   .skinbtn.own{border-color:#22e6ff;color:#22e6ff}
   .skinbtn.eq{border-color:#3ad07a;color:#3ad07a;background:rgba(58,208,122,.12);cursor:default}
+  #prestigelist{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-top:6px}
+  .pcard{background:linear-gradient(160deg,rgba(255,213,74,.06),rgba(12,18,34,.6));border:1px solid rgba(255,213,74,.2);border-radius:14px;padding:14px;text-align:center}
+  .pcard .pic{font-size:22px}
+  .pcard .pnm{font-weight:800;font-size:14px;color:#ffe08a;margin-top:4px}
+  .pcard .pds{font-size:11.5px;color:#9fb2d8;margin:4px 0 8px;min-height:30px}
+  .pcard .plv{font-family:monospace;font-size:11px;color:#8ea0c8;margin-bottom:8px}
+  .pbtn{display:block;width:100%;padding:7px;border-radius:9px;border:1px solid rgba(255,213,74,.5);background:rgba(255,213,74,.08);color:#ffe08a;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit}
+  .pbtn.no{opacity:.4;cursor:not-allowed}
+  .pbtn.max{border-color:#3ad07a;color:#3ad07a;background:rgba(58,208,122,.12);cursor:default}
   /* --- B206 選單卡片/按鈕美化（hover 浮起 + 掃光 + 選中脈動） --- */
   .btn{position:relative;overflow:hidden;transition:transform .12s,box-shadow .12s}
   .btn:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(34,230,255,.5)}
@@ -441,7 +450,10 @@ if('serviceWorker' in navigator){ var __reloaded=false;
     <button class="btn ghost" id="relicbtn" style="flex:1">遺物收藏 💎</button>
     <button class="btn ghost" id="skinbtn" style="flex:1">皮膚商城 🎨</button>
   </div>
-  <button class="btn ghost" id="shopbtn">永久強化 ◆</button>
+  <div style="display:flex;gap:10px">
+    <button class="btn ghost" id="shopbtn" style="flex:1">永久強化 ◆</button>
+    <button class="btn ghost" id="prestigebtn" style="flex:1;border-color:rgba(255,213,74,.5);color:#ffe08a">轉生殿堂 ✦</button>
+  </div>
   <button class="btn ghost" id="boostbtn">局前補給 🎁</button>
   <div style="display:flex;gap:10px">
     <button class="btn ghost" id="tutbtn" style="flex:1">新手教學 📘</button>
@@ -562,6 +574,15 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   <button class="btn ghost" id="skinclose" style="margin-top:14px">返回</button>
 </div></div>
 
+<!-- 轉生殿堂 -->
+<div id="prestige" class="overlay"><div class="panel" style="max-width:600px">
+  <h2 style="text-align:center;font-size:24px;font-weight:900;letter-spacing:2px;color:#ffd54a;margin-bottom:2px;text-shadow:0 0 16px rgba(255,213,74,.55)">轉生殿堂 ✦</h2>
+  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:12px">重置永久強化，換取永不重置的星核 · 碎片、皮膚與收藏全數保留</div>
+  <div id="prestigetop"></div>
+  <div id="prestigelist"></div>
+  <button class="btn ghost" id="prestigeclose" style="margin-top:14px">返回</button>
+</div></div>
+
 <!-- 排行榜 -->
 <div id="board" class="overlay"><div class="panel" style="max-width:520px">
   <h2 style="text-align:center;font-size:24px;font-weight:900;letter-spacing:2px;color:#ffd54a;margin-bottom:6px">排行榜 🏆</h2>
@@ -640,7 +661,7 @@ try{ var _fx=localStorage.getItem('neon_fx'); if(_fx==='med')fxScale=0.6; else i
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false,enigma:false,spiralist:false,gunslinger:false,ronin:false,warden2:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0},weekly:{week:-1,done:false},achMile:{},modeBest:{},relics:{},skins:{default:1},equippedSkin:'default',codes:{}};
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0},weekly:{week:-1,done:false},achMile:{},modeBest:{},relics:{},skins:{default:1},equippedSkin:'default',codes:{},prestige:{cores:0,count:0,upg:{}}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
@@ -868,6 +889,31 @@ function renderSkinShop(){ DB.skins=DB.skins||{default:1}; DB.equippedSkin=DB.eq
   $('skinlist').querySelectorAll('[data-buy]').forEach(function(b){ b.onclick=function(){ buySkin(b.getAttribute('data-buy')); }; });
   $('skinlist').querySelectorAll('[data-eq]').forEach(function(b){ b.onclick=function(){ DB.equippedSkin=b.getAttribute('data-eq'); saveDB(); GAudio.pick&&GAudio.pick(); renderSkinShop(); }; });
 }
+// ===== 轉生殿堂 UI =====
+var _prestigeConfirm=false;
+function buyPrestige(id){ var p=prestigeById(id); if(!p)return; DB.prestige=DB.prestige||{cores:0,count:0,upg:{}}; var lv=prestigeLv(id); if(lv>=p.max)return; var cost=p.cost(lv); if((DB.prestige.cores||0)<cost)return; DB.prestige.cores-=cost; DB.prestige.upg[id]=lv+1; saveDB(); GAudio.achieve&&GAudio.achieve(); renderPrestige(); }
+function renderPrestige(){ DB.prestige=DB.prestige||{cores:0,count:0,upg:{}};
+  var inv=metaInvested(), gain=prestigeGain(), can=gain>0;
+  var rebirthBtn;
+  if(_prestigeConfirm&&can){ rebirthBtn='<div style="display:flex;gap:8px"><button class="btn" id="pconfirmyes" style="flex:1;margin:0;border-color:#ffd54a;color:#ffd54a;background:rgba(255,213,74,.12)">確定轉生 → +✦'+gain+'</button><button class="btn ghost" id="pconfirmno" style="flex:1;margin:0">取消</button></div>'; }
+  else rebirthBtn='<button class="btn" id="prebirth" style="margin:0;'+(can?'border-color:#ffd54a;color:#ffd54a;background:rgba(255,213,74,.1)':'opacity:.5;cursor:not-allowed')+'"'+(can?'':' disabled')+'>✦ 轉生'+(can?'（獲得 ✦'+gain+' 星核）':'（需永久強化總等級 '+inv+'/'+PRESTIGE_REQ+'）')+'</button>';
+  $('prestigetop').innerHTML=
+    '<div style="display:flex;justify-content:space-around;text-align:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,213,74,.2);border-radius:14px;padding:14px;margin-bottom:12px">'+
+      '<div><div style="font-size:26px;font-weight:900;color:#ffd54a;font-family:monospace">✦ '+(DB.prestige.cores||0)+'</div><div style="font-size:11px;color:#8ea0c8">星核</div></div>'+
+      '<div><div style="font-size:26px;font-weight:900;color:#c98bff;font-family:monospace">'+(DB.prestige.count||0)+'</div><div style="font-size:11px;color:#8ea0c8">轉生次數</div></div>'+
+      '<div><div style="font-size:26px;font-weight:900;color:#22e6ff;font-family:monospace">'+inv+'</div><div style="font-size:11px;color:#8ea0c8">目前強化投入</div></div>'+
+    '</div>'+
+    '<div style="font-size:11.5px;color:#9fb2d8;text-align:center;margin-bottom:8px">轉生會把所有永久強化歸零，換取星核；碎片、皮膚與收藏不受影響。星核加成永久有效、不會被重置。</div>'+
+    rebirthBtn;
+  var html=PRESTIGE.map(function(p){ var lv=prestigeLv(p.id), maxed=lv>=p.max, cost=p.cost(lv), afford=(DB.prestige.cores||0)>=cost;
+    var btn = maxed?'<div class="pbtn max">✓ 已滿級</div>':'<button class="pbtn'+(afford?'':' no')+'" data-p="'+p.id+'"'+(afford?'':' disabled')+'>✦ '+cost+'</button>';
+    return '<div class="pcard"><div class="pic">'+p.ic+'</div><div class="pnm">'+p.name+'</div><div class="pds">'+p.desc+' '+p.per+'／級</div><div class="plv">Lv '+lv+' / '+p.max+'</div>'+btn+'</div>'; }).join('');
+  $('prestigelist').innerHTML='<div style="margin:14px 2px 8px;font-weight:900;color:#ffe08a;letter-spacing:1px">✦ 星核加成（永不重置）</div>'+html;
+  var yes=$('pconfirmyes'); if(yes)yes.onclick=function(){ if(doPrestige()){ _prestigeConfirm=false; GAudio.fuse&&GAudio.fuse(); announce&&null; renderPrestige(); } };
+  var no=$('pconfirmno'); if(no)no.onclick=function(){ _prestigeConfirm=false; renderPrestige(); };
+  var rb=$('prebirth'); if(rb)rb.onclick=function(){ if(prestigeGain()>0){ _prestigeConfirm=true; renderPrestige(); } };
+  $('prestigelist').querySelectorAll('[data-p]').forEach(function(b){ b.onclick=function(){ buyPrestige(b.getAttribute('data-p')); }; });
+}
 function redeemCode(){ var el=$('codeinput'), msg=$('codemsg'); if(!el||!msg)return; var code=(el.value||'').trim().toUpperCase().replace(/\s/g,''); DB.codes=DB.codes||{};
   if(!code){ msg.style.color='#ff9eb0'; msg.textContent='請先輸入代碼'; return; }
   var c=CREATOR_CODES[code];
@@ -1024,6 +1070,24 @@ var META=[
   {id:'omni',    ic:'🌌', name:'萬能核心 · 殿堂', desc:'傷害/生命/攻速/移速全面提升（碎片無底洞）', per:'+3%全能', max:20, cost:function(l){return 8000*(l+1)*(l+1);}},
 ];
 function metaLv(id){return DB.meta[id]||0;}
+// ===== 轉生 Prestige：重置永久強化換星核，星核購買永不重置的全域加成 =====
+function prestigeLv(id){ return (DB.prestige&&DB.prestige.upg&&DB.prestige.upg[id])||0; }
+var PRESTIGE=[
+  {id:'p_dmg',   ic:'⚔️', name:'星核之力', desc:'全域傷害', per:'+3%',  max:15, cost:function(l){return 2+l;}},
+  {id:'p_hp',    ic:'❤️', name:'星核之壁', desc:'全域生命上限', per:'+4%', max:15, cost:function(l){return 2+l;}},
+  {id:'p_haste', ic:'⏱️', name:'星核疾風', desc:'全域攻速', per:'+3%',  max:12, cost:function(l){return 2+l;}},
+  {id:'p_crit',  ic:'🎯', name:'星核暴走', desc:'初始暴擊率', per:'+2%',  max:10, cost:function(l){return 3+l;}},
+  {id:'p_greed', ic:'💰', name:'星核貪婪', desc:'碎片獲取', per:'+6%',   max:12, cost:function(l){return 2+l;}},
+  {id:'p_xp',    ic:'🧿', name:'星核領悟', desc:'經驗獲取', per:'+5%',   max:10, cost:function(l){return 2+l;}},
+  {id:'p_revive',ic:'💫', name:'星核復甦', desc:'每局額外復活', per:'+1次', max:2, cost:function(l){return 8+l*8;}}
+];
+function prestigeById(id){ for(var i=0;i<PRESTIGE.length;i++)if(PRESTIGE[i].id===id)return PRESTIGE[i]; return null; }
+function metaInvested(){ var s=0; for(var k in (DB.meta||{}))s+=DB.meta[k]||0; return s; }   // 目前投入的永久強化總等級
+var PRESTIGE_REQ=15;   // 轉生門檻：永久強化總等級
+function prestigeGain(){ var inv=metaInvested(); if(inv<PRESTIGE_REQ)return 0; return Math.floor(inv/3); }   // 可獲星核
+function doPrestige(){ var g=prestigeGain(); if(g<=0)return false; DB.prestige=DB.prestige||{cores:0,count:0,upg:{}};
+  DB.prestige.cores+=g; DB.prestige.count=(DB.prestige.count||0)+1; DB.meta={};   // 重置永久強化等級（碎片/皮膚/收藏保留）
+  saveDB(); return true; }
 
 // =====================================================================
 // 角色
@@ -1886,10 +1950,11 @@ function newRun(daily){
   if(_tr>=4)G.entranceT=1.0;   // 傳奇：出場動畫
   // 基礎屬性（含永久強化 + 角色 + 每日變異）
   var omni=1+0.03*metaLv('omni');   // 萬能核心：全能加成
-  player.base={ dmg:1*(1+0.08*metaLv('dmg'))*(1+0.06*metaLv('overcharge'))*omni*(ch.stat.dmg||1)*mut.pDmg,
-    fireRate:1*(ch.stat.fireRate||1)*(1+0.05*metaLv('haste'))*omni, speed:230*(1+0.05*metaLv('spd'))*omni*(ch.stat.speed||1)*mut.pSpd,
-    maxHp:(100+12*metaLv('hp'))*omni*(ch.stat.maxHp||1)*mut.pHp, pickup:90*(1+0.12*metaLv('pick'))*(ch.stat.pickup||1),
-    crit:0.05+(ch.stat.crit||0)+0.03*metaLv('crit'), critMult:2*(1+0.1*metaLv('critdmg')), armor:0.04*metaLv('armor'), regen:0.3*metaLv('regen'), xpMult:1+0.08*metaLv('xp') };
+  var pDmg=1+0.03*prestigeLv('p_dmg'), pHp=1+0.04*prestigeLv('p_hp'), pHaste=1+0.03*prestigeLv('p_haste');   // 轉生星核全域加成（永不重置）
+  player.base={ dmg:1*(1+0.08*metaLv('dmg'))*(1+0.06*metaLv('overcharge'))*omni*pDmg*(ch.stat.dmg||1)*mut.pDmg,
+    fireRate:1*(ch.stat.fireRate||1)*(1+0.05*metaLv('haste'))*omni*pHaste, speed:230*(1+0.05*metaLv('spd'))*omni*(ch.stat.speed||1)*mut.pSpd,
+    maxHp:(100+12*metaLv('hp'))*omni*pHp*(ch.stat.maxHp||1)*mut.pHp, pickup:90*(1+0.12*metaLv('pick'))*(ch.stat.pickup||1),
+    crit:0.05+(ch.stat.crit||0)+0.03*metaLv('crit')+0.02*prestigeLv('p_crit'), critMult:2*(1+0.1*metaLv('critdmg')), armor:0.04*metaLv('armor'), regen:0.3*metaLv('regen'), xpMult:(1+0.08*metaLv('xp'))*(1+0.05*prestigeLv('p_xp')) };
   enemies=[]; bullets=[]; ebullets=[]; orbs=[]; particles=[]; dmgnums=[]; pickups=[]; blades=[]; fxRings=[]; wells=[]; beams=[]; mines=[]; clouds=[]; hazards=[]; drones=[]; shards=[];
   addWeapon(ch.start);
   recalc(); player.hp=player.maxHp;
@@ -2306,7 +2371,8 @@ function hurtPlayer(amount){
   if(player.hp<=0){
     if(G.charmRevive){ G.charmRevive=false; player.hp=player.maxHp*0.7; player.iframe=2.8;
       clearNearby(); announce('復活符發動！浴火重生','#5dff9b'); flashScreen('93,255,155',0.4); GAudio.level&&GAudio.level(); return; }   // 復活符：保底復活一次
-    if(!G.usedRevive && metaLv('revive')>0){ G.usedRevive=true; player.hp=player.maxHp*0.6; player.iframe=2.5;
+    var maxRev=metaLv('revive')+prestigeLv('p_revive');   // 復生協議 + 星核復甦(可多次)
+    if((G.reviveUsed||0)<maxRev){ G.reviveUsed=(G.reviveUsed||0)+1; G.usedRevive=true; player.hp=player.maxHp*0.6; player.iframe=2.5;
       clearNearby(); announce('復生協議！','#5dff9b'); GAudio.level(); return; }
     player.hp=0; gameOver();
   }
@@ -3616,7 +3682,7 @@ function startGame(daily){
 function gameOver(){
   G.over=true; running=true; // 仍渲染
   G.score=Math.round(G.time*10+G.kills*5+G.level*20+(G.bossKills||0)*200+(G.eliteKills||0)*15+(G.dmgDealt||0)*0.01);
-  var reward=Math.floor((G.kills*0.6+G.time*0.5+G.level*3)*(1+0.15*metaLv('greed')))+G.shards;
+  var reward=Math.floor((G.kills*0.6+G.time*0.5+G.level*3)*(1+0.15*metaLv('greed'))*(1+0.06*prestigeLv('p_greed')))+G.shards;
   DB.shards+=reward;
   if(G.time>DB.best.time){DB.best={time:G.time,kills:G.kills};}
   G.newRecord = (G.score||0) > (DB.bestScore||0); if(G.newRecord)DB.bestScore=G.score;
@@ -3788,7 +3854,7 @@ function renderPauseBuild(){
     '<div class="blabel">被動</div><div class="brow">'+ph+'</div>'+
     '<div class="blabel">角色 · 地圖</div><div class="brow"><span class="bchip">'+(CHARS.find(function(c){return c.id===selChar;})||{}).name+'</span><span class="bchip">'+G.stage.name+'</span>'+(G.daily?'<span class="bchip" style="border-color:#ffd54a">🗓️ '+G.mut.name+'</span>':'')+'</div>'; }
 
-function hideAll(){ ['menu','levelup','shop','pause','over','board','ach','codex','bestiary','relics','skinshop','profile','tutorial','missions'].forEach(function(id){$(id).classList.remove('show');}); }
+function hideAll(){ ['menu','levelup','shop','pause','over','board','ach','codex','bestiary','relics','skinshop','prestige','profile','tutorial','missions'].forEach(function(id){$(id).classList.remove('show');}); }
 function renderAch(){ var got=0, lgTotal=0, lgGot=0, hidGot=0, hidTotal=0; var html=ACHIEVEMENTS.map(function(a){ var u=DB.achievements[a.id]; if(u)got++;
   var lg=a.name.indexOf('【傳說】')>=0; if(lg){lgTotal++; if(u)lgGot++;}
   if(a.hidden){ hidTotal++; if(u)hidGot++; }
@@ -3873,7 +3939,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v305 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v306 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -4065,6 +4131,8 @@ $('relicbtn').onclick=function(){ renderRelics(); $('menu').classList.remove('sh
 $('relicclose').onclick=function(){ $('relics').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('skinbtn').onclick=function(){ $('codemsg').textContent=''; renderSkinShop(); $('menu').classList.remove('show'); $('skinshop').classList.add('show'); };
 $('skinclose').onclick=function(){ $('skinshop').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
+$('prestigebtn').onclick=function(){ _prestigeConfirm=false; renderPrestige(); $('menu').classList.remove('show'); $('prestige').classList.add('show'); };
+$('prestigeclose').onclick=function(){ $('prestige').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('coderedeem').onclick=redeemCode;
 $('codeinput').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); redeemCode(); } });
 $('shopbtn').onclick=function(){ renderShop(); $('menu').classList.remove('show'); $('shop').classList.add('show'); };

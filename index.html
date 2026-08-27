@@ -829,8 +829,9 @@ function renderRelics(){ DB.relics=DB.relics||{}; var got=0;
 // ===== 皮膚商城 UI + 創作者代碼兌換 =====
 var CREATOR_CODES={ 'RELIKA':{shards:5000,name:'創作者專屬禮包'}, 'NEONSURGE':{shards:1500,name:'霓潮歡迎禮'}, 'SURVIVOR':{shards:2000,name:'倖存者補給'}, 'THANKYOU':{shards:1000,name:'感謝有你'} };
 function skinCardSig(sk){ if(!sk||sk.id==='default'){ var idx=CHARS.findIndex(function(c){return c.id===selChar;}); var s=charSig(selChar); s.arch=(idx<0?0:idx)%6; return s; }
-  if(sk.dyn)return {arch:0,col:'#22e6ff',glow:'#7c5bff',edge:'#c9fff0',hull:'#2a1a40',hull2:'#40203a',core:'#ffffff',accent:'#ff5edb'};
-  var out={arch:0}; for(var k in sk.pal)out[k]=sk.pal[k]; return out; }
+  var ar=(sk.arch!=null&&sk.arch>=0)?sk.arch:0;
+  if(sk.dyn)return {arch:ar,col:'#22e6ff',glow:'#7c5bff',edge:'#c9fff0',hull:'#2a1a40',hull2:'#40203a',core:'#ffffff',accent:'#ff5edb'};
+  var out={arch:ar}; for(var k in sk.pal)out[k]=sk.pal[k]; return out; }
 function buySkin(id){ var sk=skinById(id); if(!sk||DB.skins[id])return; if((DB.shards||0)<sk.price)return; DB.shards-=sk.price; DB.skins[id]=1; DB.equippedSkin=id; saveDB(); GAudio.achieve&&GAudio.achieve(); renderSkinShop(); }
 function renderSkinShop(){ DB.skins=DB.skins||{default:1}; DB.equippedSkin=DB.equippedSkin||'default';
   $('skinshards').textContent='◆ '+(DB.shards||0);
@@ -1081,25 +1082,38 @@ var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'
 
 // ===== 皮膚商城：機體外觀塗裝，用碎片購買（含每 2 個月輪換的限量皮膚）=====
 function mkpal(hue){ return {col:'hsl('+hue+',85%,60%)',glow:'hsl('+hue+',90%,62%)',edge:'hsl('+hue+',92%,78%)',hull:'hsl('+hue+',46%,30%)',hull2:'hsl('+((hue+22)%360)+',50%,23%)',core:'hsl('+((hue+16)%360)+',82%,88%)',accent:'hsl('+((hue+40)%360)+',90%,64%)'}; }
-var SKIN_RARITY={ common:{name:'原廠',c:'#8ea6c8'}, rare:{name:'稀有',c:'#22e6ff'}, epic:{name:'史詩',c:'#c98bff'}, legend:{name:'傳說',c:'#ffd54a'}, limited:{name:'限量',c:'#ff5edb'} };
+var SKIN_RARITY={ common:{name:'原廠',c:'#8ea6c8'}, rare:{name:'稀有',c:'#22e6ff'}, superrare:{name:'超稀有',c:'#3ad07a'}, epic:{name:'史詩',c:'#c98bff'}, legend:{name:'傳奇',c:'#ffd54a'} };
+var SKIN_TIER={common:0,rare:1,superrare:2,epic:3,legend:4};   // 超稀有+改音效 · 史詩+攻擊特效 · 傳奇+擊殺特效&出場動畫
+// 每款皮膚外觀顯著不同：不同船體原型(arch)+ 手調調色盤 + 分級特效(sfx音效 / atkCol攻擊色 / killCol擊殺色)
 var SKINS=[
-  {id:'default', name:'原廠塗裝', price:0,    r:'common', pal:null, desc:'各角色專屬本色，展現每位倖存者的獨特身分'},
-  {id:'crimson', name:'緋紅烈焰', price:600,  r:'rare',   pal:mkpal(0),   desc:'燃燒的赤色戰意，為每一次衝鋒點火'},
-  {id:'toxic',   name:'劇毒魅影', price:600,  r:'rare',   pal:mkpal(115), desc:'瀰漫毒霧的螢綠塗裝'},
-  {id:'ice',     name:'極地寒霜', price:600,  r:'rare',   pal:mkpal(195), desc:'凜冽的冰晶藍白，凍結一切靠近者'},
-  {id:'void',    name:'虛空之影', price:900,  r:'epic',   pal:{col:'#9b6bff',glow:'#7c5bff',edge:'#c9a8ff',hull:'#1a1030',hull2:'#0e0820',core:'#e6d8ff',accent:'#c98bff'}, desc:'吞噬光線的深淵紫黑，來自虛空的餽贈'},
-  {id:'mono',    name:'純白騎士', price:800,  r:'epic',   pal:{col:'#e8f0ff',glow:'#ffffff',edge:'#ffffff',hull:'#5a6478',hull2:'#3a4258',core:'#ffffff',accent:'#bcd0ff'}, desc:'一塵不染的白色機體，騎士的信條'},
-  {id:'gold',    name:'黃金傳說', price:1500, r:'legend', pal:mkpal(45),  desc:'流淌財富光澤的黃金機體，唯有頂尖倖存者配得上'}
+  {id:'default', name:'原廠塗裝', price:0,    r:'common',    arch:-1, pal:null, desc:'各角色專屬本色，展現每位倖存者的獨特身分'},
+  // —— 稀有：純外觀 ——
+  {id:'crimson', name:'緋紅烈焰', price:400,  r:'rare',      arch:0, pal:mkpal(0),   desc:'燃燒的赤色戰意，為每一次衝鋒點火'},
+  {id:'toxic',   name:'劇毒魅影', price:400,  r:'rare',      arch:3, pal:mkpal(115), desc:'瀰漫毒霧的螢綠塗裝'},
+  {id:'azure',   name:'蔚藍疾風', price:400,  r:'rare',      arch:1, pal:mkpal(210), desc:'如疾風般俐落的天藍機體'},
+  {id:'ember',   name:'餘燼橙焰', price:400,  r:'rare',      arch:5, pal:mkpal(28),  desc:'戰火燒盡後仍不熄的橙紅餘燼'},
+  // —— 超稀有：+音效改變 ——
+  {id:'ice',     name:'極地寒霜', price:800,  r:'superrare', arch:2, pal:mkpal(195), sfx:'crystal', desc:'凜冽冰晶藍白 · 擊殺化作清脆碎冰聲'},
+  {id:'tesla',   name:'雷霆電弧', price:800,  r:'superrare', arch:3, pal:{col:'#ffe14a',glow:'#fff08a',edge:'#ffffcc',hull:'#3a3410',hull2:'#28240a',core:'#ffffff',accent:'#7cf0ff'}, sfx:'arc', desc:'纏繞電弧的機體 · 擊殺爆出電流嘯鳴'},
+  {id:'magma',   name:'熔岩核心', price:800,  r:'superrare', arch:5, pal:{col:'#ff6a2a',glow:'#ff8f3a',edge:'#ffce8a',hull:'#3a1408',hull2:'#280d04',core:'#fff0d0',accent:'#ffd24a'}, sfx:'deep', desc:'熔岩流淌的赤紅機體 · 擊殺轟出低頻爆響'},
+  // —— 史詩：+音效 +攻擊特效 ——
+  {id:'void',    name:'虛空之影', price:1400, r:'epic',      arch:4, pal:{col:'#9b6bff',glow:'#7c5bff',edge:'#c9a8ff',hull:'#1a1030',hull2:'#0e0820',core:'#e6d8ff',accent:'#c98bff'}, sfx:'deep', atkCol:'#c98bff', desc:'吞噬光線的深淵紫黑 · 開火迸發虛空星芒'},
+  {id:'mono',    name:'純白騎士', price:1400, r:'epic',      arch:0, pal:{col:'#e8f0ff',glow:'#ffffff',edge:'#ffffff',hull:'#5a6478',hull2:'#3a4258',core:'#ffffff',accent:'#bcd0ff'}, sfx:'crystal', atkCol:'#ffffff', desc:'一塵不染的白色騎士 · 開火綻放純白光刃'},
+  {id:'obsidian',name:'黑曜獵手', price:1400, r:'epic',      arch:1, pal:{col:'#ff7a2a',glow:'#ff9a3a',edge:'#ffce8a',hull:'#101014',hull2:'#08080a',core:'#ffd0a0',accent:'#ff7a2a'}, sfx:'arc', atkCol:'#ff9a3a', desc:'漆黑鑲橙的獵手機體 · 開火射出灼熱火星'},
+  // —— 傳奇：+音效 +攻擊特效 +擊殺特效 +出場動畫 ——
+  {id:'gold',    name:'黃金傳奇', price:2500, r:'legend',    arch:2, pal:mkpal(45),  sfx:'crystal', atkCol:'#ffe14a', killCol:'#ffd54a', desc:'流淌財富光澤的黃金機體 · 王者的登場、攻擊與收割'},
+  {id:'nebula',  name:'星雲霸主', price:2500, r:'legend',    arch:3, pal:{col:'#ff5edb',glow:'#c98bff',edge:'#ffd0f0',hull:'#1a1030',hull2:'#100a24',core:'#ffffff',accent:'#7cf0ff'}, sfx:'arc', atkCol:'#ff5edb', killCol:'#c98bff', desc:'橫跨星雲的霸主 · 出場撕裂空間、擊殺綻放星塵'}
 ];
-var LIMITED_SKINS=[
-  {id:'ltd_prism', name:'虹光稜鏡', price:2500, r:'limited', dyn:true, desc:'色相不斷流轉的稜鏡機體，僅在此檔期販售'},
-  {id:'ltd_sakura',name:'霓櫻',     price:2500, r:'limited', pal:{col:'#ff8fc7',glow:'#ff6fb5',edge:'#ffd0e6',hull:'#4a2438',hull2:'#33182a',core:'#fff0f7',accent:'#ffb3d9'}, desc:'飄落霓虹櫻瓣的粉色機體，一期一會'},
-  {id:'ltd_abyss', name:'深海幽光', price:2500, r:'limited', pal:{col:'#2affd0',glow:'#00e0b0',edge:'#a0fff0',hull:'#082a2a',hull2:'#041e20',core:'#e0fff8',accent:'#5affe0'}, desc:'幽深海溝的生物螢光，稍縱即逝'}
+var LIMITED_SKINS=[   // 限量皮膚一律傳奇級（全特效）
+  {id:'ltd_prism', name:'虹光稜鏡', price:3000, r:'legend', arch:2, dyn:true, sfx:'crystal', atkCol:'#7cf0ff', killCol:'#ff5edb', desc:'色相不斷流轉的稜鏡機體 · 限量傳奇，僅此檔期'},
+  {id:'ltd_sakura',name:'霓櫻',     price:3000, r:'legend', arch:4, pal:{col:'#ff8fc7',glow:'#ff6fb5',edge:'#ffd0e6',hull:'#4a2438',hull2:'#33182a',core:'#fff0f7',accent:'#ffb3d9'}, sfx:'crystal', atkCol:'#ffb3d9', killCol:'#ff8fc7', desc:'飄落霓虹櫻瓣的粉色機體 · 限量傳奇，一期一會'},
+  {id:'ltd_abyss', name:'深海幽光', price:3000, r:'legend', arch:5, pal:{col:'#2affd0',glow:'#00e0b0',edge:'#a0fff0',hull:'#082a2a',hull2:'#041e20',core:'#e0fff8',accent:'#5affe0'}, sfx:'deep', atkCol:'#5affe0', killCol:'#2affd0', desc:'幽深海溝的生物螢光 · 限量傳奇，稍縱即逝'}
 ];
 function skinById(id){ var a=SKINS.concat(LIMITED_SKINS); for(var i=0;i<a.length;i++)if(a[i].id===id)return a[i]; return null; }
+function skinTier(sk){ return sk?(SKIN_TIER[sk.r]||0):0; }
 function currentLimited(){ var period=Math.floor(Date.now()/(60*86400000)); return LIMITED_SKINS[period%LIMITED_SKINS.length]; }
 function limitedDaysLeft(){ var per=60*86400000; var next=(Math.floor(Date.now()/per)+1)*per; return Math.ceil((next-Date.now())/86400000); }
-function applySkinToSig(sig){ var sk=skinById(DB.equippedSkin||'default'); if(!sk||!sk.pal)return sig; var out={arch:sig.arch,hue:sig.hue}; for(var k in sk.pal)out[k]=sk.pal[k]; return out; }
+function applySkinToSig(sig){ var sk=skinById(DB.equippedSkin||'default'); if(!sk)return sig; var arch=(sk.arch!=null&&sk.arch>=0)?sk.arch:sig.arch; if(!sk.pal){ sig.arch=arch; return sig; } var out={arch:arch,hue:sig.hue}; for(var k in sk.pal)out[k]=sk.pal[k]; return out; }
 
 // =====================================================================
 // 地圖 / 關卡
@@ -1825,7 +1839,13 @@ function newRun(daily){
   player={ x:0,y:0, radius:15, hp:0, maxHp:0, speed:0, iframe:0, aimAngle:0, frenzyT:0, overdriveT:0,
     weapons:[], passives:{}, base:{}, charId:ch.id, sig:charSig(ch.id) };
   var _ci=CHARS.indexOf(ch); if(_ci>=0)player.sig.arch=_ci%6;   // 依名冊序號分派船體原型，六型平均分佈
-  player.sig=applySkinToSig(player.sig); var _eqSk=skinById(DB.equippedSkin||'default'); player.skinDyn=!!(_eqSk&&_eqSk.dyn);   // 套用皮膚塗裝（保留船體原型）
+  player.sig=applySkinToSig(player.sig); var _eqSk=skinById(DB.equippedSkin||'default'); player.skinDyn=!!(_eqSk&&_eqSk.dyn);   // 套用皮膚塗裝
+  var _tr=skinTier(_eqSk);
+  player.skinSfx=_tr>=2?(_eqSk.sfx||null):null;                                   // 超稀有+：音效改變
+  player.skinAtk=_tr>=3?(_eqSk.atkCol||(_eqSk.pal&&_eqSk.pal.accent)||'#ffffff'):null;  // 史詩+：攻擊特效
+  player.skinKill=_tr>=4?(_eqSk.killCol||(_eqSk.pal&&_eqSk.pal.glow)||'#ffd54a'):null;  // 傳奇：擊殺特效
+  if(GAudio.setSkinFx)GAudio.setSkinFx(player.skinSfx);
+  if(_tr>=4)G.entranceT=1.0;   // 傳奇：出場動畫
   // 基礎屬性（含永久強化 + 角色 + 每日變異）
   var omni=1+0.03*metaLv('omni');   // 萬能核心：全能加成
   player.base={ dmg:1*(1+0.08*metaLv('dmg'))*(1+0.06*metaLv('overcharge'))*omni*(ch.stat.dmg||1)*mut.pDmg,
@@ -2162,6 +2182,7 @@ function hitEnemy(e,amount,fromx,fromy,knock){
 }
 function killEnemy(e){
   e.dead=true; G.kills++; if(e.elite){G.eliteKills=(G.eliteKills||0)+1; GAudio.elite&&GAudio.elite();} addCombo();
+  if(player.skinKill){ burst(e.x,e.y,player.skinKill,6,220); if(fxScale>=0.6&&(G._skfx=(G._skfx||0)+1)%2===0)ringFx(e.x,e.y,26,player.skinKill); }   // 傳奇皮膚：擊殺特效(彩色迸射+間隔光環，吃fxScale不爆量)
   if(player.lifesteal>0&&player.hp<player.maxHp){ player.hp=Math.min(player.maxHp,player.hp+player.lifesteal); }   // 吸血被動：擊殺回血
   if(player.cleave>0&&(G._clv||0)<4){ G._clv=(G._clv||0)+1; var clr=(50+player.cleave*14)*player.area, clr2=clr*clr, cvd=dmg(8+player.cleave*5); enemyGrid.query(e.x,e.y,clr,function(o){ if(o.hp>0&&o!==e&&dist2(o.x,o.y,e.x,e.y)<clr2)hitEnemy(o,cvd,e.x,e.y,0.1); }); ringFx(e.x,e.y,clr,'#ff8a3a'); G._clv--; }   // 劈斬：擊殺濺射(深度上限4防爆棧)
   if(player.shrapnel>0){ var shn=3+player.shrapnel, shd=dmg(7+player.shrapnel*4); for(var shi=0;shi<shn;shi++){ var sha=shi/shn*TAU+rand(-0.2,0.2); spawnBullet(e.x,e.y,Math.cos(sha),Math.sin(sha),640,shd,'#ffd54a',2,4,1.5); } }   // 破片：擊殺炸出遠距高速貫穿彈片(可穿透、飛更遠)
@@ -2296,6 +2317,7 @@ function loop(ts){ if(!running)return; requestAnimationFrame(loop);
 function update(dt){
   G.time+=dt;
   G._relicT=(G._relicT||0)+dt; if(G._relicT>=1.5){ G._relicT=0; checkRelics(); }   // 遺物：局內每 1.5 秒檢查一次，達成即刻出土
+  if(G.entranceT>0)G.entranceT-=dt;   // 傳奇皮膚出場動畫計時
   if(G.mode==='timeattack'&&!G.over){ G.modeTimer-=dt; if(G.modeTimer<=0){ G.modeTimer=0; announce('⏱️ 時間到！','#ffd54a'); G.over=true; gameOver(); return; } }   // 限時狂殺：時間到結算
   // combo 衰減
   if(G.comboTimer>0){ G.comboTimer-=dt; if(G.comboTimer<=0){ if(G.combo>=15)floatText('連擊中斷 x'+G.combo,'#ff8a3a'); G.combo=0; var cb=$('combo'); cb.style.opacity='0'; cb.classList.remove('flame','inferno');} }
@@ -3360,6 +3382,12 @@ function drawPlayer(){
     ctx.restore(); }
   ctx.restore(); ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
   ctx.save(); ctx.translate(player.x,player.y);
+  // 史詩+ 皮膚：環繞攻擊光環（脈動）
+  if(player.skinAtk){ ctx.save(); ctx.globalCompositeOperation='lighter'; var apu=0.5+0.5*Math.sin(G.time*4); ctx.globalAlpha=0.3+apu*0.25; ctx.strokeStyle=player.skinAtk; ctx.lineWidth=2; ctx.shadowColor=player.skinAtk; ctx.shadowBlur=12; ctx.beginPath(); ctx.arc(0,0,player.radius*(1.7+apu*0.25),0,TAU); ctx.stroke(); ctx.restore(); }
+  // 傳奇皮膚：出場動畫（擴散光環 + 縮放登場）
+  if(G.entranceT>0){ var et=G.entranceT, ep=1-et; ctx.save(); ctx.globalCompositeOperation='lighter'; var ekc=player.skinKill||player.sig.glow;
+    for(var er=0;er<3;er++){ var erp=ep*1.4-er*0.18; if(erp>0&&erp<1){ ctx.globalAlpha=(1-erp)*0.6; ctx.strokeStyle=ekc; ctx.lineWidth=3; ctx.shadowColor=ekc; ctx.shadowBlur=16; ctx.beginPath(); ctx.arc(0,0,erp*120,0,TAU); ctx.stroke(); } }
+    ctx.restore(); var esc=0.4+0.6*Math.min(1,ep*1.6); ctx.scale(esc,esc); }
   // 光暈（狂化變紅）
   ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=player.frenzyT>0?0.85:0.6; ctx.drawImage(glow(pGlow),-44,-44,88,88);
   ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
@@ -3807,7 +3835,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v300 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v301 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -3917,10 +3945,15 @@ var GAudio=(function(){ var ac=null, mMusic=false, mSfx=false, mVol=0.8;
     s.connect(f); f.connect(g); g.connect(a.destination); try{s.start();s.stop(a.currentTime+dur+0.02);}catch(e){} }
   function slide(f1,f2,dur,type,vol){ var a=ctx(); if(!a||mSfx||mVol<=0)return; var o=a.createOscillator(),g=a.createGain(); o.type=type||'sawtooth'; o.frequency.setValueAtTime(f1,a.currentTime); o.frequency.exponentialRampToValueAtTime(Math.max(1,f2),a.currentTime+dur);
     g.gain.setValueAtTime(Math.max(0.0002,(vol||0.1)*mVol),a.currentTime); g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+dur); o.connect(g); g.connect(a.destination); try{o.start();o.stop(a.currentTime+dur+0.02);}catch(e){} }
-  var _shootT=0;
+  var _shootT=0; var skinFx=null;
   return {
     resume:function(){ var a=ctx(); if(a&&a.state==='suspended')a.resume(); },
-    kill:function(){ beep(rand(220,320),0.05,'square',0.04); noise(0.05,0.045,'highpass',1400); },   // 擊殺：脆音+高頻噴濺
+    setSkinFx:function(id){ skinFx=id||null; },   // 皮膚音效檔位（超稀有以上）
+    kill:function(){
+      if(skinFx==='crystal'){ beep(rand(900,1300),0.05,'triangle',0.05); noise(0.04,0.03,'highpass',3200); }        // 清脆碎冰
+      else if(skinFx==='arc'){ slide(1600,420,0.06,'square',0.05); noise(0.03,0.03,'highpass',2600); }               // 電流嘯鳴
+      else if(skinFx==='deep'){ beep(rand(90,150),0.09,'sine',0.06); noise(0.06,0.05,'lowpass',420); }               // 低頻爆響
+      else { beep(rand(220,320),0.05,'square',0.04); noise(0.05,0.045,'highpass',1400); } },   // 擊殺：脆音+高頻噴濺
     hurt:function(){ beep(90,0.16,'sawtooth',0.16); noise(0.12,0.1,'lowpass',500); },
     level:function(){ [523,659,784,1046].forEach(function(f,i){setTimeout(function(){beep(f,0.16,'triangle',0.14);},i*65);}); setTimeout(function(){beep(1568,0.4,'sine',0.08);},260); },   // 升級：琶音+高音收尾
     pick:function(){ beep(880,0.05,'triangle',0.055); },
@@ -3933,6 +3966,9 @@ var GAudio=(function(){ var ac=null, mMusic=false, mSfx=false, mVol=0.8;
     shatter:function(){ [1500,2000,2600].forEach(function(f,i){setTimeout(function(){beep(f,0.05,'triangle',0.05);},i*28);}); noise(0.08,0.05,'highpass',2200); },   // 碎冰：清脆碎裂
     zap:function(){ slide(1300,320,0.08,'square',0.07); },   // 電擊：高→低滑音
     shoot:function(kind){ var a=ctx(); if(!a)return; if(a.currentTime-_shootT<0.05)return; _shootT=a.currentTime;   // 開火：節流的細微射擊音(依武器類型變色)
+      if(skinFx==='crystal'){ slide(1400,1000,0.03,'triangle',0.016); return; }        // 皮膚音效：清亮
+      if(skinFx==='arc'){ slide(1100,640,0.03,'square',0.015); return; }               // 皮膚音效：電弧
+      if(skinFx==='deep'){ beep(200,0.045,'sawtooth',0.02); return; }                  // 皮膚音效：低沉
       if(kind==='beam')slide(900,700,0.04,'sawtooth',0.02); else if(kind==='heavy'){ beep(160,0.05,'square',0.03); noise(0.04,0.02,'lowpass',700);} else slide(760,560,0.028,'square',0.018); },
     comboBlip:function(n){ beep(300+Math.min(n,60)*16,0.035,'triangle',0.033); if(n===25||n===50||n===100||n===200||n===350||n===500){ [660,880,1174,1568].forEach(function(f,i){setTimeout(function(){beep(f,0.14,'triangle',0.11);},i*55);}); } },   // 連擊里程碑：上升號角
     setMood:function(b,l){ if(b)BASS=b; if(l)LEAD=l; },

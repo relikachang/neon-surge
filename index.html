@@ -1036,9 +1036,16 @@ var BOOSTS=[
   {id:'bironhp',  ic:'❤️', name:'鋼鐵之軀',   desc:'本局生命上限 +50%',            cost:300, apply:function(){ player.base.maxHp*=1.5; recalc(); player.hp=player.maxHp; }},
   {id:'bartifact',ic:'🎲', name:'隨機神器',   desc:'開局隨機獲得一把武器（L3）',   cost:350, apply:function(){ var avail=WORDER.filter(function(id){return !weaponById(id);}); if(avail.length){ var id=pick(avail); addWeapon(id); var w=weaponById(id); if(w)w.level=2; } }},
   {id:'bgoldrush',ic:'💰', name:'掏金符',     desc:'本局碎片獲取 ×2（越打越賺）',  cost:300, apply:function(){ player.shardMul=(player.shardMul||1)*2; }},
-  {id:'bboots',   ic:'👟', name:'疾風之靴',   desc:'本局移速 +30%',                cost:250, apply:function(){ player.speed*=1.3; }},
-  {id:'bcrit',    ic:'🎯', name:'精準核心',   desc:'本局暴擊率 +20%',              cost:300, apply:function(){ player.crit=Math.min(1,player.crit+0.2); }},
-  {id:'bpierce',  ic:'➡️', name:'貫穿起手',   desc:'本局所有子彈額外貫穿 +2',       cost:250, apply:function(){ player.pierceBonus=(player.pierceBonus||0)+2; }},
+  {id:'bboots',   ic:'👟', name:'疾風之靴',   desc:'本局移速 +30%',                cost:250, apply:function(){ player.base.speed*=1.3; recalc(); }},
+  {id:'bcrit',    ic:'🎯', name:'精準核心',   desc:'本局暴擊率 +20%',              cost:300, apply:function(){ player.base.crit=Math.min(1,player.base.crit+0.2); recalc(); }},
+  {id:'bpierce',  ic:'➡️', name:'貫穿起手',   desc:'本局所有子彈額外貫穿 +2',       cost:250, apply:function(){ player.boostPierce=(player.boostPierce||0)+2; recalc(); }},
+  // —— B318 局前補給擴充（皆改 base，升級不失效）——
+  {id:'bregen',   ic:'✚',  name:'再生湧泉',   desc:'本局每秒回血 +2.5',            cost:280, apply:function(){ player.base.regen=(player.base.regen||0)+2.5; recalc(); }},
+  {id:'bmagnet',  ic:'🧲', name:'磁力立場',   desc:'本局拾取範圍 +80%',            cost:220, apply:function(){ player.base.pickup*=1.8; recalc(); }},
+  {id:'bcritdmg', ic:'💢', name:'致命一擊',   desc:'本局暴擊傷害 +100%',           cost:320, apply:function(){ player.base.critMult+=1.0; recalc(); }},
+  {id:'barmor',   ic:'🛡️', name:'鋼鐵壁壘',   desc:'本局減傷 +15%',                cost:300, apply:function(){ player.base.armor=(player.base.armor||0)+0.15; recalc(); }},
+  {id:'bxplearn', ic:'📚', name:'學者之志',   desc:'本局經驗獲取 +50%',            cost:280, apply:function(){ player.base.xpMult*=1.5; recalc(); }},
+  {id:'bdemolish',ic:'💣', name:'火力起手',   desc:'本局傷害 +25%',                cost:350, apply:function(){ player.base.dmg*=1.25; recalc(); }},
 ];
 function todaysMissions(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0;
   var pool=MISSIONS.slice(), out=[]; for(var j=0;j<3;j++){ var p=(h+j*7)%pool.length; out.push(pool[p]); pool.splice(p,1); } return out; }
@@ -2046,7 +2053,7 @@ function recalc(){
   player.xpMult=b.xpMult*(1+0.15*(p.pxp||0));
   player.area=1+0.16*(p.parea||0)+0.05*metaLv('area')+0.03*prestigeLv('p_area');      // 範圍/巨大化(含局外強化 + 星核擴張)
   player.amount=(p.pamount||0)+metaLv('multishot');          // 額外投射物(含局外多重核心)
-  player.pierceBonus=(p.ppierce||0)+metaLv('startpierce');     // 額外貫穿(含局外貫穿核心)
+  player.pierceBonus=(p.ppierce||0)+metaLv('startpierce')+(player.boostPierce||0);     // 額外貫穿(含局外貫穿核心 + 局前補給)
   player.bossDmg=1+0.08*metaLv('bossbane');     // 屠龍核心：對首領增傷
   player.dodge=Math.min(0.6,0.08*(p.pdodge||0)+0.02*metaLv('dodge'));   // 閃避機率(含局外迴避核心,上限60%)
   player.lifesteal=0.4*(p.pvamp||0)+0.2*metaLv('lifesteal');   // 擊殺回血量（含局外吸血核心）
@@ -4034,7 +4041,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v317 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v318 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

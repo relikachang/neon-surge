@@ -2394,7 +2394,17 @@ var EVENTS=[
     spawnPickup(s.x,s.y,'magnet'); for(var m=0;m<6;m++)spawnPickup(s.x+rand(-60,60),s.y+rand(-60,60),'xpgem'); markSpot(s.x,s.y,'#7dd3ff'); }},
   {w:7,  fn:function(s){   // 🎆 過載慶典：狂化 + 過載 + 光棱橫掃齊發，火力全開
     announce('🎆 過載慶典！火力全開','#ffe14a'); flashScreen('255,225,74',0.2);
-    spawnPickup(s.x,s.y,'overdrive'); spawnPickup(s.x+rand(-42,42),s.y+rand(-42,42),'frenzy'); spawnPickup(s.x+rand(-42,42),s.y+rand(-42,42),'lightstorm'); markSpot(s.x,s.y,'#ffe14a'); }}
+    spawnPickup(s.x,s.y,'overdrive'); spawnPickup(s.x+rand(-42,42),s.y+rand(-42,42),'frenzy'); spawnPickup(s.x+rand(-42,42),s.y+rand(-42,42),'lightstorm'); markSpot(s.x,s.y,'#ffe14a'); }},
+  // —— B365 局內事件擴充 ——
+  {w:8,  fn:function(s){   // 🧊 絕對零度：定身 + 凍結全場 + 回復，凍結空檔盡情收割
+    announce('🧊 絕對零度降臨！全場凍結','#8bd3ff'); flashScreen('139,211,255',0.22);
+    spawnPickup(s.x,s.y,'stasis'); spawnPickup(s.x+rand(-44,44),s.y+rand(-44,44),'timefreeze'); spawnPickup(s.x+rand(-44,44),s.y+rand(-44,44),'heart'); markSpot(s.x,s.y,'#8bd3ff'); }},
+  {w:8,  fn:function(s){   // 🛡️ 堡壘防線：部署砲塔 + 援護小隊 + 護盾，築起臨時要塞
+    announce('🛡️ 堡壘防線展開！','#5dffe0');
+    spawnPickup(s.x,s.y,'turretdrop'); spawnPickup(s.x+rand(-42,42),s.y+rand(-42,42),'squad'); spawnPickup(s.x+rand(-42,42),s.y+rand(-42,42),'shield'); markSpot(s.x,s.y,'#5dffe0'); }},
+  {w:7,  fn:function(s){   // 💥 天降災劫：空襲 + 雷暴 + 地毯轟炸齊落，抹平整片戰場
+    announce('💥 天降災劫！戰場轟炸','#ff6a3d'); flashScreen('255,106,61',0.24); shake(9);
+    spawnPickup(s.x,s.y,'airstrike'); spawnPickup(s.x+rand(-46,46),s.y+rand(-46,46),'thunderstorm'); spawnPickup(s.x+rand(-46,46),s.y+rand(-46,46),'carpetbomb'); for(var b=0;b<2;b++)spawnPickup(s.x+rand(-50,50),s.y+rand(-50,50),'shardbag'); markSpot(s.x,s.y,'#ff6a3d'); }}
 ];
 function triggerRandomEvent(){
   if(!G||G.over)return;
@@ -4433,7 +4443,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v364 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v365 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者'];
 function renderMenu(){

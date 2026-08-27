@@ -2835,6 +2835,12 @@ function update(dt){
           enemyGrid.query(b.x,b.y,er,function(o){ if(o.hp>0&&o!==e&&dist2(o.x,o.y,b.x,b.y)<er*er)hitEnemy(o,b.dmg*0.55,b.x,b.y,0.3); });
           b.pierce=0; hit=true; } }
     });
+    // 敵子彈可被玩家子彈擊碎：碰到即碎裂，消耗一點貫穿；貫穿耗盡則子彈同歸於盡
+    if((!hit||b.pierce>0)&&ebullets.length){ for(var ei=ebullets.length-1;ei>=0;ei--){ var eb=ebullets[ei];
+      var rr=b.r+eb.r+2; if(dist2(b.x,b.y,eb.x,eb.y)<rr*rr){ ebullets.splice(ei,1);
+        burst(eb.x,eb.y,'#ff9de0',5,140); ringFx(eb.x,eb.y,15,'#ffd0f0');
+        if(G._ebShat==null||G.time-G._ebShat>0.045){ G._ebShat=G.time; GAudio.shatter&&GAudio.shatter(); }
+        b.pierce--; if(b.pierce<=0){ hit=true; break; } } } }
     if(hit&&b.pierce<=0){ bullets.splice(i,1); }
   }
 
@@ -4360,7 +4366,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v354 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v355 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者'];
 function renderMenu(){
@@ -4690,6 +4696,8 @@ window.__neon={
   give:function(t){ collectPickup({type:t,x:player.x,y:player.y}); return {frenzyT:+(player.frenzyT||0).toFixed(1),iframe:+player.iframe.toFixed(1),hp:Math.round(player.hp)}; },
   runInfo:function(){ return {char:selChar,startWeapon:player.weapons[0]?player.weapons[0].id:null,maxHp:Math.round(player.maxHp),crit:+player.crit.toFixed(2),speed:Math.round(player.speed),frenzyT:+(player.frenzyT||0).toFixed(1),shards:DB.shards}; },
   runCheckAch:function(){ var b=DB.shards; checkAch(); return {gain:DB.shards-b,unlocked:Object.keys(DB.achievements)}; },
+  ebCount:function(){ return ebullets.length; },
+  spawnEB:function(ox,oy){ spawnEnemyBullet(player.x+(ox||0),player.y+(oy||0),0,0,0,10,0); return ebullets.length; },
   setCombo:function(n){ G.combo=n-1; addCombo(); return {combo:G.combo,frenzyT:+(player.frenzyT||0).toFixed(1)}; }
 };
 })();

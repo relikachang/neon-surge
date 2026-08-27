@@ -220,8 +220,8 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   #menustats .st b{display:block;font-size:20px;font-weight:900;color:#eaf5ff;line-height:1.1}
   #menustats .st span{display:block;font-size:11px;color:#8ea0c8;letter-spacing:1px;margin-top:2px}
   #menu .btn#playbtn{font-size:25px;padding:23px;letter-spacing:4px}
-  #modesel{display:flex;gap:8px;margin-top:8px}
-  #modesel .modecard{flex:1;background:rgba(12,18,34,.6);border:2px solid rgba(255,255,255,.1);border-radius:14px;padding:10px 8px;cursor:pointer;text-align:center;transition:.14s}
+  #modesel{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+  #modesel .modecard{flex:1 1 120px;background:rgba(12,18,34,.6);border:2px solid rgba(255,255,255,.1);border-radius:14px;padding:10px 8px;cursor:pointer;text-align:center;transition:.14s}
   #modesel .modecard:hover{border-color:rgba(34,230,255,.5)}
   #modesel .modecard.on{border-color:var(--cyan);box-shadow:0 0 20px rgba(34,230,255,.35);background:rgba(34,230,255,.08)}
   #modesel .mic{font-size:26px}
@@ -1243,7 +1243,8 @@ try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bo
 var MODES={
   normal:{ic:'♾️',name:'標準生存',desc:'經典模式：活越久越強，挑戰無盡'},
   timeattack:{ic:'⏱️',name:'限時狂殺',desc:'120 秒內衝最高擊殺，時間到結算',dur:120},
-  bossrush:{ic:'👑',name:'首領亂鬥',desc:'無雜兵，首領接連降臨，考驗火力與走位'}
+  bossrush:{ic:'👑',name:'首領亂鬥',desc:'無雜兵，首領接連降臨，考驗火力與走位'},
+  hardcore:{ic:'💀',name:'一命限定',desc:'零復活・受一次致命傷即結束，碎片獎勵 1.5 倍',reward:1.5}
 };
 function stageUnlocked(s){ return !s.locked || DB.stages[s.id]; }
 
@@ -2369,11 +2370,13 @@ function hurtPlayer(amount){
   if(amount>=0.5)dmgNum(player.x,player.y-26,amount,false,true);   // 玩家中彈：明顯紅色 -N
   flashHurt(); GAudio.hurt();
   if(player.hp<=0){
-    if(G.charmRevive){ G.charmRevive=false; player.hp=player.maxHp*0.7; player.iframe=2.8;
-      clearNearby(); announce('復活符發動！浴火重生','#5dff9b'); flashScreen('93,255,155',0.4); GAudio.level&&GAudio.level(); return; }   // 復活符：保底復活一次
-    var maxRev=metaLv('revive')+prestigeLv('p_revive');   // 復生協議 + 星核復甦(可多次)
-    if((G.reviveUsed||0)<maxRev){ G.reviveUsed=(G.reviveUsed||0)+1; G.usedRevive=true; player.hp=player.maxHp*0.6; player.iframe=2.5;
-      clearNearby(); announce('復生協議！','#5dff9b'); GAudio.level(); return; }
+    if(G.mode!=='hardcore'){   // 一命限定：完全禁止任何復活
+      if(G.charmRevive){ G.charmRevive=false; player.hp=player.maxHp*0.7; player.iframe=2.8;
+        clearNearby(); announce('復活符發動！浴火重生','#5dff9b'); flashScreen('93,255,155',0.4); GAudio.level&&GAudio.level(); return; }   // 復活符：保底復活一次
+      var maxRev=metaLv('revive')+prestigeLv('p_revive');   // 復生協議 + 星核復甦(可多次)
+      if((G.reviveUsed||0)<maxRev){ G.reviveUsed=(G.reviveUsed||0)+1; G.usedRevive=true; player.hp=player.maxHp*0.6; player.iframe=2.5;
+        clearNearby(); announce('復生協議！','#5dff9b'); GAudio.level(); return; }
+    }
     player.hp=0; gameOver();
   }
 }
@@ -3682,7 +3685,8 @@ function startGame(daily){
 function gameOver(){
   G.over=true; running=true; // 仍渲染
   G.score=Math.round(G.time*10+G.kills*5+G.level*20+(G.bossKills||0)*200+(G.eliteKills||0)*15+(G.dmgDealt||0)*0.01);
-  var reward=Math.floor((G.kills*0.6+G.time*0.5+G.level*3)*(1+0.15*metaLv('greed'))*(1+0.06*prestigeLv('p_greed')))+G.shards;
+  var _modeRw=(MODES[G.mode]&&MODES[G.mode].reward)||1;   // 模式獎勵倍率（一命限定 1.5×）
+  var reward=Math.floor((G.kills*0.6+G.time*0.5+G.level*3)*(1+0.15*metaLv('greed'))*(1+0.06*prestigeLv('p_greed'))*_modeRw)+G.shards;
   DB.shards+=reward;
   if(G.time>DB.best.time){DB.best={time:G.time,kills:G.kills};}
   G.newRecord = (G.score||0) > (DB.bestScore||0); if(G.newRecord)DB.bestScore=G.score;
@@ -3939,7 +3943,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v306 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v307 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -3993,7 +3997,7 @@ function renderMenu(){
     slb.innerHTML='<div class="slname" style="color:'+ssg.bossColor+'">'+ssg.name+' <span class="slboss" style="color:'+ssg.bossColor+';border-color:'+ssg.bossColor+'66">👑 '+ssg.bossName+'</span></div><div class="sltxt">「'+slore+'」</div>';
   }
   var ms=$('modesel'); if(ms){ ms.innerHTML='';
-    ['normal','timeattack','bossrush'].forEach(function(mid){ var md=MODES[mid];
+    ['normal','timeattack','bossrush','hardcore'].forEach(function(mid){ var md=MODES[mid];
       var el=document.createElement('div'); el.className='modecard'+(selMode===mid?' on':'');
       el.innerHTML='<div class="mic">'+md.ic+'</div><div class="mn">'+md.name+'</div><div class="md">'+md.desc+'</div>';
       el.onclick=function(){ selMode=mid; try{localStorage.setItem('neon_mode',mid);}catch(_){} renderMenu(); };

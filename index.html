@@ -499,7 +499,8 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   <div class="setrow"><span class="setlabel">音樂</span><div class="setseg" id="setmusic"><button data-v="on">開</button><button data-v="off">關</button></div></div>
   <div class="setrow"><span class="setlabel">音效</span><div class="setseg" id="setsfx"><button data-v="on">開</button><button data-v="off">關</button></div></div>
   <div class="setrow"><span class="setlabel">特效強度</span><div class="setseg" id="setfx"><button data-v="high">高</button><button data-v="med">中</button><button data-v="low">簡潔</button></div></div>
-  <div class="hint" style="margin-top:4px">特效強度「簡潔」可讓低階手機更順;設定會自動記憶。</div>
+  <div class="setrow"><span class="setlabel">螢幕震動</span><div class="setseg" id="setshake"><button data-v="on">開</button><button data-v="off">關</button></div></div>
+  <div class="hint" style="margin-top:4px">特效強度「簡潔」可讓低階手機更順;不喜歡畫面晃動可關閉螢幕震動;設定會自動記憶。</div>
   <button class="btn ghost" id="settingsclose" style="margin-top:14px">返回選單</button>
 </div></div>
 
@@ -2649,7 +2650,8 @@ window.addEventListener('mouseup',function(){pEnd();});
 // =====================================================================
 // 螢幕震動 / 傷害紅屏
 // =====================================================================
-var shakeAmt=0; function shake(v){ shakeAmt=Math.min(16,shakeAmt+v); }
+var shakeOn=true; try{ if(localStorage.getItem('neon_shake')==='0')shakeOn=false; }catch(e){}   // 螢幕震動開關(記憶)
+var shakeAmt=0; function shake(v){ if(!shakeOn)return; shakeAmt=Math.min(16,shakeAmt+v); }
 var hurtFlash=0; function flashHurt(){ hurtFlash=1; }
 var flashA=0, flashRGB='255,255,255'; function flashScreen(rgb,a){ flashRGB=rgb; flashA=Math.max(flashA,a); }
 
@@ -4217,7 +4219,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v331 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v332 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -4429,6 +4431,7 @@ function renderSettings(){
   seg('setsfx',GAudio.isSfxMuted()?'off':'on');
   var fxv='high'; try{ var f=localStorage.getItem('neon_fx'); if(f==='med')fxv='med'; else if(f==='low')fxv='low'; }catch(e){}
   seg('setfx',fxv);
+  seg('setshake',shakeOn?'on':'off');
 }
 $('settingsbtn').onclick=function(){ $('menu').classList.remove('show'); $('settings').classList.add('show'); renderSettings(); };
 $('settingsclose').onclick=function(){ $('settings').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
@@ -4437,6 +4440,7 @@ $('setvol').onchange=function(){ GAudio.ping&&GAudio.ping(); };
 $('setmusic').onclick=function(e){ var b=e.target.closest?e.target.closest('button'):null; if(!b)return; var on=b.getAttribute('data-v')==='on'; if(GAudio.isMusicMuted()===on)GAudio.toggleMusic(); var mb=$('musicbtn'); if(mb)mb.classList.toggle('off',GAudio.isMusicMuted()); renderSettings(); };
 $('setsfx').onclick=function(e){ var b=e.target.closest?e.target.closest('button'):null; if(!b)return; var on=b.getAttribute('data-v')==='on'; if(GAudio.isSfxMuted()===on)GAudio.toggleSfx(); var sb=$('mutebtn'); if(sb){sb.textContent=GAudio.isSfxMuted()?'🔇':'🔊'; sb.classList.toggle('off',GAudio.isSfxMuted());} if(!GAudio.isSfxMuted())GAudio.ping&&GAudio.ping(); renderSettings(); };
 $('setfx').onclick=function(e){ var b=e.target.closest?e.target.closest('button'):null; if(!b)return; var v=b.getAttribute('data-v'); fxScale=(v==='med'?0.6:v==='low'?0.3:1); try{localStorage.setItem('neon_fx',v);}catch(_){} renderSettings(); };
+$('setshake').onclick=function(e){ var b=e.target.closest?e.target.closest('button'):null; if(!b)return; shakeOn=(b.getAttribute('data-v')==='on'); try{localStorage.setItem('neon_shake',shakeOn?'1':'0');}catch(_){} renderSettings(); };
 $('tutplay').onclick=function(){ $('tutorial').classList.remove('show'); DB.seenTutorial=true; saveDB(); startGame(false); };
 function renderMissions(){ var today=dayKey(); var done=(DB.missions&&DB.missions.date===today)?DB.missions.done:{};
   var html=todaysMissions().map(function(m){ var ok=!!done[m.id];

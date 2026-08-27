@@ -1511,6 +1511,25 @@ var WDEFS={
       }
     }
   },
+  splitshot:{ic:'🔱',name:'裂變彈',color:'#5affc0',tag:'裂變',max:8,
+    desc:function(l){return l===0?'命中敵人後炸裂成扇形散彈，一發變多發':'裂片數↑ 傷害↑';},
+    cd:function(l){return Math.max(0.5,1.0-l*0.06);},
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var base=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle;
+      var n=1+Math.floor(player.amount/2);
+      for(var i=0;i<n;i++){ var a=base+(i-(n-1)/2)*0.14+rand(-0.02,0.02);
+        var b=spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),560,dmg(16+w.level*5),'#5affc0',1,7,1.6);
+        if(b){ b.split=2+Math.floor(w.level/2); b.splitDmg=dmg(7+w.level*3); } }
+    },
+    evo:{reqPassive:'pamount',ic:'🎇',name:'連鎖裂變',color:'#8affd0',desc:'裂片數量與傷害大增，扇形散彈鋪滿整片戰場',
+      cd:function(l){return Math.max(0.36,0.8-l*0.05);},
+      fire:function(w){ var t=nearestEnemy(player.x,player.y,9999); var base=t?Math.atan2(t.y-player.y,t.x-player.x):player.aimAngle;
+        var n=2+Math.floor(player.amount/2);
+        for(var i=0;i<n;i++){ var a=base+(i-(n-1)/2)*0.14+rand(-0.02,0.02);
+          var b=spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),660,dmg(22+w.level*6),'#8affd0',1,8,1.8);
+          if(b){ b.split=4+w.level; b.splitDmg=dmg(11+w.level*4); } }
+      }
+    }
+  },
   blades:{ic:'🌀',name:'環刃',color:'#ff3df0',tag:'環繞',max:8,
     desc:function(l){return l===0?'環繞身邊的能量刃':'刃數↑ 傷害↑ 半徑↑';},
     cd:function(){return 999;}, orbit:true,
@@ -1925,12 +1944,13 @@ var WDEFS={
     }
   }
 };
-var WORDER=['plasma','ricochet','wavecannon','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet','hornet','spiralgun','gatling','chakram','beamsweep'];
+var WORDER=['plasma','ricochet','wavecannon','splitshot','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet','hornet','spiralgun','gatling','chakram','beamsweep'];
 // 武器背景敘事（顯示於武器圖鑑，延續世界觀）
 var WEAPON_LORE={
   plasma:'倖存者護甲的標準配備。每一發電漿都是舊世界文明最後的火種。',
   ricochet:'一顆永不安分的彈丸。它在敵群之間彈跳、越彈越烈，像場停不下來的死亡撞球。',
   wavecannon:'把聲音的形狀凝成實體。一整道橫向的能量波牆推進而出，戰線上的一切都被同時抹平。',
+  splitshot:'一發即碎的脆彈。它渴望觸碰——每一次撞擊，都綻放成一整片致命的花火。',
   blades:'霓虹劇院的環形舞台化成的刃。它們繞著你旋轉，如同永不散場的謝幕。',
   lightning:'從雷雲中抽取的一縷憤怒，在敵群之間跳躍，尋找下一個接地點。',
   aura:'焚燒祭司的信仰之環。靠近它的一切，都將化為獻給黑夜的灰燼。',
@@ -2919,6 +2939,9 @@ function update(dt){
           var best=null,bd=320*320; for(var qi=0;qi<enemies.length;qi++){ var o=enemies[qi]; if(o.hp>0&&!b.hitset[o._id]){ var dd=dist2(o.x,o.y,b.x,b.y); if(dd<bd){bd=dd;best=o;} } }
           if(best){ var bsp=Math.hypot(b.vx,b.vy)||500,ba2=Math.atan2(best.y-b.y,best.x-b.x); b.vx=Math.cos(ba2)*bsp; b.vy=Math.sin(ba2)*bsp; b.dmg=Math.round(b.dmg*(b.ricRamp||1.12)); b.pierce=Math.max(b.pierce,1); b.life=Math.max(b.life,0.5); ringFx(b.x,b.y,12,b.color); return; }
           else b.ricochet=0; }
+        if(b.split>0&&bullets.length<500){ var sn=b.split; b.split=0; var sa=Math.atan2(b.vy,b.vx);   // 裂變彈：命中後炸裂成扇形散彈(子彈不再裂變;子彈數過多時停裂防爆量)
+          for(var spi=0;spi<sn;spi++){ var sca=sa+(spi-(sn-1)/2)*0.42; spawnBullet(b.x,b.y,Math.cos(sca),Math.sin(sca),500,b.splitDmg||b.dmg*0.5,b.color,1,4,0.95); }
+          ringFx(b.x,b.y,11,b.color); }
         b.pierce--; if(b.pierce<=0)hit=true;
         if(b.explode){ var er=b.explode; ringFx(b.x,b.y,er,b.color); burst(b.x,b.y,b.color,10,180);
           enemyGrid.query(b.x,b.y,er,function(o){ if(o.hp>0&&o!==e&&dist2(o.x,o.y,b.x,b.y)<er*er)hitEnemy(o,b.dmg*0.55,b.x,b.y,0.3); });
@@ -4462,7 +4485,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v370 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v371 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者'];
 function renderMenu(){

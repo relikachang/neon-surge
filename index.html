@@ -394,6 +394,10 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   #pausebtn{position:absolute;top:56px;right:16px;pointer-events:auto;cursor:pointer;font-size:20px;
     background:rgba(12,18,34,.7);border:1px solid rgba(255,255,255,.12);border-radius:10px;width:40px;height:40px;
     display:flex;align-items:center;justify-content:center;z-index:6}
+  #suicidebtn{position:absolute;top:56px;left:16px;pointer-events:auto;cursor:pointer;font-size:18px;
+    background:rgba(40,12,18,.7);border:1px solid rgba(255,80,100,.32);border-radius:10px;min-width:40px;height:40px;padding:0 9px;
+    display:flex;align-items:center;justify-content:center;z-index:6;color:#ff6a7e;white-space:nowrap;transition:background .15s,border-color .15s,box-shadow .15s}
+  #suicidebtn.armed{background:rgba(184,20,42,.94);border-color:#ff5e7a;color:#fff;box-shadow:0 0 14px rgba(255,60,90,.6);font-size:14px;font-weight:800}
 </style>
 </head>
 <body>
@@ -416,6 +420,7 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   <div id="hpwrap"><div id="hpbar"><div id="hpfill"></div></div><div id="hptxt">100 / 100</div></div>
   <div id="weprow"></div>
   <div id="pausebtn">⏸</div>
+  <div id="suicidebtn" title="自殺 · 結束本局">💀</div>
   <div id="joy"><div id="joyknob"></div></div>
 </div>
 
@@ -4366,7 +4371,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v355 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v356 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者'];
 function renderMenu(){
@@ -4616,6 +4621,12 @@ $('pausebtn').onclick=togglePause;
 $('resumebtn').onclick=function(){ togglePause(); };
 $('restartbtn').onclick=function(){ var d=!!(G&&G.daily); $('pause').classList.remove('show'); startGame(d); };
 $('quitbtn').onclick=function(){ G.over=true; gameOver(); $('pause').classList.remove('show'); };
+// 左上角自殺按鈕：兩段式確認（首次點擊武裝、2 秒內再點才結束本局），避免誤觸
+(function(){ var sb=$('suicidebtn'); if(!sb)return; var armed=false;
+  function reset(){ armed=false; sb.classList.remove('armed'); sb.textContent='💀'; }
+  sb.onclick=function(){ if(!G||G.over)return;
+    if(!armed){ armed=true; sb.classList.add('armed'); sb.textContent='確定自殺?'; clearTimeout(sb._t); sb._t=setTimeout(reset,2000); }
+    else { clearTimeout(sb._t); reset(); G.over=true; gameOver(); } }; })();
 $('tomenubtn').onclick=function(){ $('pause').classList.remove('show'); G.paused=false; toMenu(); };
 $('sharebtn').onclick=shareCard;
 $('againbtn').onclick=function(){ startGame(!!(G&&G.daily)); };

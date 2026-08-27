@@ -254,6 +254,18 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   #charlore .clname{font-weight:800;font-size:13px;letter-spacing:1px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
   #charlore .cltxt{font-size:12.5px;line-height:1.65;color:#c3d2ee;font-style:italic}
   #charlore::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--cyan),#7c5bff)}
+  #skinlist{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .skincard{background:rgba(12,18,34,.6);border:2px solid rgba(255,255,255,.1);border-radius:14px;padding:10px;text-align:center;transition:transform .15s,box-shadow .15s}
+  .skincard:hover{transform:translateY(-2px)}
+  .skincard.on{box-shadow:0 0 18px rgba(34,230,255,.3)}
+  .skinprev{display:block;margin:0 auto;filter:drop-shadow(0 0 6px rgba(0,0,0,.4))}
+  .skname{font-weight:800;font-size:13px;margin-top:4px;line-height:1.5}
+  .skdesc{font-size:11px;color:#8ea0c8;line-height:1.4;margin:5px 0 8px;min-height:44px}
+  .skinbtn{display:block;width:100%;padding:7px;border-radius:9px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#eaf0ff;font-weight:800;font-size:13px;cursor:pointer;font-family:inherit}
+  .skinbtn.buy{border-color:#ffd54a;color:#ffd54a}
+  .skinbtn.buy.no{opacity:.4;cursor:not-allowed}
+  .skinbtn.own{border-color:#22e6ff;color:#22e6ff}
+  .skinbtn.eq{border-color:#3ad07a;color:#3ad07a;background:rgba(58,208,122,.12);cursor:default}
   /* --- B206 選單卡片/按鈕美化（hover 浮起 + 掃光 + 選中脈動） --- */
   .btn{position:relative;overflow:hidden;transition:transform .12s,box-shadow .12s}
   .btn:hover{transform:translateY(-2px);box-shadow:0 14px 36px rgba(34,230,255,.5)}
@@ -417,7 +429,10 @@ if('serviceWorker' in navigator){ var __reloaded=false;
     <button class="btn ghost" id="codexbtn" style="flex:1">武器圖鑑 📖</button>
     <button class="btn ghost" id="bestiarybtn" style="flex:1">怪物圖鑑 👾</button>
   </div>
-  <button class="btn ghost" id="relicbtn">遺物收藏 💎</button>
+  <div style="display:flex;gap:10px">
+    <button class="btn ghost" id="relicbtn" style="flex:1">遺物收藏 💎</button>
+    <button class="btn ghost" id="skinbtn" style="flex:1">皮膚商城 🎨</button>
+  </div>
   <button class="btn ghost" id="shopbtn">永久強化 ◆</button>
   <button class="btn ghost" id="boostbtn">局前補給 🎁</button>
   <div style="display:flex;gap:10px">
@@ -524,6 +539,21 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   <button class="btn ghost" id="relicclose" style="margin-top:14px">返回</button>
 </div></div>
 
+<!-- 皮膚商城 -->
+<div id="skinshop" class="overlay"><div class="panel" style="max-width:640px">
+  <h2 style="text-align:center;font-size:24px;font-weight:900;letter-spacing:2px;color:#22e6ff;margin-bottom:2px;text-shadow:0 0 14px rgba(34,230,255,.5)">皮膚商城 🎨</h2>
+  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:10px">為你的機體換上專屬塗裝 · 限量皮膚每 2 個月輪換一款</div>
+  <div id="skinshards" style="text-align:center;font-weight:900;color:#ffd54a;margin-bottom:10px">◆ 0</div>
+  <div style="display:flex;gap:8px;margin-bottom:14px;align-items:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,213,74,.28);border-radius:12px;padding:9px 11px">
+    <div style="font-size:20px">🎟️</div>
+    <input id="codeinput" maxlength="20" placeholder="輸入創作者代碼領碎片" style="flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:#eaf0ff;font-size:13px;padding:7px 10px;font-family:inherit;text-transform:uppercase">
+    <button class="btn" id="coderedeem" style="margin:0;padding:8px 16px;width:auto;font-size:13px">兌換</button>
+  </div>
+  <div id="codemsg" style="text-align:center;font-size:12px;min-height:16px;margin-bottom:8px"></div>
+  <div id="skinlist"></div>
+  <button class="btn ghost" id="skinclose" style="margin-top:14px">返回</button>
+</div></div>
+
 <!-- 排行榜 -->
 <div id="board" class="overlay"><div class="panel" style="max-width:520px">
   <h2 style="text-align:center;font-size:24px;font-weight:900;letter-spacing:2px;color:#ffd54a;margin-bottom:6px">排行榜 🏆</h2>
@@ -602,7 +632,7 @@ try{ var _fx=localStorage.getItem('neon_fx'); if(_fx==='med')fxScale=0.6; else i
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false,enigma:false,spiralist:false,gunslinger:false,ronin:false,warden2:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0},weekly:{week:-1,done:false},achMile:{},modeBest:{},relics:{}};
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0},weekly:{week:-1,done:false},achMile:{},modeBest:{},relics:{},skins:{default:1},equippedSkin:'default',codes:{}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
@@ -796,6 +826,34 @@ function renderRelics(){ DB.relics=DB.relics||{}; var got=0;
   $('reliclist').innerHTML='<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12px;color:#8ea0c8;margin-bottom:5px"><span>💎 收藏進度</span><span>'+got+' / '+RELICS.length+'（'+pct+'%）</span></div>'+
     '<div style="height:9px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,#22e6ff,#c98bff,#ffd54a);box-shadow:0 0 10px #ffd54a"></div></div></div>'+html;
 }
+// ===== 皮膚商城 UI + 創作者代碼兌換 =====
+var CREATOR_CODES={ 'RELIKA':{shards:5000,name:'創作者專屬禮包'}, 'NEONSURGE':{shards:1500,name:'霓潮歡迎禮'}, 'SURVIVOR':{shards:2000,name:'倖存者補給'}, 'THANKYOU':{shards:1000,name:'感謝有你'} };
+function skinCardSig(sk){ if(!sk||sk.id==='default'){ var idx=CHARS.findIndex(function(c){return c.id===selChar;}); var s=charSig(selChar); s.arch=(idx<0?0:idx)%6; return s; }
+  if(sk.dyn)return {arch:0,col:'#22e6ff',glow:'#7c5bff',edge:'#c9fff0',hull:'#2a1a40',hull2:'#40203a',core:'#ffffff',accent:'#ff5edb'};
+  var out={arch:0}; for(var k in sk.pal)out[k]=sk.pal[k]; return out; }
+function buySkin(id){ var sk=skinById(id); if(!sk||DB.skins[id])return; if((DB.shards||0)<sk.price)return; DB.shards-=sk.price; DB.skins[id]=1; DB.equippedSkin=id; saveDB(); GAudio.achieve&&GAudio.achieve(); renderSkinShop(); }
+function renderSkinShop(){ DB.skins=DB.skins||{default:1}; DB.equippedSkin=DB.equippedSkin||'default';
+  $('skinshards').textContent='◆ '+(DB.shards||0);
+  var lim=currentLimited(); var list=SKINS.concat([lim]);
+  var html=list.map(function(sk,i){ var rc=SKIN_RARITY[sk.r]||SKIN_RARITY.common; var owned=!!DB.skins[sk.id]||sk.id==='default'; var eq=(DB.equippedSkin||'default')===sk.id; var afford=(DB.shards||0)>=sk.price; var isLtd=sk.r==='limited';
+    var btn; if(eq)btn='<div class="skinbtn eq">✓ 已裝備</div>';
+      else if(owned)btn='<button class="skinbtn own" data-eq="'+sk.id+'">裝備</button>';
+      else btn='<button class="skinbtn buy'+(afford?'':' no')+'" data-buy="'+sk.id+'"'+(afford?'':' disabled')+'>◆ '+sk.price+'</button>';
+    return '<div class="skincard'+(eq?' on':'')+'" style="border-color:'+rc.c+(eq?'':'44')+'"><canvas class="skinprev" width="80" height="64" data-i="'+i+'"></canvas>'+
+      '<div class="skname" style="color:'+rc.c+'">'+sk.name+'<br><span class="cxtag" style="color:'+rc.c+';border-color:'+rc.c+'">'+rc.name+'</span>'+(isLtd?' <span class="cxtag" style="color:#ff5edb;border-color:#ff5edb">⏳'+limitedDaysLeft()+'天</span>':'')+'</div>'+
+      '<div class="skdesc">'+sk.desc+'</div>'+btn+'</div>'; }).join('');
+  $('skinlist').innerHTML=html;
+  $('skinlist').querySelectorAll('.skinprev').forEach(function(cv){ try{ var i=+cv.getAttribute('data-i'); var g=cv.getContext('2d'); drawMiniShip(g,40,34,15,skinCardSig(list[i])); }catch(_){} });
+  $('skinlist').querySelectorAll('[data-buy]').forEach(function(b){ b.onclick=function(){ buySkin(b.getAttribute('data-buy')); }; });
+  $('skinlist').querySelectorAll('[data-eq]').forEach(function(b){ b.onclick=function(){ DB.equippedSkin=b.getAttribute('data-eq'); saveDB(); GAudio.pick&&GAudio.pick(); renderSkinShop(); }; });
+}
+function redeemCode(){ var el=$('codeinput'), msg=$('codemsg'); if(!el||!msg)return; var code=(el.value||'').trim().toUpperCase().replace(/\s/g,''); DB.codes=DB.codes||{};
+  if(!code){ msg.style.color='#ff9eb0'; msg.textContent='請先輸入代碼'; return; }
+  var c=CREATOR_CODES[code];
+  if(!c){ msg.style.color='#ff9eb0'; msg.textContent='❌ 無效的代碼'; GAudio.hurt&&GAudio.hurt(); return; }
+  if(DB.codes[code]){ msg.style.color='#ffb03a'; msg.textContent='⚠️ 此代碼你已經兌換過了'; return; }
+  DB.codes[code]=1; DB.shards=(DB.shards||0)+c.shards; saveDB(); GAudio.achieve&&GAudio.achieve();
+  msg.style.color='#3ad07a'; msg.textContent='✅ '+c.name+' · +◆'+c.shards+' 碎片！'; el.value=''; $('skinshards').textContent='◆ '+(DB.shards||0); renderSkinShop(); }
 
 // 每日挑戰變異詞條（依日期決定）
 var IDENTITY_MUT={id:'none',name:'',eSpd:1,eHp:1,spawn:1,elite:1,pHp:1,pDmg:1,pSpd:1};
@@ -1020,6 +1078,28 @@ var CHAR_LORE={
   warden2:'孤島燈塔最後的守燈人。掃描雷射是他日夜不熄的燈——為所有迷途者指路。'
 };
 var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕',lunar:'單局擊殺1200敵人',enigma:'？？？ 隱藏任務',spiralist:'單局擊殺2500敵人',gunslinger:'單局造成100萬傷害',ronin:'單局擊殺60精英',warden2:'單局存活12分'};
+
+// ===== 皮膚商城：機體外觀塗裝，用碎片購買（含每 2 個月輪換的限量皮膚）=====
+function mkpal(hue){ return {col:'hsl('+hue+',85%,60%)',glow:'hsl('+hue+',90%,62%)',edge:'hsl('+hue+',92%,78%)',hull:'hsl('+hue+',46%,30%)',hull2:'hsl('+((hue+22)%360)+',50%,23%)',core:'hsl('+((hue+16)%360)+',82%,88%)',accent:'hsl('+((hue+40)%360)+',90%,64%)'}; }
+var SKIN_RARITY={ common:{name:'原廠',c:'#8ea6c8'}, rare:{name:'稀有',c:'#22e6ff'}, epic:{name:'史詩',c:'#c98bff'}, legend:{name:'傳說',c:'#ffd54a'}, limited:{name:'限量',c:'#ff5edb'} };
+var SKINS=[
+  {id:'default', name:'原廠塗裝', price:0,    r:'common', pal:null, desc:'各角色專屬本色，展現每位倖存者的獨特身分'},
+  {id:'crimson', name:'緋紅烈焰', price:600,  r:'rare',   pal:mkpal(0),   desc:'燃燒的赤色戰意，為每一次衝鋒點火'},
+  {id:'toxic',   name:'劇毒魅影', price:600,  r:'rare',   pal:mkpal(115), desc:'瀰漫毒霧的螢綠塗裝'},
+  {id:'ice',     name:'極地寒霜', price:600,  r:'rare',   pal:mkpal(195), desc:'凜冽的冰晶藍白，凍結一切靠近者'},
+  {id:'void',    name:'虛空之影', price:900,  r:'epic',   pal:{col:'#9b6bff',glow:'#7c5bff',edge:'#c9a8ff',hull:'#1a1030',hull2:'#0e0820',core:'#e6d8ff',accent:'#c98bff'}, desc:'吞噬光線的深淵紫黑，來自虛空的餽贈'},
+  {id:'mono',    name:'純白騎士', price:800,  r:'epic',   pal:{col:'#e8f0ff',glow:'#ffffff',edge:'#ffffff',hull:'#5a6478',hull2:'#3a4258',core:'#ffffff',accent:'#bcd0ff'}, desc:'一塵不染的白色機體，騎士的信條'},
+  {id:'gold',    name:'黃金傳說', price:1500, r:'legend', pal:mkpal(45),  desc:'流淌財富光澤的黃金機體，唯有頂尖倖存者配得上'}
+];
+var LIMITED_SKINS=[
+  {id:'ltd_prism', name:'虹光稜鏡', price:2500, r:'limited', dyn:true, desc:'色相不斷流轉的稜鏡機體，僅在此檔期販售'},
+  {id:'ltd_sakura',name:'霓櫻',     price:2500, r:'limited', pal:{col:'#ff8fc7',glow:'#ff6fb5',edge:'#ffd0e6',hull:'#4a2438',hull2:'#33182a',core:'#fff0f7',accent:'#ffb3d9'}, desc:'飄落霓虹櫻瓣的粉色機體，一期一會'},
+  {id:'ltd_abyss', name:'深海幽光', price:2500, r:'limited', pal:{col:'#2affd0',glow:'#00e0b0',edge:'#a0fff0',hull:'#082a2a',hull2:'#041e20',core:'#e0fff8',accent:'#5affe0'}, desc:'幽深海溝的生物螢光，稍縱即逝'}
+];
+function skinById(id){ var a=SKINS.concat(LIMITED_SKINS); for(var i=0;i<a.length;i++)if(a[i].id===id)return a[i]; return null; }
+function currentLimited(){ var period=Math.floor(Date.now()/(60*86400000)); return LIMITED_SKINS[period%LIMITED_SKINS.length]; }
+function limitedDaysLeft(){ var per=60*86400000; var next=(Math.floor(Date.now()/per)+1)*per; return Math.ceil((next-Date.now())/86400000); }
+function applySkinToSig(sig){ var sk=skinById(DB.equippedSkin||'default'); if(!sk||!sk.pal)return sig; var out={arch:sig.arch,hue:sig.hue}; for(var k in sk.pal)out[k]=sk.pal[k]; return out; }
 
 // =====================================================================
 // 地圖 / 關卡
@@ -1745,6 +1825,7 @@ function newRun(daily){
   player={ x:0,y:0, radius:15, hp:0, maxHp:0, speed:0, iframe:0, aimAngle:0, frenzyT:0, overdriveT:0,
     weapons:[], passives:{}, base:{}, charId:ch.id, sig:charSig(ch.id) };
   var _ci=CHARS.indexOf(ch); if(_ci>=0)player.sig.arch=_ci%6;   // 依名冊序號分派船體原型，六型平均分佈
+  player.sig=applySkinToSig(player.sig); var _eqSk=skinById(DB.equippedSkin||'default'); player.skinDyn=!!(_eqSk&&_eqSk.dyn);   // 套用皮膚塗裝（保留船體原型）
   // 基礎屬性（含永久強化 + 角色 + 每日變異）
   var omni=1+0.03*metaLv('omni');   // 萬能核心：全能加成
   player.base={ dmg:1*(1+0.08*metaLv('dmg'))*(1+0.06*metaLv('overcharge'))*omni*(ch.stat.dmg||1)*mut.pDmg,
@@ -3268,6 +3349,7 @@ function drawPlayer(){
   var movedFar=!lastp||Math.hypot(player.x-lastp.x,player.y-lastp.y)>4;
   if(G._pf%2===0){ if(movedFar){ player.trail.push({x:player.x,y:player.y,ang:player.aimAngle}); if(player.trail.length>9)player.trail.shift(); } else if(player.trail.length){ player.trail.shift(); } }
   var sig=player.sig||charSig(player.charId||'ranger');
+  if(player.skinDyn){ var _dh=(G.time*70)%360; sig={arch:sig.arch, col:'hsl('+_dh+',90%,62%)', glow:'hsl('+_dh+',95%,64%)', edge:'hsl('+((_dh+30)%360)+',95%,80%)', hull:'hsl('+_dh+',50%,32%)', hull2:'hsl('+((_dh+40)%360)+',55%,24%)', core:'hsl('+((_dh+20)%360)+',85%,90%)', accent:'hsl('+((_dh+120)%360)+',92%,64%)' }; }   // 虹光稜鏡：色相流轉
   var trFren=player.frenzyT>0, trOv=player.overdriveT>0, trCol=trFren?'#ff5e5e':(trOv?'#ffe14a':sig.col), trPr=player.radius;
   var pGlow=trFren?'#ff5e5e':(trOv?'#ffe14a':sig.glow);
   ctx.save(); ctx.globalCompositeOperation='lighter';
@@ -3640,7 +3722,7 @@ function renderPauseBuild(){
     '<div class="blabel">被動</div><div class="brow">'+ph+'</div>'+
     '<div class="blabel">角色 · 地圖</div><div class="brow"><span class="bchip">'+(CHARS.find(function(c){return c.id===selChar;})||{}).name+'</span><span class="bchip">'+G.stage.name+'</span>'+(G.daily?'<span class="bchip" style="border-color:#ffd54a">🗓️ '+G.mut.name+'</span>':'')+'</div>'; }
 
-function hideAll(){ ['menu','levelup','shop','pause','over','board','ach','codex','bestiary','relics','profile','tutorial','missions'].forEach(function(id){$(id).classList.remove('show');}); }
+function hideAll(){ ['menu','levelup','shop','pause','over','board','ach','codex','bestiary','relics','skinshop','profile','tutorial','missions'].forEach(function(id){$(id).classList.remove('show');}); }
 function renderAch(){ var got=0, lgTotal=0, lgGot=0, hidGot=0, hidTotal=0; var html=ACHIEVEMENTS.map(function(a){ var u=DB.achievements[a.id]; if(u)got++;
   var lg=a.name.indexOf('【傳說】')>=0; if(lg){lgTotal++; if(u)lgGot++;}
   if(a.hidden){ hidTotal++; if(u)hidGot++; }
@@ -3725,7 +3807,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v299 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v300 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -3885,6 +3967,10 @@ $('bestiarybtn').onclick=function(){ renderBestiary(); $('menu').classList.remov
 $('bestiaryclose').onclick=function(){ $('bestiary').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('relicbtn').onclick=function(){ renderRelics(); $('menu').classList.remove('show'); $('relics').classList.add('show'); };
 $('relicclose').onclick=function(){ $('relics').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
+$('skinbtn').onclick=function(){ $('codemsg').textContent=''; renderSkinShop(); $('menu').classList.remove('show'); $('skinshop').classList.add('show'); };
+$('skinclose').onclick=function(){ $('skinshop').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
+$('coderedeem').onclick=redeemCode;
+$('codeinput').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); redeemCode(); } });
 $('shopbtn').onclick=function(){ renderShop(); $('menu').classList.remove('show'); $('shop').classList.add('show'); };
 $('shopclose').onclick=function(){ $('shop').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('boostbtn').onclick=function(){ renderBoostShop(); $('menu').classList.remove('show'); $('boostshop').classList.add('show'); };

@@ -1251,7 +1251,15 @@ var SKINS=[
   {id:'spectre', name:'幽靈殘響', price:1400, r:'epic',      arch:4, pal:{col:'#4affd0',glow:'#7affe0',edge:'#c8fff4',hull:'#0a2224',hull2:'#061618',core:'#eafffb',accent:'#a0ffe8'}, sfx:'arc', atkCol:'#7affe0', desc:'半透明的幽靈機體 · 開火拖曳幽綠殘響'},
   {id:'bloodmoon',name:'血月狩獵', price:1400, r:'epic',     arch:1, pal:{col:'#ff3a4a',glow:'#ff5a5a',edge:'#ffb0b0',hull:'#200608',hull2:'#140406',core:'#ffe0e0',accent:'#ff2b5e'}, sfx:'deep', atkCol:'#ff5a5a', desc:'血月映照的獵手機體 · 開火濺出赤紅殺意'},
   {id:'aurora',  name:'極光女神', price:2500, r:'legend',    arch:3, pal:{col:'#5affd0',glow:'#7cf0ff',edge:'#d0fff0',hull:'#0a2030',hull2:'#0c1428',core:'#ffffff',accent:'#c98bff'}, sfx:'crystal', atkCol:'#7cf0ff', killCol:'#5affd0', desc:'極光交織的女神機體 · 登場如天幕流轉、擊殺灑落極光'},
-  {id:'darkmatter',name:'暗物質', price:2500, r:'legend',    arch:5, pal:{col:'#7c3aff',glow:'#9d5aff',edge:'#c8a0ff',hull:'#0a0416',hull2:'#06020e',core:'#f0e6ff',accent:'#ff5edb'}, sfx:'deep', atkCol:'#9d5aff', killCol:'#ff5edb', desc:'扭曲時空的暗物質機體 · 沉默的登場、湮滅的收割'}
+  {id:'darkmatter',name:'暗物質', price:2500, r:'legend',    arch:5, pal:{col:'#7c3aff',glow:'#9d5aff',edge:'#c8a0ff',hull:'#0a0416',hull2:'#06020e',core:'#f0e6ff',accent:'#ff5edb'}, sfx:'deep', atkCol:'#9d5aff', killCol:'#ff5edb', desc:'扭曲時空的暗物質機體 · 沉默的登場、湮滅的收割'},
+  // —— B324 皮膚擴充 ——
+  {id:'sandstorm',name:'流沙行者', price:400,  r:'rare',      arch:1, pal:{col:'#e0b060',glow:'#f0c880',edge:'#ffe8c0',hull:'#3a2c14',hull2:'#28200e',core:'#fff4e0',accent:'#c89040'}, desc:'沙漠風暴中前行的土金機體，堅韌不拔'},
+  {id:'plum',    name:'紫梅暗香', price:400,  r:'rare',      arch:4, pal:{col:'#c04a9a',glow:'#e06ab0',edge:'#f0b0d8',hull:'#2a0a20',hull2:'#1c0616',core:'#ffe0f4',accent:'#9a3ac0'}, desc:'寒夜綻放的紫梅機體，暗香浮動'},
+  {id:'steel',   name:'鋼鐵洪流', price:400,  r:'rare',      arch:0, pal:{col:'#7a90b0',glow:'#a0b8d8',edge:'#d8e4f4',hull:'#2a323e',hull2:'#1c222c',core:'#eef4ff',accent:'#8aa8d0'}, desc:'冷硬工業風的鋼灰機體，洪流般的壓迫'},
+  {id:'amethyst',name:'紫晶共鳴', price:800,  r:'superrare', arch:2, pal:{col:'#a06aff',glow:'#c090ff',edge:'#e8d0ff',hull:'#1e1240',hull2:'#140a2c',core:'#f4ecff',accent:'#d0a0ff'}, sfx:'crystal', desc:'紫水晶共振的機體 · 擊殺清響如晶石碎裂'},
+  {id:'ironblood',name:'鐵血玄甲', price:800,  r:'superrare', arch:5, pal:{col:'#c04a4a',glow:'#e06a5a',edge:'#ffb0a0',hull:'#241010',hull2:'#180a0a',core:'#ffe0d8',accent:'#8a3a3a'}, sfx:'deep', desc:'浴血玄甲的重裝機體 · 擊殺轟出沉悶血鳴'},
+  {id:'celestial',name:'天界聖光', price:2500, r:'legend',    arch:0, pal:{col:'#ffe8a0',glow:'#fff4d0',edge:'#ffffff',hull:'#4a3e18',hull2:'#342a10',core:'#ffffff',accent:'#ffd24a'}, sfx:'crystal', atkCol:'#fff4d0', killCol:'#ffe8a0', desc:'降臨凡間的聖光機體 · 登場如神諭、收割如審判'},
+  {id:'phantomx',name:'幻影主宰', price:2500, r:'legend',    arch:4, pal:{col:'#5a7cff',glow:'#7c9dff',edge:'#c0d0ff',hull:'#0a1030',hull2:'#060a20',core:'#e0e8ff',accent:'#7cf0ff'}, sfx:'deep', atkCol:'#7c9dff', killCol:'#7cf0ff', desc:'遊走維度縫隙的幻影機體 · 出場撕裂虛空、擊殺歸於虛無'}
 ];
 var LIMITED_SKINS=[   // 限量皮膚一律傳奇級（全特效）
   {id:'ltd_prism', name:'虹光稜鏡', price:3000, r:'legend', arch:2, dyn:true, sfx:'crystal', atkCol:'#7cf0ff', killCol:'#ff5edb', desc:'色相不斷流轉的稜鏡機體 · 限量傳奇，僅此檔期'},
@@ -4073,7 +4081,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v323 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v324 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

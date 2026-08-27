@@ -1438,12 +1438,13 @@ var STAGE_LORE={
   inferno:'烈焰永不熄滅的永劫煉獄。佈下地雷陣的「煉獄魔王」，是所有倒下者靈魂燃燒後凝成的最終試煉。'
 };
 var selMode='normal';
-try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal')selMode=_sm; }catch(e){}   // 記憶上次選的模式
+try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde')selMode=_sm; }catch(e){}   // 記憶上次選的模式
 var MODES={
   normal:{ic:'♾️',name:'標準生存',desc:'經典模式：活越久越強，挑戰無盡'},
   timeattack:{ic:'⏱️',name:'限時狂殺',desc:'120 秒內衝最高擊殺，時間到結算',dur:120},
   bossrush:{ic:'👑',name:'首領亂鬥',desc:'無雜兵，首領接連降臨，考驗火力與走位'},
-  hardcore:{ic:'💀',name:'一命限定',desc:'零復活・受一次致命傷即結束，碎片獎勵 1.5 倍',reward:1.5}
+  hardcore:{ic:'💀',name:'一命限定',desc:'零復活・受一次致命傷即結束，碎片獎勵 1.5 倍',reward:1.5},
+  horde:{ic:'🐝',name:'無盡狂潮',desc:'敵潮爆量湧來・考驗清場火力與極限走位，碎片獎勵 1.5 倍',reward:1.5}
 };
 function stageUnlocked(s){ return !s.locked || DB.stages[s.id]; }
 
@@ -3103,7 +3104,7 @@ function spawnDirector(dt){
     return;
   }
   var m=G.time/60; // 分鐘
-  var rate=Math.max(m>6?0.07:0.16,0.85-m*0.10)/((G.stage?G.stage.spawn:1)*(G.mut?G.mut.spawn:1)); // 生成間隔（地圖+每日加成，後期大幅更密集）
+  var rate=Math.max(m>6?0.07:0.16,0.85-m*0.10)/((G.stage?G.stage.spawn:1)*(G.mut?G.mut.spawn:1)*(G.mode==='horde'?1.9:1)); // 生成間隔（地圖+每日加成+無盡狂潮爆量，後期大幅更密集）
   G.spawnTimer-=dt;
   if(G.spawnTimer<=0 && enemies.length<380){ G.spawnTimer=rate;
     var mul=(1+m*0.55)*(m<2.5?(0.78+m*0.088):1); var batch=1+Math.floor(m*(m>6?1.5:0.8));  // 後期每波更多敵人；前 2.5 分放緩強度爬升，新手更好上手
@@ -4451,7 +4452,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v367 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v368 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者'];
 function renderMenu(){
@@ -4510,7 +4511,7 @@ function renderMenu(){
     slb.innerHTML='<div class="slname" style="color:'+ssg.bossColor+'">'+ssg.name+' <span class="slboss" style="color:'+ssg.bossColor+';border-color:'+ssg.bossColor+'66">👑 '+ssg.bossName+'</span></div><div class="sltxt">「'+slore+'」</div>';
   }
   var ms=$('modesel'); if(ms){ ms.innerHTML='';
-    ['normal','timeattack','bossrush','hardcore'].forEach(function(mid){ var md=MODES[mid];
+    ['normal','timeattack','bossrush','hardcore','horde'].forEach(function(mid){ var md=MODES[mid];
       var el=document.createElement('div'); el.className='modecard'+(selMode===mid?' on':'');
       el.innerHTML='<div class="mic">'+md.ic+'</div><div class="mn">'+md.name+'</div><div class="md">'+md.desc+'</div>';
       el.onclick=function(){ selMode=mid; try{localStorage.setItem('neon_mode',mid);}catch(_){} renderMenu(); };

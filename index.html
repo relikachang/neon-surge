@@ -1179,7 +1179,12 @@ var PRESTIGE=[
   {id:'p_critdmg',ic:'💢',name:'星核致命', desc:'暴擊傷害', per:'+8%',   max:12, cost:function(l){return 3+l;}},
   {id:'p_armor', ic:'🛡️', name:'星核堅壁', desc:'減傷', per:'+2%',      max:8,  cost:function(l){return 3+l;}},
   {id:'p_luck',  ic:'🍀', name:'星核福緣', desc:'幸運(稀有強化/掉落)', per:'+5%', max:8, cost:function(l){return 3+l;}},
-  {id:'p_omni',  ic:'🌌', name:'星核殿堂', desc:'全能(傷害/生命/攻速/移速)', per:'+2%', max:25, cost:function(l){return 12+l*3;}}
+  {id:'p_omni',  ic:'🌌', name:'星核殿堂', desc:'全能(傷害/生命/攻速/移速)', per:'+2%', max:25, cost:function(l){return 12+l*3;}},
+  // —— B343 星核擴充 ——
+  {id:'p_regen', ic:'✚',  name:'星核再生', desc:'每秒回血', per:'+0.4',   max:10, cost:function(l){return 2+l;}},
+  {id:'p_vamp',  ic:'🩸', name:'星核吸血', desc:'擊殺回血', per:'+0.1',   max:8,  cost:function(l){return 3+l;}},
+  {id:'p_dodge', ic:'💨', name:'星核迴避', desc:'閃避率', per:'+1.5%',    max:8,  cost:function(l){return 3+l;}},
+  {id:'p_thorns',ic:'🌵', name:'星核荊棘', desc:'接觸反傷', per:'+10',    max:8,  cost:function(l){return 2+l;}}
 ];
 function prestigeById(id){ for(var i=0;i<PRESTIGE.length;i++)if(PRESTIGE[i].id===id)return PRESTIGE[i]; return null; }
 function metaInvested(){ var s=0; for(var k in (DB.meta||{}))s+=DB.meta[k]||0; return s; }   // 目前投入的永久強化總等級
@@ -2146,7 +2151,7 @@ function newRun(daily){
   player.base={ dmg:1*(1+0.08*metaLv('dmg'))*(1+0.06*metaLv('overcharge'))*omni*pDmg*(ch.stat.dmg||1)*mut.pDmg,
     fireRate:1*(ch.stat.fireRate||1)*(1+0.05*metaLv('haste'))*omni*pHaste, speed:230*(1+0.05*metaLv('spd'))*omni*pSpd2*(ch.stat.speed||1)*mut.pSpd,
     maxHp:(100+12*metaLv('hp'))*omni*pHp*(ch.stat.maxHp||1)*mut.pHp, pickup:90*(1+0.12*metaLv('pick'))*(1+0.06*prestigeLv('p_pickup'))*(ch.stat.pickup||1),
-    crit:0.05+(ch.stat.crit||0)+0.03*metaLv('crit')+0.02*prestigeLv('p_crit'), critMult:2*(1+0.1*metaLv('critdmg'))*(1+0.08*prestigeLv('p_critdmg')), armor:0.04*metaLv('armor')+0.02*prestigeLv('p_armor'), regen:0.3*metaLv('regen'), xpMult:(1+0.08*metaLv('xp'))*(1+0.05*prestigeLv('p_xp')) };
+    crit:0.05+(ch.stat.crit||0)+0.03*metaLv('crit')+0.02*prestigeLv('p_crit'), critMult:2*(1+0.1*metaLv('critdmg'))*(1+0.08*prestigeLv('p_critdmg')), armor:0.04*metaLv('armor')+0.02*prestigeLv('p_armor'), regen:0.3*metaLv('regen')+0.4*prestigeLv('p_regen'), xpMult:(1+0.08*metaLv('xp'))*(1+0.05*prestigeLv('p_xp')) };
   enemies=[]; bullets=[]; ebullets=[]; orbs=[]; particles=[]; dmgnums=[]; pickups=[]; blades=[]; fxRings=[]; wells=[]; beams=[]; mines=[]; clouds=[]; hazards=[]; drones=[]; shards=[];
   addWeapon(ch.start);
   recalc(); player.hp=player.maxHp;
@@ -2181,11 +2186,11 @@ function recalc(){
   player.amount=(p.pamount||0)+metaLv('multishot');          // 額外投射物(含局外多重核心)
   player.pierceBonus=(p.ppierce||0)+metaLv('startpierce')+(player.boostPierce||0);     // 額外貫穿(含局外貫穿核心 + 局前補給)
   player.bossDmg=1+0.08*metaLv('bossbane');     // 屠龍核心：對首領增傷
-  player.dodge=Math.min(0.6,0.08*(p.pdodge||0)+0.02*metaLv('dodge'));   // 閃避機率(含局外迴避核心,上限60%)
-  player.lifesteal=0.4*(p.pvamp||0)+0.2*metaLv('lifesteal');   // 擊殺回血量（含局外吸血核心）
+  player.dodge=Math.min(0.6,0.08*(p.pdodge||0)+0.02*metaLv('dodge')+0.015*prestigeLv('p_dodge'));   // 閃避機率(含局外迴避核心+星核迴避,上限60%)
+  player.lifesteal=0.4*(p.pvamp||0)+0.2*metaLv('lifesteal')+0.1*prestigeLv('p_vamp');   // 擊殺回血量（含局外吸血核心+星核吸血）
   player.execute=0.008*(p.pexec||0)+0.005*metaLv('executioner');   // 處決門檻(生命比例,含局外處決核心)
   player.blockInterval=(p.pshield>0)?Math.max(2.5,8-(p.pshield-1)*1.1):0;   // 護盾再生間隔(秒)
-  player.thorns=14*(p.pthorns||0)+8*metaLv('thorncore');   // 荊棘反傷(含局外荊棘核心)
+  player.thorns=14*(p.pthorns||0)+8*metaLv('thorncore')+10*prestigeLv('p_thorns');   // 荊棘反傷(含局外荊棘核心+星核荊棘)
   player.chain=0.1*(p.pchain||0);   // 連鎖爆破機率
   player.chill=0.1*(p.pfrost||0);   // 霜寒減速機率
   player.nova=(p.pnova||0);   // 新星脈衝等級
@@ -4270,7 +4275,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v342 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v343 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者'];
 function renderMenu(){

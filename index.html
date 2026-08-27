@@ -412,6 +412,7 @@ if('serviceWorker' in navigator){ var __reloaded=false;
     <button class="btn ghost" id="codexbtn" style="flex:1">武器圖鑑 📖</button>
     <button class="btn ghost" id="bestiarybtn" style="flex:1">怪物圖鑑 👾</button>
   </div>
+  <button class="btn ghost" id="relicbtn">遺物收藏 💎</button>
   <button class="btn ghost" id="shopbtn">永久強化 ◆</button>
   <button class="btn ghost" id="boostbtn">局前補給 🎁</button>
   <div style="display:flex;gap:10px">
@@ -510,6 +511,14 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   <button class="btn ghost" id="bestiaryclose" style="margin-top:14px">返回</button>
 </div></div>
 
+<!-- 遺物收藏 -->
+<div id="relics" class="overlay"><div class="panel" style="max-width:640px">
+  <h2 style="text-align:center;font-size:24px;font-weight:900;letter-spacing:2px;color:#ffd54a;margin-bottom:4px;text-shadow:0 0 14px rgba(255,213,74,.5)">遺物收藏 💎</h2>
+  <div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:14px">在戰鬥中達成條件，霓虹深處會遺落古老遺物 · 收集越多，越接近世界的真相</div>
+  <div id="reliclist"></div>
+  <button class="btn ghost" id="relicclose" style="margin-top:14px">返回</button>
+</div></div>
+
 <!-- 排行榜 -->
 <div id="board" class="overlay"><div class="panel" style="max-width:520px">
   <h2 style="text-align:center;font-size:24px;font-weight:900;letter-spacing:2px;color:#ffd54a;margin-bottom:6px">排行榜 🏆</h2>
@@ -588,7 +597,7 @@ try{ var _fx=localStorage.getItem('neon_fx'); if(_fx==='med')fxScale=0.6; else i
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false,enigma:false,spiralist:false,gunslinger:false,ronin:false,warden2:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0},weekly:{week:-1,done:false},achMile:{},modeBest:{}};
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0},weekly:{week:-1,done:false},achMile:{},modeBest:{},relics:{}};
   try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
@@ -746,6 +755,42 @@ function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div c
 function dailyToast(info){ var el=$('achpop'); if(!el)return;
   el.innerHTML='<div class="ai">'+(info.perfect?'🎉':'📅')+'</div><div><div class="at">每日登入 · 連續 '+info.streak+' 天'+(info.perfect?' · 七日全勤！':(info.day7?' · 已封頂':''))+'</div><div class="an">+◆'+info.reward+' 碎片'+(info.perfect?'（含全勤 +500）':'')+'</div></div>';
   el.classList.add('show'); GAudio.achieve&&GAudio.achieve(); clearTimeout(achToast._t); achToast._t=setTimeout(function(){el.classList.remove('show');},3400); }
+
+// ===== 遺物收藏系統：戰鬥中達成條件掉落，內含世界觀敘事 =====
+var RELIC_RARITY={ common:{name:'普通',c:'#8ea6c8'}, rare:{name:'稀有',c:'#22e6ff'}, epic:{name:'史詩',c:'#c98bff'}, legend:{name:'傳說',c:'#ffd54a'} };
+var RELICS=[
+  {id:'spark',   ic:'✦', r:'common', name:'初生火種',   rw:80,  lore:'第一縷擊碎黑暗的霓虹。它記得你踏入戰場的那一刻。', chk:function(){return (G.kills||0)>=50;}},
+  {id:'corebit', ic:'◈', r:'common', name:'核心碎屑',   rw:80,  lore:'倖存者護甲的殘片，仍殘留著微弱脈動。', chk:function(){return (G.level||0)>=8;}},
+  {id:'pulse',   ic:'❍', r:'common', name:'脈衝晶石',   rw:100, lore:'每一次連擊都會讓它更加明亮——直到照亮整片虛空。', chk:function(){return (G.peakCombo||0)>=60;}},
+  {id:'firstboss',ic:'♛',r:'rare',   name:'首戰王冠',   rw:150, lore:'第一位倒下的霓虹之王，曾統治這片廢墟長達千年。', chk:function(){return (G.bossKills||0)>=1;}},
+  {id:'elitecrest',ic:'❖',r:'rare',  name:'精英徽記',   rw:150, lore:'精英獵手的印記。傳說集齊者能看穿敵潮的來向。', chk:function(){return (G.eliteKills||0)>=15;}},
+  {id:'survivor',ic:'⧗', r:'rare',   name:'恆時沙漏',   rw:180, lore:'時間在此凝結。撐過五分鐘的人，才有資格握住它。', chk:function(){return (G.time||0)>=300;}},
+  {id:'wanderer',ic:'✧', r:'rare',   name:'漫遊者之眼', rw:160, lore:'走遍多座霓虹遺跡者才會遇見它。它凝視著更遠的地平線。', chk:function(){return Object.keys(DB.stages||{}).filter(function(k){return DB.stages[k];}).length>=3;}},
+  {id:'fusion',  ic:'⬗', r:'epic',   name:'合成之心',   rw:220, lore:'兩種力量交融的證明。造物主曾以此鍛造第一件武裝。', chk:function(){return !!(player&&player.weapons&&player.weapons.some(function(w){return w.fused;}));}},
+  {id:'act4',    ic:'⯃', r:'epic',   name:'第四封印',   rw:240, lore:'越過第四道門扉，敵潮的源頭開始顯現輪廓。', chk:function(){return (G.act||1)>=4;}},
+  {id:'bosslord',ic:'♚', r:'epic',   name:'弒王者印',   rw:260, lore:'擊碎三位王者。你的名字開始在虛空中被低語傳頌。', chk:function(){return (G.bossKills||0)>=3;}},
+  {id:'combomaster',ic:'⟐',r:'epic', name:'連鎖聖徽',   rw:250, lore:'一百五十連。連虛空都跟不上你收割的節奏。', chk:function(){return (G.peakCombo||0)>=150;}},
+  {id:'flawless',ic:'✺', r:'legend', name:'無瑕之翼',   rw:400, lore:'滴血未沾，撐過三分鐘。只有傳說中的謎影做得到。', chk:function(){return G.flawless&&(G.time||0)>=180;}},
+  {id:'eternal', ic:'∞',  r:'legend', name:'永恆之核',   rw:500, lore:'存活十分鐘者，將窺見霓潮的盡頭——那裡沒有終點，只有下一波。', chk:function(){return (G.time||0)>=600;}},
+  {id:'annihilator',ic:'☄',r:'legend',name:'殲滅之證',   rw:450, lore:'累積百萬傷害。你已不是倖存者，而是這片霓虹本身的災厄。', chk:function(){return (G.dmgDealt||0)>=1000000;}},
+  {id:'collector',ic:'❇', r:'legend', name:'萬象之匣',   rw:600, lore:'集齊眾多遺物者，匣中浮現世界初生的完整記憶。', chk:function(){return Object.keys(DB.relics||{}).length>=12;}}
+];
+function relicToast(rel){ var el=$('achpop'); if(!el)return; var rc=RELIC_RARITY[rel.r]||RELIC_RARITY.common;
+  el.innerHTML='<div class="ai" style="color:'+rc.c+';text-shadow:0 0 12px '+rc.c+'">'+rel.ic+'</div><div><div class="at" style="color:'+rc.c+'">遺物出土 · '+rc.name+' · +'+(rel.rw||100)+' ◆</div><div class="an">'+rel.name+'</div></div>';
+  el.classList.add('show'); GAudio.achieve&&GAudio.achieve(); clearTimeout(achToast._t); achToast._t=setTimeout(function(){el.classList.remove('show');},2800); }
+function checkRelics(){ if(!G)return; DB.relics=DB.relics||{}; RELICS.forEach(function(rel){ if(!DB.relics[rel.id]){ try{ if(rel.chk()){ DB.relics[rel.id]=1; DB.shards+=(rel.rw||100); saveDB(); relicToast(rel); } }catch(e){} } }); }
+function renderRelics(){ DB.relics=DB.relics||{}; var got=0;
+  var html=RELICS.map(function(rel){ var rc=RELIC_RARITY[rel.r]||RELIC_RARITY.common; var u=!!DB.relics[rel.id]; if(u)got++;
+    if(!u)return '<div class="cxitem"><div class="cxic" style="color:#3a4568">❔</div>'+
+      '<div class="cxmain"><div class="cxn" style="color:#6b7ba0">？？？ <span class="cxtag" style="color:'+rc.c+';border-color:'+rc.c+'">'+rc.name+'</span></div>'+
+      '<div class="cxd" style="color:#4a5578">尚未出土 — 在戰鬥中達成隱藏條件即可收藏</div></div></div>';
+    return '<div class="cxitem" style="border-color:'+rc.c+'55"><div class="cxic" style="color:'+rc.c+';text-shadow:0 0 12px '+rc.c+'88">'+rel.ic+'</div>'+
+      '<div class="cxmain"><div class="cxn" style="color:'+rc.c+'">'+rel.name+' <span class="cxtag" style="color:'+rc.c+';border-color:'+rc.c+'">'+rc.name+'</span></div>'+
+      '<div class="cxd" style="font-style:italic;color:#b9c6e0">「'+rel.lore+'」</div></div></div>'; }).join('');
+  var pct=Math.round(got/RELICS.length*100);
+  $('reliclist').innerHTML='<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12px;color:#8ea0c8;margin-bottom:5px"><span>💎 收藏進度</span><span>'+got+' / '+RELICS.length+'（'+pct+'%）</span></div>'+
+    '<div style="height:9px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,#22e6ff,#c98bff,#ffd54a);box-shadow:0 0 10px #ffd54a"></div></div></div>'+html;
+}
 
 // 每日挑戰變異詞條（依日期決定）
 var IDENTITY_MUT={id:'none',name:'',eSpd:1,eHp:1,spawn:1,elite:1,pHp:1,pDmg:1,pSpd:1};
@@ -2129,6 +2174,7 @@ function loop(ts){ if(!running)return; requestAnimationFrame(loop);
 }
 function update(dt){
   G.time+=dt;
+  G._relicT=(G._relicT||0)+dt; if(G._relicT>=1.5){ G._relicT=0; checkRelics(); }   // 遺物：局內每 1.5 秒檢查一次，達成即刻出土
   if(G.mode==='timeattack'&&!G.over){ G.modeTimer-=dt; if(G.modeTimer<=0){ G.modeTimer=0; announce('⏱️ 時間到！','#ffd54a'); G.over=true; gameOver(); return; } }   // 限時狂殺：時間到結算
   // combo 衰減
   if(G.comboTimer>0){ G.comboTimer-=dt; if(G.comboTimer<=0){ if(G.combo>=15)floatText('連擊中斷 x'+G.combo,'#ff8a3a'); G.combo=0; var cb=$('combo'); cb.style.opacity='0'; cb.classList.remove('flame','inferno');} }
@@ -3432,6 +3478,7 @@ function gameOver(){
   checkAch();
   checkMissions();
   checkWeekly();
+  checkRelics();
   saveDB();
   $('o-time').textContent=fmtTime(G.time); $('o-kills').textContent=G.kills;
   $('o-level').textContent=G.level; $('o-wave').textContent=G.wave;
@@ -3553,7 +3600,7 @@ function renderPauseBuild(){
     '<div class="blabel">被動</div><div class="brow">'+ph+'</div>'+
     '<div class="blabel">角色 · 地圖</div><div class="brow"><span class="bchip">'+(CHARS.find(function(c){return c.id===selChar;})||{}).name+'</span><span class="bchip">'+G.stage.name+'</span>'+(G.daily?'<span class="bchip" style="border-color:#ffd54a">🗓️ '+G.mut.name+'</span>':'')+'</div>'; }
 
-function hideAll(){ ['menu','levelup','shop','pause','over','board','ach','codex','bestiary','profile','tutorial','missions'].forEach(function(id){$(id).classList.remove('show');}); }
+function hideAll(){ ['menu','levelup','shop','pause','over','board','ach','codex','bestiary','relics','profile','tutorial','missions'].forEach(function(id){$(id).classList.remove('show');}); }
 function renderAch(){ var got=0, lgTotal=0, lgGot=0, hidGot=0, hidTotal=0; var html=ACHIEVEMENTS.map(function(a){ var u=DB.achievements[a.id]; if(u)got++;
   var lg=a.name.indexOf('【傳說】')>=0; if(lg){lgTotal++; if(u)lgGot++;}
   if(a.hidden){ hidTotal++; if(u)hidGot++; }
@@ -3638,7 +3685,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v297 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v298 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -3792,6 +3839,8 @@ $('codexbtn').onclick=function(){ renderCodex(); $('menu').classList.remove('sho
 $('codexclose').onclick=function(){ $('codex').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('bestiarybtn').onclick=function(){ renderBestiary(); $('menu').classList.remove('show'); $('bestiary').classList.add('show'); };
 $('bestiaryclose').onclick=function(){ $('bestiary').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
+$('relicbtn').onclick=function(){ renderRelics(); $('menu').classList.remove('show'); $('relics').classList.add('show'); };
+$('relicclose').onclick=function(){ $('relics').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('shopbtn').onclick=function(){ renderShop(); $('menu').classList.remove('show'); $('shop').classList.add('show'); };
 $('shopclose').onclick=function(){ $('shop').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('boostbtn').onclick=function(){ renderBoostShop(); $('menu').classList.remove('show'); $('boostshop').classList.add('show'); };

@@ -744,6 +744,16 @@ var ACHIEVEMENTS=[
   {id:'psv20',   ic:'🧬',name:'強化入門',  desc:'圖鑑發現 20 種被動',rw:400,chk:function(){return Object.keys(DB.psvSeen||{}).length>=20;}},
   {id:'psvall',  ic:'🔬',name:'強化大全',  desc:'圖鑑發現全部 39 種被動',rw:1500,chk:function(){try{return PORDER.every(function(id){return DB.psvSeen&&DB.psvSeen[id];});}catch(e){return false;}}},
   {id:'codexmaster',ic:'👑',name:'萬典宗師',desc:'集齊武器與被動全圖鑑',rw:3000,chk:function(){try{return WORDER.every(function(id){return DB.wpnSeen&&DB.wpnSeen[id];})&&PORDER.every(function(id){return DB.psvSeen&&DB.psvSeen[id];});}catch(e){return false;}}},
+  // —— B342 成就擴充 ——
+  {id:'prestige20',ic:'🌌',name:'無盡輪迴',  desc:'累計轉生 20 次',rw:3000,chk:function(){return (DB.prestige&&DB.prestige.count||0)>=20;}},
+  {id:'corebuyer', ic:'⭐',name:'星核收藏',  desc:'星核加成累計購買 15 級',rw:1500,chk:function(){try{var s=0;var u=DB.prestige&&DB.prestige.upg||{};for(var k in u)s+=u[k]||0;return s>=15;}catch(e){return false;}}},
+  {id:'login60',   ic:'📅',name:'月月相見',  desc:'累計登入 60 天',rw:2000,chk:function(){return (DB.login&&DB.login.total||0)>=60;}},
+  {id:'login100',  ic:'📆',name:'百日不輟',  desc:'累計登入 100 天',rw:4000,chk:function(){return (DB.login&&DB.login.total||0)>=100;}},
+  {id:'skin60',    ic:'🎨',name:'塗裝宗匠',  desc:'擁有 60 款皮膚',rw:2500,chk:function(){return Object.keys(DB.skins||{}).length>=60;}},
+  {id:'wealthy2',  ic:'💎',name:'霓虹巨富',  desc:'碎片存量達 200000',rw:2000,chk:function(){return (DB.shards||0)>=200000;}},
+  {id:'act10s',    ic:'☰',name:'幕終之境',  desc:'單局抵達第 10 幕',rw:600,chk:function(){return (G.act||1)>=10;}},
+  {id:'charskinall',ic:'🚀',name:'本色大師',  desc:'集齊全部 32 款角色專屬皮膚',rw:3000,chk:function(){try{return CHAR_SKINS.every(function(s){return DB.skins[s.id];});}catch(e){return false;}}},
+  {id:'limitedown',ic:'🌈',name:'限量藏家',  desc:'擁有任一限量皮膚',rw:1000,chk:function(){try{return LIMITED_SKINS.some(function(s){return DB.skins[s.id];});}catch(e){return false;}}},
   {id:'wave25',  ic:'🌊',name:'波瀾不驚',desc:'抵達第 25 波',rw:150,chk:function(){return G.wave>=25;}},
   {id:'fortress',ic:'🏰',name:'要塞征服',desc:'機械要塞存活 3 分',rw:250,chk:function(){return G.stage&&G.stage.id==='fortress'&&G.time>=180;}},
   {id:'score5k', ic:'🏆',name:'高分玩家',desc:'單局達 5000 分',rw:200,chk:function(){return (G.score||0)>=5000;}},
@@ -850,7 +860,7 @@ var ACHIEVEMENTS=[
   {id:'h_earlyboss',ic:'⏱️',hidden:true,name:'速斬',desc:'開局 2 分鐘內擊敗首領',rw:700,chk:function(){return (G.bossKills||0)>=1&&G.time<=120;}},
 ];
 function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); checkAchMile(); }
-var ACH_MILE=[{n:25,rw:400},{n:50,rw:800},{n:75,rw:1200},{n:100,rw:2000},{n:125,rw:3500}];   // 成就里程碑：累計解鎖 N 個給階段大獎
+var ACH_MILE=[{n:25,rw:400},{n:50,rw:800},{n:75,rw:1200},{n:100,rw:2000},{n:125,rw:3500},{n:150,rw:6000}];   // 成就里程碑：累計解鎖 N 個給階段大獎
 function checkAchMile(){ DB.achMile=DB.achMile||{}; var got=Object.keys(DB.achievements||{}).length;
   ACH_MILE.forEach(function(m){ if(got>=m.n && !DB.achMile[m.n]){ DB.achMile[m.n]=1; DB.shards+=m.rw; saveDB(); achToast({ic:'🏅',name:'成就里程碑 '+m.n+' 達成！'},m.rw); } }); }
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';
@@ -4260,7 +4270,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v341 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v342 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者'];
 function renderMenu(){

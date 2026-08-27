@@ -983,7 +983,7 @@ function checkWeekly(){ if(!G)return; DB.weekly=DB.weekly||{week:-1,done:false};
   if(DB.weekly.week!==wk){ DB.weekly={week:wk,done:false}; }
   if(DB.weekly.done)return; var m=thisWeekMission();
   try{ if(m.chk()){ DB.weekly.done=true; DB.shards+=m.rw; saveDB(); achToast({ic:m.ic,name:'每週挑戰完成！'},m.rw); } }catch(e){} }
-function saveDB(){ localStorage.setItem(SAVE,JSON.stringify(DB)); }
+function saveDB(){ try{ localStorage.setItem(SAVE,JSON.stringify(DB)); }catch(e){} }   // 嵌入(如 Google Sites)第三方儲存被封鎖時靜默失敗，遊戲仍可正常遊玩
 
 // 永久強化定義
 var META=[
@@ -3849,7 +3849,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v302 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v303 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

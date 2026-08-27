@@ -2127,28 +2127,40 @@ function spawnPickup(x,y,type){ pickups.push({x:x,y:y,type:type,vy:0,t:0}); }
 // ===== 局內隨機事件：週期性在玩家附近降臨主題事件，附橫幅提示，複用道具系統 =====
 function eventSpot(){ var a=rand(0,TAU), d=rand(280,380); return {x:player.x+Math.cos(a)*d, y:player.y+Math.sin(a)*d, a:a}; }
 function markSpot(x,y,col){ for(var i=0;i<3;i++)ringFx(x,y,60+i*55,col); burst(x,y,col,12,220); }
-function triggerRandomEvent(){
-  if(!G||G.over)return;
-  var roll=Math.random(), s=eventSpot();
-  if(roll<0.32){   // 📦 補給空投：一叢良品道具
+var EVENTS=[
+  {w:16, fn:function(s){   // 📦 補給空投：一叢良品道具
     announce('📦 補給空投降臨！前往拾取','#5dff9b');
     var pool=['heal','shardbag','frenzy','magnet','xpgem','shield'];
-    for(var i=0;i<4;i++)spawnPickup(s.x+rand(-46,46),s.y+rand(-46,46),pick(pool));
-    markSpot(s.x,s.y,'#5dff9b');
-  } else if(roll<0.6){   // ⭐ 增益祭壇：單一強力增益
+    for(var i=0;i<4;i++)spawnPickup(s.x+rand(-46,46),s.y+rand(-46,46),pick(pool)); markSpot(s.x,s.y,'#5dff9b'); }},
+  {w:14, fn:function(s){   // ⭐ 增益祭壇：單一強力增益
     announce('⭐ 增益祭壇降臨！','#ffe14a');
-    spawnPickup(s.x,s.y,pick(['overdrive','purify','turretdrop','squad','quake','emppulse','soulharvest']));
-    markSpot(s.x,s.y,'#ffe14a');
-  } else if(roll<0.82){   // 💰 碎片寶庫：一疊碎片袋
+    spawnPickup(s.x,s.y,pick(['overdrive','purify','turretdrop','squad','quake','emppulse','soulharvest'])); markSpot(s.x,s.y,'#ffe14a'); }},
+  {w:12, fn:function(s){   // 💰 碎片寶庫：一疊碎片袋
     announce('💰 碎片寶庫出現！','#ffd54a');
-    for(var b=0;b<5;b++)spawnPickup(s.x+rand(-56,56),s.y+rand(-56,56),'shardbag');
-    markSpot(s.x,s.y,'#ffd54a');
-  } else {   // 🎯 精英狩獵：召來一群強化敵，戰利點掉落碎片，邊戰邊取
+    for(var b=0;b<5;b++)spawnPickup(s.x+rand(-56,56),s.y+rand(-56,56),'shardbag'); markSpot(s.x,s.y,'#ffd54a'); }},
+  {w:12, fn:function(s){   // 🎯 精英狩獵：召來一群強化敵，戰利點掉落碎片
     announce('🎯 精英狩獵！清剿敵群、奪取戰利','#ff5edb');
     for(var h=0;h<6;h++)spawnType('charger',2.2);
-    for(var hb=0;hb<3;hb++)spawnPickup(s.x+rand(-50,50),s.y+rand(-50,50),'shardbag');
-    markSpot(s.x,s.y,'#ff5edb');
-  }
+    for(var hb=0;hb<3;hb++)spawnPickup(s.x+rand(-50,50),s.y+rand(-50,50),'shardbag'); markSpot(s.x,s.y,'#ff5edb'); }},
+  {w:9,  fn:function(s){   // 🍀 幸運女神：天降幸運草(補給叢)+頭獎
+    announce('🍀 幸運女神眷顧！','#5dff9b');
+    spawnPickup(s.x,s.y,'clover'); spawnPickup(s.x+rand(-40,40),s.y+rand(-40,40),'jackpot'); markSpot(s.x,s.y,'#5dff9b'); }},
+  {w:9,  fn:function(s){   // ⏳ 時間裂隙：時停 + 經驗結晶
+    announce('⏳ 時間裂隙開啟！','#7dd3ff');
+    spawnPickup(s.x,s.y,'timefreeze'); for(var x=0;x<3;x++)spawnPickup(s.x+rand(-48,48),s.y+rand(-48,48),'xpgem'); markSpot(s.x,s.y,'#7dd3ff'); }},
+  {w:9,  fn:function(s){   // 💗 生命聖泉：生命結晶 + 回血
+    announce('💗 生命聖泉湧現！','#ff6b8a');
+    spawnPickup(s.x,s.y,'heart'); for(var x=0;x<2;x++)spawnPickup(s.x+rand(-44,44),s.y+rand(-44,44),'heal'); markSpot(s.x,s.y,'#ff6b8a'); }},
+  {w:5,  fn:function(s){   // 👑 首領懸賞：空降一名首領，擊破爆厚賞(高風險高回報)
+    announce('👑 首領懸賞降臨！擊破爆厚賞','#ff2b5e'); flashScreen('255,43,94',0.3); shake(10);
+    spawnBoss(); spawnPickup(s.x,s.y,'jackpot'); for(var b=0;b<4;b++)spawnPickup(s.x+rand(-54,54),s.y+rand(-54,54),'shardbag'); markSpot(s.x,s.y,'#ff2b5e'); }}
+];
+function triggerRandomEvent(){
+  if(!G||G.over)return;
+  var s=eventSpot(), tot=0; for(var i=0;i<EVENTS.length;i++)tot+=EVENTS[i].w;
+  var r=Math.random()*tot, acc=0, ev=EVENTS[0];
+  for(var j=0;j<EVENTS.length;j++){ acc+=EVENTS[j].w; if(r<acc){ ev=EVENTS[j]; break; } }
+  try{ ev.fn(s); }catch(e){}
 }
 function burst(x,y,color,n,sp){ n=Math.max(1,Math.round(n*fxScale)); for(var i=0;i<n;i++){var a=rand(0,TAU),s=rand(0.3,1)*(sp||160);
   particles.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rand(0.3,0.7),max:0.7,color:color,r:rand(1.5,3.5)});} }
@@ -4051,7 +4063,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v320 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v321 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

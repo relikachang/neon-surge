@@ -2641,7 +2641,14 @@ var EVENTS=[
     for(var bg=0;bg<2;bg++)spawnType('golden',1); spawnPickup(s.x,s.y,'clover'); markSpot(s.x,s.y,'#ffd54a'); }},
   {w:6,  fn:function(s){   // ⚡ 能量潮汐：一叢強力生存增益，短暫化身無敵殺神
     announce('⚡ 能量潮汐湧現！','#7cf0ff'); flashScreen('124,240,255',0.2);
-    spawnPickup(s.x,s.y,'overdrive'); spawnPickup(s.x+rand(-44,44),s.y+rand(-44,44),'purify'); spawnPickup(s.x+rand(-44,44),s.y+rand(-44,44),'shield'); spawnPickup(s.x+rand(-44,44),s.y+rand(-44,44),'fullheal'); markSpot(s.x,s.y,'#7cf0ff'); }}
+    spawnPickup(s.x,s.y,'overdrive'); spawnPickup(s.x+rand(-44,44),s.y+rand(-44,44),'purify'); spawnPickup(s.x+rand(-44,44),s.y+rand(-44,44),'shield'); spawnPickup(s.x+rand(-44,44),s.y+rand(-44,44),'fullheal'); markSpot(s.x,s.y,'#7cf0ff'); }},
+  {w:7,  fn:function(s){   // 🌪️ 狂潮突襲：突然湧入一群高速厲魂，清剿後爆碎片與頭獎
+    announce('🌪️ 狂潮突襲！清剿高速敵群奪厚賞','#9d6bff'); flashScreen('157,107,255',0.18); shake(5);
+    for(var ws=0;ws<12;ws++)spawnType('wraith',1.2); spawnPickup(s.x,s.y,'jackpot');
+    for(var wb=0;wb<2;wb++)spawnPickup(s.x+rand(-52,52),s.y+rand(-52,52),'shardbag'); markSpot(s.x,s.y,'#9d6bff'); }},
+  {w:6,  fn:function(s){   // 🛡️ 堡壘祭壇：一叢保命增益，短暫化身金剛不壞
+    announce('🛡️ 堡壘祭壇降臨！','#5dd3ff'); flashScreen('93,211,255',0.2);
+    spawnPickup(s.x,s.y,'shield'); spawnPickup(s.x+rand(-44,44),s.y+rand(-44,44),'fullheal'); spawnPickup(s.x+rand(-44,44),s.y+rand(-44,44),'revivecharm'); markSpot(s.x,s.y,'#5dd3ff'); }}
 ];
 function triggerRandomEvent(){
   if(!G||G.over)return;
@@ -4745,7 +4752,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v438 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v439 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

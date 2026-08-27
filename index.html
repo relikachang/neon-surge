@@ -2067,6 +2067,32 @@ function fireBeam(ang,damage,len,width,color){ var dx=Math.cos(ang),dy=Math.sin(
   beams.push({x:player.x,y:player.y,ang:ang,len:len,w:width,color:color,life:0.12,max:0.12}); }
 function spawnOrb(x,y,val){ orbs.push({x:x,y:y,val:val,vx:rand(-40,40),vy:rand(-40,40)}); }
 function spawnPickup(x,y,type){ pickups.push({x:x,y:y,type:type,vy:0,t:0}); }
+// ===== 局內隨機事件：週期性在玩家附近降臨主題事件，附橫幅提示，複用道具系統 =====
+function eventSpot(){ var a=rand(0,TAU), d=rand(280,380); return {x:player.x+Math.cos(a)*d, y:player.y+Math.sin(a)*d, a:a}; }
+function markSpot(x,y,col){ for(var i=0;i<3;i++)ringFx(x,y,60+i*55,col); burst(x,y,col,12,220); }
+function triggerRandomEvent(){
+  if(!G||G.over)return;
+  var roll=Math.random(), s=eventSpot();
+  if(roll<0.32){   // 📦 補給空投：一叢良品道具
+    announce('📦 補給空投降臨！前往拾取','#5dff9b');
+    var pool=['heal','shardbag','frenzy','magnet','xpgem','shield'];
+    for(var i=0;i<4;i++)spawnPickup(s.x+rand(-46,46),s.y+rand(-46,46),pick(pool));
+    markSpot(s.x,s.y,'#5dff9b');
+  } else if(roll<0.6){   // ⭐ 增益祭壇：單一強力增益
+    announce('⭐ 增益祭壇降臨！','#ffe14a');
+    spawnPickup(s.x,s.y,pick(['overdrive','purify','turretdrop','squad','quake','emppulse','soulharvest']));
+    markSpot(s.x,s.y,'#ffe14a');
+  } else if(roll<0.82){   // 💰 碎片寶庫：一疊碎片袋
+    announce('💰 碎片寶庫出現！','#ffd54a');
+    for(var b=0;b<5;b++)spawnPickup(s.x+rand(-56,56),s.y+rand(-56,56),'shardbag');
+    markSpot(s.x,s.y,'#ffd54a');
+  } else {   // 🎯 精英狩獵：召來一群強化敵，戰利點掉落碎片，邊戰邊取
+    announce('🎯 精英狩獵！清剿敵群、奪取戰利','#ff5edb');
+    for(var h=0;h<6;h++)spawnType('charger',2.2);
+    for(var hb=0;hb<3;hb++)spawnPickup(s.x+rand(-50,50),s.y+rand(-50,50),'shardbag');
+    markSpot(s.x,s.y,'#ff5edb');
+  }
+}
 function burst(x,y,color,n,sp){ n=Math.max(1,Math.round(n*fxScale)); for(var i=0;i<n;i++){var a=rand(0,TAU),s=rand(0.3,1)*(sp||160);
   particles.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:rand(0.3,0.7),max:0.7,color:color,r:rand(1.5,3.5)});} }
 function spawnShards(x,y,color,n,sp){ if(shards.length>260)return; n=Math.max(1,Math.round(n*fxScale)); for(var i=0;i<n;i++){ var a=rand(0,TAU),s=rand(0.45,1)*(sp||190);
@@ -2435,6 +2461,8 @@ function update(dt){
   G.time+=dt;
   G._relicT=(G._relicT||0)+dt; if(G._relicT>=1.5){ G._relicT=0; checkRelics(); }   // 遺物：局內每 1.5 秒檢查一次，達成即刻出土
   if(G.entranceT>0)G.entranceT-=dt;   // 傳奇皮膚出場動畫計時
+  if(G.eventAt==null)G.eventAt=rand(28,38);   // 局內隨機事件：首發約 30 秒
+  if(!G.over&&G.time>=G.eventAt){ triggerRandomEvent(); G.eventAt=G.time+rand(32,46); }   // 之後每 32~46 秒一次
   if(G.mode==='timeattack'&&!G.over){ G.modeTimer-=dt; if(G.modeTimer<=0){ G.modeTimer=0; announce('⏱️ 時間到！','#ffd54a'); G.over=true; gameOver(); return; } }   // 限時狂殺：時間到結算
   // combo 衰減
   if(G.comboTimer>0){ G.comboTimer-=dt; if(G.comboTimer<=0){ if(G.combo>=15)floatText('連擊中斷 x'+G.combo,'#ff8a3a'); G.combo=0; var cb=$('combo'); cb.style.opacity='0'; cb.classList.remove('flame','inferno');} }
@@ -3953,7 +3981,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v308 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v309 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

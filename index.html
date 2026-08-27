@@ -3017,7 +3017,9 @@ function levelUp(){ G.level++; G.xpNeed=Math.floor(5+G.level*3+G.level*G.level*0
   player.hp=Math.min(player.maxHp,player.hp+6);
   for(var lr=0;lr<4;lr++)ringFx(player.x,player.y,64+lr*72,'#ffd54a'); ringFx(player.x,player.y,player.radius+22,'#ffffff'); burst(player.x,player.y,'#ffe89a',30,300); burst(player.x,player.y,'#ffffff',12,200); flashScreen('255,213,74',0.28); shake(4);   // 升級瞬間：盛大金環爆發 + 白核環 + 微震
   var xf=$('xpfill'); if(xf){ xf.classList.remove('lvflash'); void xf.offsetWidth; xf.classList.add('lvflash'); }   // 經驗條升級閃光
-  GAudio.level(); checkAch(); openLevelUp(); }
+  var lvBig=(G.level%10===0);   // 每 10 級里程碑：更華麗的升級音 + 慶祝
+  if(lvBig){ announce('✨ 等級 '+G.level+' 里程碑！','#ffe14a'); for(var lb=0;lb<3;lb++)ringFx(player.x,player.y,110+lb*80,'#ffe14a'); flashScreen('255,225,74',0.32); }
+  GAudio.level(lvBig); checkAch(); openLevelUp(); }
 
 function collectPickup(p){
   ringFx(p.x,p.y,48,'#ffffff'); ringFx(p.x,p.y,26,'#ffe89a'); burst(p.x,p.y,'#ffffff',10,220); GAudio.pick&&GAudio.pick();   // 拾取瞬間：雙環閃光 + 收集音
@@ -4232,7 +4234,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v334 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v335 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -4374,7 +4376,9 @@ var GAudio=(function(){ var ac=null, mMusic=false, mSfx=false, mVol=0.8;
       else if(skinFx==='deep'){ beep(rand(90,150),0.09,'sine',0.06); noise(0.06,0.05,'lowpass',420); }               // 低頻爆響
       else { beep(rand(220,320),0.05,'square',0.04); noise(0.05,0.045,'highpass',1400); } },   // 擊殺：脆音+高頻噴濺
     hurt:function(){ beep(90,0.16,'sawtooth',0.16); noise(0.12,0.1,'lowpass',500); },
-    level:function(){ [523,659,784,1046].forEach(function(f,i){setTimeout(function(){beep(f,0.16,'triangle',0.14);},i*65);}); setTimeout(function(){beep(1568,0.4,'sine',0.08);},260); },   // 升級：琶音+高音收尾
+    level:function(big){   // 升級：琶音+高音收尾；big=每 10 級的里程碑更華麗
+      [523,659,784,1046].forEach(function(f,i){setTimeout(function(){beep(f,0.16,'triangle',0.14);},i*65);}); setTimeout(function(){beep(1568,0.4,'sine',0.08);},260);
+      if(big){ [1046,1318,1568,2093].forEach(function(f,i){setTimeout(function(){beep(f,0.2,'triangle',0.11);},300+i*70);}); setTimeout(function(){beep(2637,0.5,'sine',0.07);},600); noise(0.12,0.05,'highpass',2600); } },
     pick:function(){ beep(880,0.05,'triangle',0.055); },
     boss:function(){ beep(52,0.7,'sawtooth',0.2); beep(78,0.7,'sawtooth',0.12); noise(0.6,0.14,'lowpass',160); },   // Boss：低頻雙音+隆隆噪
     over:function(){ [440,330,247,165,110].forEach(function(f,i){setTimeout(function(){beep(f,0.28,'sawtooth',0.16);},i*130);}); setTimeout(function(){noise(0.5,0.12,'lowpass',300);},520); },

@@ -881,9 +881,12 @@ var ACHIEVEMENTS=[
   // —— B387 疾速狂飆模式成就 ——
   {id:'turbo3',   ic:'⚡', name:'極速倖存', desc:'疾速狂飆模式存活 3 分鐘',   rw:450, chk:function(){return G.mode==='turbo'&&G.time>=180;}},
   {id:'turboslay',ic:'⚡', name:'風馳屠戮', desc:'疾速狂飆模式單局擊殺 1500', rw:450, chk:function(){return G.mode==='turbo'&&G.kills>=1500;}},
+  // —— B397 新內容綁定成就（天罰審判 / 療靈）——
+  {id:'evo_judgment',ic:'⚡', name:'神罰降臨', desc:'將天罰審判進化為「神罰裁決」', rw:450, chk:function(){try{return player.weapons.some(function(w){return w.id==='judgment'&&w.evolved;});}catch(e){return false;}}},
+  {id:'mender_slay', ic:'🟢', name:'斬草除根', desc:'單局擊殺 12 隻療靈', rw:500, chk:function(){return (G.menderKills||0)>=12;}},
 ];
 function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); checkAchMile(); }
-var ACH_MILE=[{n:25,rw:400},{n:50,rw:800},{n:75,rw:1200},{n:100,rw:2000},{n:125,rw:3500},{n:150,rw:6000},{n:164,rw:8000}];   // 成就里程碑：累計解鎖 N 個給階段大獎（164=全清）
+var ACH_MILE=[{n:25,rw:400},{n:50,rw:800},{n:75,rw:1200},{n:100,rw:2000},{n:125,rw:3500},{n:150,rw:6000},{n:166,rw:8000}];   // 成就里程碑：累計解鎖 N 個給階段大獎（166=全清）
 function checkAchMile(){ DB.achMile=DB.achMile||{}; var got=Object.keys(DB.achievements||{}).length;
   ACH_MILE.forEach(function(m){ if(got>=m.n && !DB.achMile[m.n]){ DB.achMile[m.n]=1; DB.shards+=m.rw; saveDB(); achToast({ic:'🏅',name:'成就里程碑 '+m.n+' 達成！'},m.rw); } }); }
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';
@@ -2832,6 +2835,7 @@ function killEnemy(e){
     var ct=nearestEnemy(e.x,e.y,240*240); if(ct){ chainLightning(e.x,e.y,ct,2+player.chain,dmg(16+player.chain*6)); } else { ringFx(e.x,e.y,60,'#ffb347'); burst(e.x,e.y,'#ffb347',8,180); } G._chd--; }
   if(e.type&&!DB.bestiary[e.type]){ DB.bestiary[e.type]=true; saveDB(); }   // 怪物圖鑑：首次擊殺即解鎖
   if(e.type==='phantom')G.rareKills=(G.rareKills||0)+1;
+  if(e.type==='mender')G.menderKills=(G.menderKills||0)+1;   // 療靈擊殺計數（成就用）
   if(e.type==='golden'){ // 黃金巨獸：大量碎片 + 保底道具 + 華麗特效
     G.goldKills=(G.goldKills||0)+1; var gr=60+Math.floor(G.time/30)*8; G.shards+=gr;
     announce('💰 黃金巨獸！+◆'+gr,'#ffd54a'); flashScreen('255,213,74',0.4); shake(8);
@@ -4597,7 +4601,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v396 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v397 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

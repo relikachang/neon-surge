@@ -2586,7 +2586,7 @@ var MONSTER_LORE={
 };
 function spawnEnemy(type,ex,ey,mul,forceElite){
   var d=ETYPES[type]; mul=mul||1;
-  if(d&&d.rare&&G.time-(G._rareBanT||-99)>5){ G._rareBanT=G.time; var rmi=MONSTER_INFO[type]; G._rareBan={name:(rmi&&rmi.n)||type,color:d.color,start:G.time}; GAudio.elite&&GAudio.elite(); }   // 稀有怪登場橫幅
+  if(d&&d.rare&&G.time-(G._rareBanT||-99)>5){ G._rareBanT=G.time; var rmi=MONSTER_INFO[type]; G._rareBan={name:(rmi&&rmi.n)||type,color:d.color,start:G.time}; GAudio.rare&&GAudio.rare(); }   // 稀有怪登場橫幅 + 專屬登場音
   var st=G.stage||STAGES[0], mt=G.mut||IDENTITY_MUT;
   var endless=1+G.time/240+Math.pow(Math.max(0,G.time-360)/60,1.5)*0.15;   // 無盡難度：敵傷隨時間增長，6分後加速陡增
   var lateHp=1+Math.pow(Math.max(0,G.time-150)/60,1.6)*0.5+Math.pow(Math.max(0,G.time-420)/60,2)*0.5;   // 後期(2.5分)血量陡增，深後期(7分)爆炸性成長
@@ -2801,7 +2801,7 @@ function killEnemy(e){
   if(e.boss){ spawnPickup(e.x,e.y,'bosschest'); G.bossKills=(G.bossKills||0)+1; }   // 首領：超級戰利品
   else if(e.elite){ spawnPickup(e.x,e.y,pick(['heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','revivecharm','thunderstorm','jackpot','nuke','fullheal','repel','stasis','overdrive','purify','phaseshift','lightstorm','emppulse','turretdrop','blitz','carpetbomb','chronofield','soulharvest'])); }   // 精英必掉道具
   else if(Math.random()<lchance){ spawnPickup(e.x,e.y,pick(['heal','heal','bomb','magnet','frenzy','shield','timefreeze','xpgem','shardbag','heart','quake','clover','squad','vortex','airstrike','thunderstorm','overdrive','purify','phaseshift','lightstorm','emppulse','turretdrop','blitz','carpetbomb','chronofield','soulharvest'])); }
-  if(e.boss){ announce('首領擊破！','#ffd54a'); G.shards+=Math.floor(20*(1+0.15*metaLv('greed'))*(1+0.2*metaLv('bounty'))); }
+  if(e.boss){ announce('首領擊破！','#ffd54a'); G.shards+=Math.floor(20*(1+0.15*metaLv('greed'))*(1+0.2*metaLv('bounty'))); GAudio.bossdown&&GAudio.bossdown(); }   // 首領擊破：勝利號角
 }
 function addCombo(){ G.combo++; G.comboTimer=2.2*(1+0.15*metaLv('combo')); if(G.combo>G.peakCombo)G.peakCombo=G.combo;
   if(G.combo>=5){ var c=$('combo'); c.textContent='連擊 x'+G.combo+'  XP+'+Math.round(Math.min(1,G.combo*0.01)*100)+'%'; c.style.opacity='1';
@@ -4509,7 +4509,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v376 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v377 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者'];
 function renderMenu(){
@@ -4661,6 +4661,8 @@ var GAudio=(function(){ var ac=null, mMusic=false, mSfx=false, mVol=0.8;
       if(big){ [1046,1318,1568,2093].forEach(function(f,i){setTimeout(function(){beep(f,0.2,'triangle',0.11);},300+i*70);}); setTimeout(function(){beep(2637,0.5,'sine',0.07);},600); noise(0.12,0.05,'highpass',2600); } },
     pick:function(){ beep(880,0.05,'triangle',0.055); },
     boss:function(){ beep(52,0.7,'sawtooth',0.2); beep(78,0.7,'sawtooth',0.12); noise(0.6,0.14,'lowpass',160); },   // Boss：低頻雙音+隆隆噪
+    bossdown:function(){ [523,659,784,1046,784,1318].forEach(function(f,i){setTimeout(function(){beep(f,0.22,'triangle',0.14);},i*90);}); setTimeout(function(){beep(1568,0.42,'triangle',0.13); noise(0.3,0.08,'highpass',3000);},560); },   // 首領擊破：勝利號角
+    rare:function(){ beep(330,0.14,'triangle',0.1); setTimeout(function(){beep(495,0.14,'triangle',0.11);},110); setTimeout(function(){beep(660,0.32,'triangle',0.12); noise(0.25,0.06,'bandpass',1400);},220); },   // 稀有怪登場：莊嚴上行三音
     warn:function(){ beep(180,0.16,'square',0.09); setTimeout(function(){beep(240,0.20,'square',0.10);},150); },   // 首領逼近警示：兩聲上行嗶
     over:function(){ [440,330,247,165,110].forEach(function(f,i){setTimeout(function(){beep(f,0.28,'sawtooth',0.16);},i*130);}); setTimeout(function(){noise(0.5,0.12,'lowpass',300);},520); },
     fuse:function(){ [330,440,554,660,880,1108].forEach(function(f,i){setTimeout(function(){beep(f,0.18,'sawtooth',0.09);},i*42);}); },

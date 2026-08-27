@@ -1715,6 +1715,20 @@ var WDEFS={
         shake(5); GAudio.zap&&GAudio.zap(); }
     }
   },
+  skewer:{ic:'🏹',name:'貫雲矢',color:'#7cf0ff',tag:'狙擊',max:8,
+    desc:function(l){return l===0?'鎖定全場「最遠」之敵，射出高速無限貫穿的長矢，專清後排射手':'傷害↑ 連射↑';},
+    cd:function(l){return Math.max(0.5,1.1-l*0.075);},
+    fire:function(w){ var far=null,fd=-1; enemyGrid.query(player.x,player.y,1400,function(e){ if(e.hp>0){ var d=dist2(e.x,e.y,player.x,player.y); if(d>fd){fd=d;far=e;} } });
+      if(!far){ far=nearestEnemy(player.x,player.y,9999); if(!far)return; }
+      var n=1+Math.floor(player.amount), base=Math.atan2(far.y-player.y,far.x-player.x);
+      for(var i=0;i<n;i++){ var a=base+(i-(n-1)/2)*0.05; spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),1100,dmg(30+w.level*11),'#7cf0ff',999,4,1.4); } },
+    evo:{reqPassive:'ppierce',ic:'☄',name:'貫日長矢',color:'#aef4ff',desc:'化為貫穿全場的極速光矢，一矢洞穿整條戰線',
+      cd:function(l){return Math.max(0.34,0.8-l*0.05);},
+      fire:function(w){ var far=null,fd=-1; enemyGrid.query(player.x,player.y,1600,function(e){ if(e.hp>0){ var d=dist2(e.x,e.y,player.x,player.y); if(d>fd){fd=d;far=e;} } });
+        var base=far?Math.atan2(far.y-player.y,far.x-player.x):player.aimAngle; var n=2+Math.floor(player.amount);
+        for(var i=0;i<n;i++){ var a=base+(i-(n-1)/2)*0.045; spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),1400,dmg(44+w.level*13),'#aef4ff',999,6,1.3); } }
+    }
+  },
   mine:{ic:'🧨',name:'地雷',color:'#ffce54',tag:'陷阱',max:8,
     desc:function(l){return l===0?'佈下感應地雷，敵人靠近即引爆':'數量↑ 傷害↑ 範圍↑';},
     cd:function(l){return Math.max(0.9,2.0-l*0.14);},
@@ -2027,7 +2041,7 @@ var WDEFS={
     }
   }
 };
-var WORDER=['plasma','ricochet','wavecannon','splitshot','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet','hornet','spiralgun','gatling','chakram','beamsweep','judgment'];
+var WORDER=['plasma','ricochet','wavecannon','splitshot','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet','hornet','spiralgun','gatling','chakram','beamsweep','judgment','skewer'];
 // 武器背景敘事（顯示於武器圖鑑，延續世界觀）
 var WEAPON_LORE={
   plasma:'倖存者護甲的標準配備。每一發電漿都是舊世界文明最後的火種。',
@@ -2044,6 +2058,7 @@ var WEAPON_LORE={
   laser:'狙擊手校正世界的方式——一道光，一條無可辯駁的直線。',
   frost:'極地研究站的遺產。它凍結敵人，也凍結了時間本身的流速。',
   judgment:'審判之秤從不看數量，只稱量最重的罪。越是龐然巨物，越逃不過那道光柱。',
+  skewer:'它的眼睛望向最遠的地平線——那些自以為躲在後方的懦夫，才是它獵殺的獵物。一矢穿雲，貫徹始終。',
   mine:'工兵留給後來者的問候。踏上它的，都會後悔前進的那一步。',
   toxic:'瘟疫師的慈悲——既然治不好這世界，便讓敵人陪它一起腐爛。',
   thunder:'自稱雷神者的天罰。抬手，天便落下審判，無人知其真名。',
@@ -4632,7 +4647,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v409 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v410 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

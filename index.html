@@ -1294,7 +1294,14 @@ var SKINS=[
   {id:'amethyst',name:'紫晶共鳴', price:800,  r:'superrare', arch:2, pal:{col:'#a06aff',glow:'#c090ff',edge:'#e8d0ff',hull:'#1e1240',hull2:'#140a2c',core:'#f4ecff',accent:'#d0a0ff'}, sfx:'crystal', desc:'紫水晶共振的機體 · 擊殺清響如晶石碎裂'},
   {id:'ironblood',name:'鐵血玄甲', price:800,  r:'superrare', arch:5, pal:{col:'#c04a4a',glow:'#e06a5a',edge:'#ffb0a0',hull:'#241010',hull2:'#180a0a',core:'#ffe0d8',accent:'#8a3a3a'}, sfx:'deep', desc:'浴血玄甲的重裝機體 · 擊殺轟出沉悶血鳴'},
   {id:'celestial',name:'天界聖光', price:2500, r:'legend',    arch:0, pal:{col:'#ffe8a0',glow:'#fff4d0',edge:'#ffffff',hull:'#4a3e18',hull2:'#342a10',core:'#ffffff',accent:'#ffd24a'}, sfx:'crystal', atkCol:'#fff4d0', killCol:'#ffe8a0', desc:'降臨凡間的聖光機體 · 登場如神諭、收割如審判'},
-  {id:'phantomx',name:'幻影主宰', price:2500, r:'legend',    arch:4, pal:{col:'#5a7cff',glow:'#7c9dff',edge:'#c0d0ff',hull:'#0a1030',hull2:'#060a20',core:'#e0e8ff',accent:'#7cf0ff'}, sfx:'deep', atkCol:'#7c9dff', killCol:'#7cf0ff', desc:'遊走維度縫隙的幻影機體 · 出場撕裂虛空、擊殺歸於虛無'}
+  {id:'phantomx',name:'幻影主宰', price:2500, r:'legend',    arch:4, pal:{col:'#5a7cff',glow:'#7c9dff',edge:'#c0d0ff',hull:'#0a1030',hull2:'#060a20',core:'#e0e8ff',accent:'#7cf0ff'}, sfx:'deep', atkCol:'#7c9dff', killCol:'#7cf0ff', desc:'遊走維度縫隙的幻影機體 · 出場撕裂虛空、擊殺歸於虛無'},
+  // —— B341 皮膚擴充 ——
+  {id:'chrome',  name:'鏡面鉻銀', price:400,  r:'rare',      arch:2, pal:{col:'#c8d4e0',glow:'#e8f0f8',edge:'#ffffff',hull:'#4a5462',hull2:'#333a45',core:'#ffffff',accent:'#a0b4c8'}, desc:'冷冽的鏡面鉻銀塗裝，映照霓虹的光'},
+  {id:'mint',    name:'薄荷清晨', price:400,  r:'rare',      arch:1, pal:{col:'#5affc0',glow:'#8affd8',edge:'#d0fff0',hull:'#0e3028',hull2:'#08221c',core:'#eafff8',accent:'#7affe0'}, desc:'清新的薄荷綠機體，如晨露般透亮'},
+  {id:'sunset',  name:'落日熔金', price:800,  r:'superrare', arch:5, pal:{col:'#ff9a4a',glow:'#ffb86a',edge:'#ffe0b0',hull:'#3a1e0a',hull2:'#281406',core:'#fff4e0',accent:'#ff5e7a'}, sfx:'deep', desc:'黃昏熔金與緋紅交融 · 擊殺轟落日餘暉'},
+  {id:'toxicwave',name:'毒浪螢光', price:800, r:'superrare', arch:3, pal:{col:'#aaff2a',glow:'#c8ff5a',edge:'#e8ffb0',hull:'#243208',hull2:'#182204',core:'#f4ffd0',accent:'#5affd0'}, sfx:'crystal', desc:'刺眼的毒浪螢綠 · 擊殺清響如毒晶迸裂'},
+  {id:'royalpurple',name:'皇權紫金', price:1400, r:'epic',   arch:0, pal:{col:'#a05aff',glow:'#c088ff',edge:'#e8d0ff',hull:'#241040',hull2:'#180a2c',core:'#f4ecff',accent:'#ffd24a'}, sfx:'deep', atkCol:'#c088ff', desc:'紫袍加身、金冠鑲邊的皇權機體 · 開火綻放紫金光焰'},
+  {id:'starforge',name:'星鍛炙陽', price:2500, r:'legend',    arch:2, pal:{col:'#ffca3a',glow:'#fff08a',edge:'#fffbe0',hull:'#3a2c08',hull2:'#281e04',core:'#ffffff',accent:'#ff7a3a'}, sfx:'crystal', atkCol:'#fff08a', killCol:'#ffca3a', desc:'恆星熔爐鍛造的炙陽機體 · 登場如日出、收割如日蝕'}
 ];
 var LIMITED_SKINS=[   // 限量皮膚一律傳奇級（全特效）
   {id:'ltd_prism', name:'虹光稜鏡', price:3000, r:'legend', arch:2, dyn:true, sfx:'crystal', atkCol:'#7cf0ff', killCol:'#ff5edb', desc:'色相不斷流轉的稜鏡機體 · 限量傳奇，僅此檔期'},
@@ -4253,7 +4260,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v340 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v341 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者'];
 function renderMenu(){

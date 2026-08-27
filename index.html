@@ -3849,7 +3849,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v303 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v304 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -3947,9 +3947,27 @@ var GAudio=(function(){ var ac=null, mMusic=false, mSfx=false, mVol=0.8;
   var musicTimer=null, step=0;
   var BASS=[55,55,73.4,65.4], LEAD=[220,277,330,277,247,330,392,330];
   function musicStep(){ if(mMusic)return; var a=ctx(); if(!a)return;
+    // 動態配樂：閉包讀遊戲狀態，依戰況分層疊加（保留關卡基底 BASS/LEAD）
+    var boss=false, hpR=1, intense=0, calm=false;
+    try{ if(typeof G!=='undefined'&&G&&!G.over){
+        if(typeof enemies!=='undefined'&&enemies){ for(var bi=0;bi<enemies.length;bi++){ if(enemies[bi].boss&&enemies[bi].hp>0){boss=true;break;} } }
+        if(typeof player!=='undefined'&&player&&player.maxHp>0)hpR=player.hp/player.maxHp;
+        intense=Math.min(1,(G.time||0)/300); calm=(G.time||0)<5;
+    } }catch(e){}
+    var lowHp=(hpR>0&&hpR<0.28);
+    // —— 基底 ——
     if(step%2===0)beep(BASS[(step/2)%BASS.length],0.24,'triangle',0.085,true);
-    beep(LEAD[step%LEAD.length],0.14,'square',0.038,true);
-    if(step%8===4)beep(1320,0.05,'sine',0.025,true);
+    beep(LEAD[step%LEAD.length],0.14,'square',calm?0.024:0.038,true);
+    // —— 高頻點綴：平時亮、瀕死時消音讓位給心跳 ——
+    if(step%8===4&&!lowHp)beep(1320,0.05,'sine',0.025,true);
+    // —— 強度層（隨存活時間漸強）：奇數步疊高八度微光 arp ——
+    if(intense>0.5&&step%2===1)beep(LEAD[step%LEAD.length]*2,0.05,'triangle',0.014,true);
+    // —— Boss 層：低頻咆哮鋪底 + 週期張力重擊，讓首領登場一聽就知 ——
+    if(boss){ beep(BASS[(step)%BASS.length]/2,0.26,'sawtooth',0.05,true);
+      if(step%4===2)beep(BASS[(step/1)%BASS.length]*1.5,0.12,'square',0.03,true);
+      if(step%8===0)beep(70,0.14,'sine',0.06,true); }
+    // —— 瀕死心跳層（lub-dub）：血量 <28% 每小節兩下低鳴，越低越急 ——
+    if(lowHp){ var hv=0.07+(0.28-hpR)*0.2; beep(48,0.09,'sine',hv,true); setTimeout(function(){beep(40,0.1,'sine',hv*0.85,true);},95); }
     step++; }
   // 白噪衝擊音(打擊/爆炸/碎裂用) + 滑音(電擊/雷射/掃射用)
   var noiseBuf=null;

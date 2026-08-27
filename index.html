@@ -4234,7 +4234,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v335 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v336 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -4243,11 +4243,15 @@ function renderMenu(){
     var chU=CHARS.filter(function(c){return !c.locked||DB.chars[c.unlock];}).length;
     var acU=Object.keys(DB.achievements||{}).length, acT=(typeof ACHIEVEMENTS!=='undefined'?ACHIEVEMENTS.length:0);
     var beU=Object.keys(DB.bestiary||{}).length;
+    var skU=Object.keys(DB.skins||{}).length, prC=(DB.prestige&&DB.prestige.count)||0;
     ms.innerHTML=
       '<div class="st"><b>◆ '+(DB.shards||0)+'</b><span>碎片</span></div>'+
+      '<div class="st"><b>'+(DB.bestScore||0)+'</b><span>最佳分數</span></div>'+
       '<div class="st"><b>'+chU+'/'+CHARS.length+'</b><span>角色</span></div>'+
       '<div class="st"><b>'+acU+(acT?'/'+acT:'')+'</b><span>成就</span></div>'+
       '<div class="st"><b>'+beU+'</b><span>圖鑑</span></div>'+
+      '<div class="st"><b>🎨 '+skU+'</b><span>皮膚</span></div>'+
+      '<div class="st"><b>✦ '+prC+'</b><span>轉生</span></div>'+
       '<div class="st"><b>'+(b.kills||0)+'</b><span>最佳擊殺</span></div>'+
       '<div class="st"><b>📅 '+((DB.login&&DB.login.streak)||0)+'</b><span>連續登入</span></div>';
   }

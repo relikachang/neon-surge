@@ -722,6 +722,16 @@ var ACHIEVEMENTS=[
   {id:'timeatk',  ic:'⏱️',name:'限時高手', desc:'限時狂殺單局得分破 8000',rw:350,chk:function(){return G.mode==='timeattack'&&(G.score||0)>=8000;}},
   {id:'code1',    ic:'🎟️',name:'幸運兌換', desc:'兌換任一創作者代碼',rw:150,chk:function(){return Object.keys(DB.codes||{}).length>=1;}},
   {id:'allstages',ic:'🗺️',name:'走遍霓虹', desc:'解鎖全部 15 張地圖',rw:600,chk:function(){try{return STAGES.every(function(s){return !s.locked||DB.stages[s.id];});}catch(e){return false;}}},
+  // —— B326 新系統成就 ——
+  {id:'skinlover', ic:'🎨',name:'塗裝愛好者',desc:'擁有 20 款皮膚',rw:500,chk:function(){return Object.keys(DB.skins||{}).length>=20;}},
+  {id:'skinmaster',ic:'🌈',name:'塗裝大師',  desc:'擁有 45 款皮膚',rw:1500,chk:function(){return Object.keys(DB.skins||{}).length>=45;}},
+  {id:'rebirth10', ic:'🌌',name:'永劫輪迴',  desc:'累計轉生 10 次',rw:1500,chk:function(){return (DB.prestige&&DB.prestige.count||0)>=10;}},
+  {id:'login30',   ic:'📅',name:'常客',      desc:'累計登入 30 天',rw:1000,chk:function(){return (DB.login&&DB.login.total||0)>=30;}},
+  {id:'allchars',  ic:'👥',name:'眾星雲集',desc:'解鎖全部角色',rw:2000,chk:function(){try{return CHARS.every(function(c){return !c.locked||DB.chars[c.unlock];});}catch(e){return false;}}},
+  {id:'wealthy',   ic:'💎',name:'霓虹富豪',  desc:'碎片存量達 50000',rw:800,chk:function(){return (DB.shards||0)>=50000;}},
+  {id:'kills3k',   ic:'💀',name:'血流成河',  desc:'單局擊殺 3000',rw:400,chk:function(){return G.kills>=3000;}},
+  {id:'codemax',   ic:'🎟️',name:'兌換達人',  desc:'兌換全部 6 組創作者代碼',rw:600,chk:function(){return Object.keys(DB.codes||{}).length>=6;}},
+  {id:'charskin16',ic:'🚀',name:'本色收藏',  desc:'擁有 16 款角色專屬皮膚',rw:800,chk:function(){try{return CHAR_SKINS.filter(function(s){return DB.skins[s.id];}).length>=16;}catch(e){return false;}}},
   {id:'wave25',  ic:'🌊',name:'波瀾不驚',desc:'抵達第 25 波',rw:150,chk:function(){return G.wave>=25;}},
   {id:'fortress',ic:'🏰',name:'要塞征服',desc:'機械要塞存活 3 分',rw:250,chk:function(){return G.stage&&G.stage.id==='fortress'&&G.time>=180;}},
   {id:'score5k', ic:'🏆',name:'高分玩家',desc:'單局達 5000 分',rw:200,chk:function(){return (G.score||0)>=5000;}},
@@ -828,7 +838,7 @@ var ACHIEVEMENTS=[
   {id:'h_earlyboss',ic:'⏱️',hidden:true,name:'速斬',desc:'開局 2 分鐘內擊敗首領',rw:700,chk:function(){return (G.bossKills||0)>=1&&G.time<=120;}},
 ];
 function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); checkAchMile(); }
-var ACH_MILE=[{n:25,rw:400},{n:50,rw:800},{n:75,rw:1200},{n:100,rw:2000}];   // 成就里程碑：累計解鎖 N 個給階段大獎
+var ACH_MILE=[{n:25,rw:400},{n:50,rw:800},{n:75,rw:1200},{n:100,rw:2000},{n:125,rw:3500}];   // 成就里程碑：累計解鎖 N 個給階段大獎
 function checkAchMile(){ DB.achMile=DB.achMile||{}; var got=Object.keys(DB.achievements||{}).length;
   ACH_MILE.forEach(function(m){ if(got>=m.n && !DB.achMile[m.n]){ DB.achMile[m.n]=1; DB.shards+=m.rw; saveDB(); achToast({ic:'🏅',name:'成就里程碑 '+m.n+' 達成！'},m.rw); } }); }
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';
@@ -4121,7 +4131,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v325 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v326 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

@@ -133,6 +133,8 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   .cxd{font-size:12px;color:#8ea0c8;margin:2px 0 4px}
   .cxsub{font-size:12px;color:#aeb8d8;line-height:1.5}
   .cxlore{font-size:11.5px;color:#b9c6e0;font-style:italic;line-height:1.55;margin:3px 0 5px;padding-left:8px;border-left:2px solid rgba(140,166,200,.25)}
+  .cxsec{font-weight:900;font-size:14px;letter-spacing:1px;color:#eaf2ff;margin:14px 2px 10px;padding-bottom:6px;border-bottom:1px solid rgba(140,166,200,.2)}
+  .cxsec:first-child{margin-top:0}
   #bossbar{position:absolute;top:66px;left:50%;transform:translateX(-50%);width:min(560px,86vw);display:none;z-index:5}
   #bossbar.show{display:block}
   #bossname{font-size:13px;font-weight:800;letter-spacing:2px;text-align:center;margin-bottom:4px;text-shadow:0 0 10px currentColor}
@@ -1859,6 +1861,22 @@ var PDEFS={
   ptenacity:{ic:'🛡️',name:'韌命',color:'#ff8a5d',max:5,desc:function(){return '生命低於 45% 時，減免 8% 傷害/級（血越低越硬）';},apply:function(){recalc();}},
 };
 var PORDER=['pdmg','prate','pspeed','php','ppick','pcrit','parmor','pregen','pxp','parea','pamount','ppierce','pcritdmg','pdodge','pvamp','pexec','pshield','pthorns','pchain','pfrost','pnova','pfury','pluck','pglass','pfreeze','poverpower','pveteran','pdrone','pcleave','pretaliate','pmomentum','pshock','pburn','pcoldblood','pshrapnel','psecondwind','psharpshoot','pcharge','ptenacity'];
+// 被動強化敘事（顯示於武器圖鑑，延續世界觀）
+var PASSIVE_LORE={
+  pdmg:'把每一分怒火淬鍊成更沉的一擊。', prate:'讓扳機比心跳更快。', pspeed:'倖存的第一法則——永遠比敵人快一步。',
+  php:'多一分血氣，就多撐過一波敵潮。', ppick:'讓散落的能量主動投奔於你。', pcrit:'在混沌中，總能找到那一寸致命的縫隙。',
+  parmor:'把痛楚，磨成不痛不癢的日常。', pregen:'傷口在戰火中悄悄癒合。', pxp:'從每一具倒下的軀殼中，讀出更強的自己。',
+  parea:'讓你的殺意，籠罩更廣的疆域。', pamount:'一發不夠，那就傾瀉更多。', ppierce:'一線之力，貫穿成排的敵陣。',
+  pcritdmg:'致命的那一擊，要更致命。', pdodge:'在千鈞一髮間，讓命運擦身而過。', pvamp:'以敵人的殞落，餵養自己的存續。',
+  pexec:'對殘存者的最後仁慈,是乾淨俐落。', pshield:'一層看不見的信念，替你擋下必死的一擊。', pthorns:'碰我者，自傷。',
+  pchain:'死亡在敵群之間傳染，如電流般蔓延。', pfrost:'讓敵人的血,隨你的意志放緩。', pnova:'以自身為中心,綻放一圈毀滅。',
+  pfury:'越是瀕死,越是無所畏懼——絕境中的野獸最致命。', pluck:'命運總在你這邊多押一注。', pglass:'以脆弱為代價,換取撕裂一切的鋒芒。',
+  pfreeze:'凜冬隨你降臨,萬物為之凝結。', poverpower:'再厚的肉盾,也要被你震開一條血路。', pveteran:'每一場戰役,都刻進更深的殺意。',
+  pdrone:'孤軍不孤——鋼鐵夥伴永遠環繞左右。', pcleave:'一刀落下,連旁側的敵人都難逃波及。', pretaliate:'受傷只會讓你更危險。',
+  pmomentum:'連殺的節奏,推著你越戰越快。', pshock:'身周纏繞不散的電弧,自動獵殺靠近者。', pburn:'點燃的火,會替你把敵人慢慢燒盡。',
+  pcoldblood:'對凍結的獵物,你的每一擊都是碎冰重錘。', pshrapnel:'每一次擊殺,都炸出四射的死亡碎片。', psecondwind:'在最後一刻,吸回一口不肯認輸的氣。',
+  psharpshoot:'距離不是劣勢,而是你越拉越致命的獵殺線。', pcharge:'蓄勢待發的一擊,厚積而薄發。', ptenacity:'血流得越多,骨頭就越硬。'
+};
 
 // 武器合成配方：兩把武器皆達 L5 → 合體成質變武器（吃掉兩把、換一把）
 var FUSIONS=[
@@ -4070,7 +4088,13 @@ function renderCodex(){
     return '<div class="cxitem"><div class="cxic" style="color:'+d.color+'">'+d.ic+'</div>'+
       '<div class="cxmain"><div class="cxn" style="color:'+d.color+'">'+d.name+' <span class="cxtag">'+d.tag+'</span></div>'+
       '<div class="cxd">'+d.desc(0)+'</div>'+lore+line+'</div></div>'; }).join('');
-  $('codexlist').innerHTML=html;
+  // 被動強化區塊(含世界觀敘事)
+  var phtml=PORDER.map(function(id){ var p=PDEFS[id]; if(!p)return ''; var pl=PASSIVE_LORE[id]?'<div class="cxlore">「'+PASSIVE_LORE[id]+'」</div>':'';
+    return '<div class="cxitem"><div class="cxic" style="color:'+p.color+'">'+p.ic+'</div>'+
+      '<div class="cxmain"><div class="cxn" style="color:'+p.color+'">'+p.name+'</div>'+
+      '<div class="cxd">'+p.desc(0)+'</div>'+pl+'</div></div>'; }).join('');
+  $('codexlist').innerHTML='<div class="cxsec">⚔️ 武器 · '+WORDER.length+' 種</div>'+html+
+    '<div class="cxsec">🧬 被動強化 · '+PORDER.length+' 種</div>'+phtml;
 }
 function renderBestiary(){ var order=['grunt','swarm','tank','ranged','bomber','splitter','charger','brute','wraith','mortar','titan','stalker','bombard','marksman','smasher','weaver','phaseknight','impaler','voidreaper','sentinel','warlock','suppressor','hexer','shade','phantom','golden','warden','conjurer','harbinger','revenant','gargantua','stormcaller','vault','boss'];
   var seen=0; var html=order.map(function(id){ var mi=MONSTER_INFO[id]||{n:id,d:''}; var d=(id==='boss'?{color:'#ffd54a',shape:''}:ETYPES[id])||{color:'#888'};
@@ -4131,7 +4155,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v326 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v327 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

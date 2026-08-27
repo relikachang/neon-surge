@@ -676,8 +676,8 @@ try{ var _fx=localStorage.getItem('neon_fx'); if(_fx==='med')fxScale=0.6; else i
 var SAVE='neonSurge_v1';
 var DB=loadDB();
 function loadDB(){ var dchars={blade:false,storm:false,gunner:false,cryo:false,void:false,sniper:false,engineer:false,pyro:false,demo:false,thundergod:false,blazer:false,plaguer:false,rover:false,breaker:false,duelist:false,shredder:false,fortifier:false,gambler:false,electromancer:false,judicator:false,novacaster:false,prismancer:false,shockmancer:false,bombardier:false,cometeer:false,lunar:false,enigma:false,spiralist:false,gunslinger:false,ronin:false,warden2:false};
-  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false,singularity:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0,total:0,mile:{}},weekly:{week:-1,done:false},achMile:{},modeBest:{},relics:{},skins:{default:1},equippedSkin:'default',codes:{},prestige:{cores:0,count:0,upg:{}},wpnSeen:{},psvSeen:{}};
-  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false,singularity:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
+  var d={shards:0,meta:{},best:{time:0,kills:0},chars:dchars,stages:{wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false,singularity:false,antimatter:false},scores:[],daily:{date:'',time:0,kills:0},achievements:{},bestiary:{},playerName:'',autopick:false,seenTutorial:false,missions:{date:'',done:{}},boost:{},login:{last:'',streak:0,total:0,mile:{}},weekly:{week:-1,done:false},achMile:{},modeBest:{},relics:{},skins:{default:1},equippedSkin:'default',codes:{},prestige:{cores:0,count:0,upg:{}},wpnSeen:{},psvSeen:{}};
+  try{var s=JSON.parse(localStorage.getItem(SAVE)); if(s){var m=Object.assign(d,s); m.chars=Object.assign({},dchars,s.chars||{}); m.stages=Object.assign({wastes:false,abyss:false,fortress:false,core:false,rift:false,tundra:false,meteorite:false,oblivion:false,eventhorizon:false,nebula:false,maelstrom:false,genesis:false,paradox:false,inferno:false,singularity:false,antimatter:false},s.stages||{}); m.scores=s.scores||[]; m.daily=s.daily||d.daily; m.achievements=s.achievements||{}; m.bestiary=s.bestiary||{}; m.playerName=s.playerName||''; m.autopick=!!s.autopick; m.seenTutorial=!!s.seenTutorial; m.missions=s.missions||{date:'',done:{}}; m.boost=s.boost||{}; return m;}}catch(e){} return d; }
 
 // ===== 世界排行榜(Firebase Realtime Database REST) =====
 // 使用者只需在 firebase.google.com 建免費 Realtime Database、規則設 {".read":true,".write":true}，把資料庫網址貼在下面即可上線；留空則自動退回本機榜。
@@ -732,7 +732,7 @@ var ACHIEVEMENTS=[
   {id:'bossrush5',ic:'👹',name:'亂鬥屠王', desc:'首領亂鬥單局擊敗 5 首領',rw:400,chk:function(){return G.mode==='bossrush'&&(G.bossKills||0)>=5;}},
   {id:'timeatk',  ic:'⏱️',name:'限時高手', desc:'限時狂殺單局得分破 8000',rw:350,chk:function(){return G.mode==='timeattack'&&(G.score||0)>=8000;}},
   {id:'code1',    ic:'🎟️',name:'幸運兌換', desc:'兌換任一創作者代碼',rw:150,chk:function(){return Object.keys(DB.codes||{}).length>=1;}},
-  {id:'allstages',ic:'🗺️',name:'走遍霓虹', desc:'解鎖全部 16 張地圖',rw:600,chk:function(){try{return STAGES.every(function(s){return !s.locked||DB.stages[s.id];});}catch(e){return false;}}},
+  {id:'allstages',ic:'🗺️',name:'走遍霓虹', desc:'解鎖全部 17 張地圖',rw:600,chk:function(){try{return STAGES.every(function(s){return !s.locked||DB.stages[s.id];});}catch(e){return false;}}},
   // —— B326 新系統成就 ——
   {id:'skinlover', ic:'🎨',name:'塗裝愛好者',desc:'擁有 20 款皮膚',rw:500,chk:function(){return Object.keys(DB.skins||{}).length>=20;}},
   {id:'skinmaster',ic:'🌈',name:'塗裝大師',  desc:'擁有 45 款皮膚',rw:1500,chk:function(){return Object.keys(DB.skins||{}).length>=45;}},
@@ -1431,12 +1431,14 @@ var STAGES=[
   {id:'paradox', name:'悖論深淵', desc:'因果崩壞 · 雙旋干涉主宰', bg:'#060410', grid:'rgba(160,120,255,0.15)', eHp:3.9,  eSpd:1.5,  spawn:2.05, bossName:'悖論主宰', bossColor:'#c8a0ff', pattern:'paradoxnova', locked:true, unlock:'genesis'},
   {id:'inferno', name:'永劫煉獄', desc:'烈焰永燃 · 地雷陣主宰', bg:'#0e0402', grid:'rgba(255,110,50,0.15)', eHp:4.2, eSpd:1.52, spawn:2.1, bossName:'煉獄魔王', bossColor:'#ff5a2b', pattern:'minefield', locked:true, unlock:'paradox'},
   {id:'singularity',name:'虛數奇點', desc:'維度盡頭 · 奇點主宰', bg:'#020106', grid:'rgba(180,140,255,0.13)', eHp:4.6, eSpd:1.58, spawn:2.18, bossName:'奇點主宰', bossColor:'#c8a0ff', pattern:'blackhole', locked:true, unlock:'inferno'},
+  {id:'antimatter',name:'反物質核心', desc:'湮滅奇界 · 反物質主宰', bg:'#0a0206', grid:'rgba(255,94,219,0.13)', eHp:5.0, eSpd:1.62, spawn:2.25, bossName:'反物質主宰', bossColor:'#ff5edb', pattern:'paradoxnova', locked:true, unlock:'singularity'},
 ];
 var selStage='city';
 // 地圖 × 首領 世界觀敘事（選圖時顯示，融合場景氛圍與首領命名由來）
 var STAGE_LORE={
   city:'霓潮最初潰堤的城市。街燈仍亮，行人已無。盤踞市中心的「監視者」是舊防衛系統的殘魂，永不闔上的眼。',
   singularity:'一切維度向內塌縮的終點。連光都無法逃逸的黑暗中，「奇點主宰」是所有被吞噬世界壓縮而成的意志——它不是敵人，而是宇宙折疊自身時，留下的最後一道傷疤。',
+  antimatter:'奇點的另一側，是物質與反物質永恆對撞的湮滅奇界。每一次接觸都是一場小規模的創世與毀滅。「反物質主宰」由純粹的負存在凝成，你的每一發攻擊，對它而言都是久違的、甜美的湮滅。',
   wastes:'一場大火把荒原燒成緋紅。灰燼中站起的「焚化者」，把每一個踏入者都當成尚未燒盡的燃料。',
   abyss:'光無法抵達的深淵。傳說世界的裂縫從這裡開始——而「深淵之核」，就是那道裂縫跳動的心臟。',
   fortress:'自我封閉千年的機械要塞。雙生的「核心守衛」以雙螺旋彈幕守護一個早已無人記得要守護的祕密。',
@@ -3221,6 +3223,9 @@ function spawnDirector(dt){
   // 環境危害：虛數奇點多重重力井(最密集最強的黑洞拉扯,終極挑戰)
   if(G.stage&&G.stage.id==='singularity'){ G.hazT=(G.hazT==null?2.2:G.hazT-dt); if(G.hazT<=0){ G.hazT=rand(1.7,2.8);
     hazards.push({kind:'pull',x:player.x+rand(-240,240),y:player.y+rand(-240,240),r:150+Math.random()*56,life:4.2,max:4.2,dtk:0}); } }
+  // 環境危害：反物質核心湮滅對撞(全場密集預警爆擊,物質與反物質接觸即毀滅)
+  if(G.stage&&G.stage.id==='antimatter'){ G.hazT=(G.hazT==null?1.6:G.hazT-dt); if(G.hazT<=0){ G.hazT=rand(1.2,2.0);
+    for(var amk=0;amk<3;amk++){ if(hazards.length<80)hazards.push({kind:'strike',x:player.x+rand(-230,230),y:player.y+rand(-230,230),r:64+Math.random()*30,life:1.8,max:1.8,warn:0.95,fired:false,dtk:0}); } } }
   // 環境視野阻礙關卡：一次性入場提示
   if(G.stage&&!G._visAnn){ var _va=VISION_STAGES[G.stage.id]; if(_va){ G._visAnn=true; announce(_va.msg,_va.mc); } }
   // 環境狀態·寒獄凍原：暴風雪陣風週期性凍緩(移動變慢，呼應白幕視野)
@@ -4501,7 +4506,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v374 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v375 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者'];
 function renderMenu(){

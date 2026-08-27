@@ -3018,10 +3018,10 @@ function hurtPlayer(amount){
   if(player.hp<=0){
     if(G.mode!=='hardcore'){   // 一命限定：完全禁止任何復活
       if(G.charmRevive){ G.charmRevive=false; player.hp=player.maxHp*0.7; player.iframe=2.8;
-        clearNearby(); announce('復活符發動！浴火重生','#5dff9b'); flashScreen('93,255,155',0.4); GAudio.level&&GAudio.level(); return; }   // 復活符：保底復活一次
+        clearNearby(); announce('復活符發動！浴火重生','#5dff9b'); flashScreen('93,255,155',0.4); GAudio.revive&&GAudio.revive(); return; }   // 復活符：保底復活一次
       var maxRev=metaLv('revive')+prestigeLv('p_revive');   // 復生協議 + 星核復甦(可多次)
       if((G.reviveUsed||0)<maxRev){ G.reviveUsed=(G.reviveUsed||0)+1; G.usedRevive=true; player.hp=player.maxHp*0.6; player.iframe=2.5;
-        clearNearby(); announce('復生協議！','#5dff9b'); GAudio.level(); return; }
+        clearNearby(); announce('復生協議！','#5dff9b'); GAudio.revive&&GAudio.revive(); return; }
     }
     player.hp=0; gameOver();
   }
@@ -4454,7 +4454,7 @@ function gameOver(){
   if(G.time>=720&&!DB.chars.warden2){DB.chars.warden2=true;}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
-    if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; } }
+    if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; GAudio.unlock&&GAudio.unlock(); } }
   // 排行榜（保留前 10，依存活時間）
   var scoreEntry={score:G.score,time:Math.round(G.time),kills:G.kills,level:G.level,stage:G.stage.id,char:selChar,daily:G.daily,name:(DB.playerName||'匿名玩家')};
   DB.scores.push(scoreEntry);
@@ -4703,7 +4703,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v426 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v427 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',
@@ -4883,6 +4883,8 @@ var GAudio=(function(){ var ac=null, mMusic=false, mSfx=false, mVol=0.8;
     crit:function(){ beep(1760,0.045,'triangle',0.05); setTimeout(function(){beep(2640,0.05,'triangle',0.035);},18); noise(0.03,0.02,'highpass',3600); },   // 暴擊：清亮雙音+高頻脆響
     jackpot:function(){ [523,659,784,1046,1318,1568,2093].forEach(function(f,i){setTimeout(function(){beep(f,0.075,'triangle',0.09);},i*42);}); setTimeout(function(){beep(2637,0.3,'triangle',0.1); noise(0.2,0.05,'highpass',3000);},330); },   // 頭獎：金幣瀑布式上行 + 尾閃
     eventherald:function(){ beep(392,0.16,'triangle',0.085); setTimeout(function(){beep(587,0.16,'triangle',0.095);},130); setTimeout(function(){beep(784,0.28,'triangle',0.11); noise(0.16,0.04,'bandpass',1200);},260); },   // 局內事件降臨：莊嚴三音號角預告
+    revive:function(){ [262,330,392,523,659].forEach(function(f,i){setTimeout(function(){beep(f,0.3,'sine',0.1);},i*80);}); setTimeout(function(){beep(784,0.6,'triangle',0.12); noise(0.4,0.06,'lowpass',900);},420); },   // 復活：溫暖上行的重生湧現
+    unlock:function(){ beep(659,0.1,'triangle',0.1); setTimeout(function(){beep(988,0.1,'triangle',0.11);},100); setTimeout(function(){beep(1319,0.24,'triangle',0.12); noise(0.14,0.04,'highpass',2600);},200); },   // 內容解鎖：清亮上行三音叮鈴
     shoot:function(kind){ var a=ctx(); if(!a)return; if(a.currentTime-_shootT<0.05)return; _shootT=a.currentTime;   // 開火：節流的細微射擊音(依武器類型變色)
       if(skinFx==='crystal'){ slide(1400,1000,0.03,'triangle',0.016); return; }        // 皮膚音效：清亮
       if(skinFx==='arc'){ slide(1100,640,0.03,'square',0.015); return; }               // 皮膚音效：電弧

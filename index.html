@@ -1096,7 +1096,15 @@ var PRESTIGE=[
   {id:'p_crit',  ic:'🎯', name:'星核暴走', desc:'初始暴擊率', per:'+2%',  max:10, cost:function(l){return 3+l;}},
   {id:'p_greed', ic:'💰', name:'星核貪婪', desc:'碎片獲取', per:'+6%',   max:12, cost:function(l){return 2+l;}},
   {id:'p_xp',    ic:'🧿', name:'星核領悟', desc:'經驗獲取', per:'+5%',   max:10, cost:function(l){return 2+l;}},
-  {id:'p_revive',ic:'💫', name:'星核復甦', desc:'每局額外復活', per:'+1次', max:2, cost:function(l){return 8+l*8;}}
+  {id:'p_revive',ic:'💫', name:'星核復甦', desc:'每局額外復活', per:'+1次', max:2, cost:function(l){return 8+l*8;}},
+  // —— B316 星核擴充 ——
+  {id:'p_speed', ic:'👟', name:'星核疾行', desc:'全域移速', per:'+2%',   max:10, cost:function(l){return 2+l;}},
+  {id:'p_area',  ic:'🔵', name:'星核擴張', desc:'全域攻擊範圍', per:'+3%', max:10, cost:function(l){return 3+l;}},
+  {id:'p_pickup',ic:'🧲', name:'星核磁引', desc:'拾取範圍', per:'+6%',   max:8,  cost:function(l){return 2+l;}},
+  {id:'p_critdmg',ic:'💢',name:'星核致命', desc:'暴擊傷害', per:'+8%',   max:12, cost:function(l){return 3+l;}},
+  {id:'p_armor', ic:'🛡️', name:'星核堅壁', desc:'減傷', per:'+2%',      max:8,  cost:function(l){return 3+l;}},
+  {id:'p_luck',  ic:'🍀', name:'星核福緣', desc:'幸運(稀有強化/掉落)', per:'+5%', max:8, cost:function(l){return 3+l;}},
+  {id:'p_omni',  ic:'🌌', name:'星核殿堂', desc:'全能(傷害/生命/攻速/移速)', per:'+2%', max:25, cost:function(l){return 12+l*3;}}
 ];
 function prestigeById(id){ for(var i=0;i<PRESTIGE.length;i++)if(PRESTIGE[i].id===id)return PRESTIGE[i]; return null; }
 function metaInvested(){ var s=0; for(var k in (DB.meta||{}))s+=DB.meta[k]||0; return s; }   // 目前投入的永久強化總等級
@@ -1967,7 +1975,7 @@ function newRun(daily){
   var mut=daily?todaysMutator():IDENTITY_MUT;
   G={ time:0, kills:0, level:1, xp:0, xpNeed:5, wave:1, shards:0, combo:0, comboTimer:0,
      spawnTimer:0, bossTimer:0, eliteTimer:0, over:false, paused:false,
-     nextBossAt:105, usedRevive:false, luck:0.06*metaLv('luck'), stage:st, mut:mut, daily:!!daily,
+     nextBossAt:105, usedRevive:false, luck:0.06*metaLv('luck')+0.05*prestigeLv('p_luck'), stage:st, mut:mut, daily:!!daily,
      dmgDealt:0, peakCombo:0, bossKills:0, eliteKills:0, act:1, actMul:1, flawless:true,
      mode:(daily?'normal':selMode), modeTimer:(!daily&&selMode==='timeattack'?(MODES.timeattack.dur):0) };
   if(G.mode==='bossrush')G.nextBossAt=4;   // 首領亂鬥：快速首波首領
@@ -1982,12 +1990,13 @@ function newRun(daily){
   if(GAudio.setSkinFx)GAudio.setSkinFx(player.skinSfx);
   if(_tr>=4)G.entranceT=1.0;   // 傳奇：出場動畫
   // 基礎屬性（含永久強化 + 角色 + 每日變異）
-  var omni=1+0.03*metaLv('omni');   // 萬能核心：全能加成
-  var pDmg=1+0.03*prestigeLv('p_dmg'), pHp=1+0.04*prestigeLv('p_hp'), pHaste=1+0.03*prestigeLv('p_haste');   // 轉生星核全域加成（永不重置）
+  var pOmni=1+0.02*prestigeLv('p_omni');   // 星核殿堂：全能加成（永不重置）
+  var omni=(1+0.03*metaLv('omni'))*pOmni;   // 萬能核心 × 星核殿堂
+  var pDmg=1+0.03*prestigeLv('p_dmg'), pHp=1+0.04*prestigeLv('p_hp'), pHaste=1+0.03*prestigeLv('p_haste'), pSpd2=1+0.02*prestigeLv('p_speed');   // 轉生星核全域加成（永不重置）
   player.base={ dmg:1*(1+0.08*metaLv('dmg'))*(1+0.06*metaLv('overcharge'))*omni*pDmg*(ch.stat.dmg||1)*mut.pDmg,
-    fireRate:1*(ch.stat.fireRate||1)*(1+0.05*metaLv('haste'))*omni*pHaste, speed:230*(1+0.05*metaLv('spd'))*omni*(ch.stat.speed||1)*mut.pSpd,
-    maxHp:(100+12*metaLv('hp'))*omni*pHp*(ch.stat.maxHp||1)*mut.pHp, pickup:90*(1+0.12*metaLv('pick'))*(ch.stat.pickup||1),
-    crit:0.05+(ch.stat.crit||0)+0.03*metaLv('crit')+0.02*prestigeLv('p_crit'), critMult:2*(1+0.1*metaLv('critdmg')), armor:0.04*metaLv('armor'), regen:0.3*metaLv('regen'), xpMult:(1+0.08*metaLv('xp'))*(1+0.05*prestigeLv('p_xp')) };
+    fireRate:1*(ch.stat.fireRate||1)*(1+0.05*metaLv('haste'))*omni*pHaste, speed:230*(1+0.05*metaLv('spd'))*omni*pSpd2*(ch.stat.speed||1)*mut.pSpd,
+    maxHp:(100+12*metaLv('hp'))*omni*pHp*(ch.stat.maxHp||1)*mut.pHp, pickup:90*(1+0.12*metaLv('pick'))*(1+0.06*prestigeLv('p_pickup'))*(ch.stat.pickup||1),
+    crit:0.05+(ch.stat.crit||0)+0.03*metaLv('crit')+0.02*prestigeLv('p_crit'), critMult:2*(1+0.1*metaLv('critdmg'))*(1+0.08*prestigeLv('p_critdmg')), armor:0.04*metaLv('armor')+0.02*prestigeLv('p_armor'), regen:0.3*metaLv('regen'), xpMult:(1+0.08*metaLv('xp'))*(1+0.05*prestigeLv('p_xp')) };
   enemies=[]; bullets=[]; ebullets=[]; orbs=[]; particles=[]; dmgnums=[]; pickups=[]; blades=[]; fxRings=[]; wells=[]; beams=[]; mines=[]; clouds=[]; hazards=[]; drones=[]; shards=[];
   addWeapon(ch.start);
   recalc(); player.hp=player.maxHp;
@@ -2018,7 +2027,7 @@ function recalc(){
   player.armor=Math.min(0.7,b.armor+0.08*(p.parmor||0));
   player.regen=b.regen+0.6*(p.pregen||0);
   player.xpMult=b.xpMult*(1+0.15*(p.pxp||0));
-  player.area=1+0.16*(p.parea||0)+0.05*metaLv('area');      // 範圍/巨大化(含局外強化)
+  player.area=1+0.16*(p.parea||0)+0.05*metaLv('area')+0.03*prestigeLv('p_area');      // 範圍/巨大化(含局外強化 + 星核擴張)
   player.amount=(p.pamount||0)+metaLv('multishot');          // 額外投射物(含局外多重核心)
   player.pierceBonus=(p.ppierce||0)+metaLv('startpierce');     // 額外貫穿(含局外貫穿核心)
   player.bossDmg=1+0.08*metaLv('bossbane');     // 屠龍核心：對首領增傷
@@ -4008,7 +4017,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v315 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v316 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

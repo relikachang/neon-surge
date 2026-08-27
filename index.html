@@ -2339,6 +2339,43 @@ var MONSTER_INFO={
   vault:{n:'賞金寶庫',d:'緩慢移動的稀有寶庫，血量厚重難以擊破，但擊殺會爆出海量碎片與寶箱，值得集火。',rare:true},
   boss:{n:'首領',d:'各地圖的統治者，具多階段攻擊、狂暴與絕命狂暴。',rare:true},
 };
+// 怪物背景敘事（顯示於怪物圖鑑，世界觀第六塊）
+var MONSTER_LORE={
+  grunt:'霓潮最先量產的殘骸，沒有名字，只有前進的指令。',
+  swarm:'一群共享同一個空洞意志的碎片，數量就是牠們的思想。',
+  tank:'把恐懼焊進裝甲的行走堡壘，緩慢卻不可阻擋。',
+  ranged:'躲在後排的懦夫，用距離換取多活的幾秒。',
+  bomber:'注定要爆炸的軀殼，連死亡都要拖你陪葬。',
+  splitter:'切開牠，只會得到更多的牠——分裂是牠唯一的信仰。',
+  charger:'把全部的存在意義,壓縮進一次不顧一切的衝刺。',
+  brute:'霓潮鍛造的鈍器,用血肉的厚度碾碎一切精巧。',
+  wraith:'游離於實體邊緣的怨念,快得連光都追不上。',
+  mortar:'從安全的遠方,把死亡拋成一道會轉彎的弧線。',
+  titan:'行走的災厄,每一步都讓大地為之震顫。',
+  stalker:'從你的盲點裡誕生,你看見牠時,刃已及身。',
+  bombard:'把整片天空鋪成彈幕的火力狂徒。',
+  shade:'貼著你影子移動的幻象,在你回頭前已放出爆彈。',
+  marksman:'一發預警,一發致命,牠只給你一次讓開的機會。',
+  smasher:'重錘落下之處,連空氣都被砸出裂痕。',
+  weaver:'把整座戰場織成一張緩緩收緊的死亡之網。',
+  phaseknight:'在相位之間穿行的騎士,無敵的瞬間即是牠的殺機。',
+  impaler:'衝鋒的軌跡是一道灼熱的傷疤,別站在牠的直線上。',
+  voidreaper:'從虛空縫隙探出的鐮刃,收割你來不及反應的須臾。',
+  sentinel:'不知疲倦的旋轉之眼,以一道雷射巡視牠的領域。',
+  warlock:'向內收攏的封鎖之環,是牠對入侵者最溫柔的絞殺。',
+  suppressor:'用密不透風的彈流,把你釘死在原地的壓制機器。',
+  hexer:'低語詛咒的咒師,削弱你的鋒芒,只為多換一刻苟延。',
+  phantom:'第八分鐘後浮現的高速幽靈,成群掠過,豐厚而危險。',
+  golden:'膽怯而閃耀的寶獸,追上牠,便是追上一整座財富。',
+  warden:'舊防衛系統的殘魂,血厚傷高,永不闔上的監視之眼。',
+  conjurer:'不斷從虛空喚出蟲群的召魂者,源頭不絕,群潮不止。',
+  harbinger:'災厄的先聲,牠射出的每一發都追著你不放。',
+  gargantua:'震波巨獸中的君主,血量恐怖,倒下時吐出首領級的戰利。',
+  revenant:'死亡也困不住的亡魂,殞落瞬間炸開一整環的怨念。',
+  stormcaller:'在你腳下召來雷暴的使徒,倒下時爆出雷霆的餽贈。',
+  vault:'緩緩移動的賞金寶庫,難以擊破,卻藏著海量的碎片與寶藏。',
+  boss:'每一張地圖的統治者,盤踞於此,等待著挑戰牠王座的倖存者。'
+};
 function spawnEnemy(type,ex,ey,mul,forceElite){
   var d=ETYPES[type]; mul=mul||1;
   if(d&&d.rare&&G.time-(G._rareBanT||-99)>5){ G._rareBanT=G.time; var rmi=MONSTER_INFO[type]; G._rareBan={name:(rmi&&rmi.n)||type,color:d.color,start:G.time}; GAudio.elite&&GAudio.elite(); }   // 稀有怪登場橫幅
@@ -4119,9 +4156,10 @@ function renderBestiary(){ var order=['grunt','swarm','tank','ranged','bomber','
     if(!found)return '<div class="cxitem"><div class="cxic" style="color:#3a4568">❔</div>'+
       '<div class="cxmain"><div class="cxn" style="color:#6b7ba0">？？？'+star+'</div>'+
       '<div class="cxd" style="color:#4a5578">尚未擊殺 — 遭遇並擊殺後解鎖圖鑑</div></div></div>';
+    var mlore=MONSTER_LORE[id]?'<div class="cxlore">「'+MONSTER_LORE[id]+'」</div>':'';
     return '<div class="cxitem"><div class="cxic" style="color:'+d.color+'">'+ic+'</div>'+
       '<div class="cxmain"><div class="cxn" style="color:'+d.color+'">'+mi.n+star+'</div>'+
-      '<div class="cxd">'+mi.d+'</div></div></div>'; }).join('');
+      '<div class="cxd">'+mi.d+'</div>'+mlore+'</div></div>'; }).join('');
   $('bestiarylist').innerHTML='<div style="text-align:center;color:#8ea0c8;font-size:12px;margin-bottom:12px">已解鎖 '+seen+' / '+order.length+' 種</div>'+html;
 }
 function medal(i){ return i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1); }
@@ -4170,7 +4208,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v329 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v330 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

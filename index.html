@@ -858,9 +858,16 @@ var ACHIEVEMENTS=[
   {id:'h_codex30',ic:'📚',hidden:true,name:'圖鑑通',desc:'圖鑑解鎖 30 種怪物',rw:1000,chk:function(){return Object.keys(DB.bestiary||{}).length>=30;}},
   {id:'h_untouchable',ic:'🕊️',hidden:true,name:'無瑕',desc:'全程無傷存活 5 分鐘',rw:1400,chk:function(){return G.flawless&&G.time>=300;}},
   {id:'h_earlyboss',ic:'⏱️',hidden:true,name:'速斬',desc:'開局 2 分鐘內擊敗首領',rw:700,chk:function(){return (G.bossKills||0)>=1&&G.time<=120;}},
+  // —— B351 環境關生存成就（呼應視野阻礙/環境狀態）——
+  {id:'nebula3',   ic:'☁️', name:'瘴氣行者', desc:'在「幽光星雲」瘴氣中存活 3 分鐘',   rw:550,  chk:function(){return G.stage&&G.stage.id==='nebula'&&G.time>=180;}},
+  {id:'maelstrom3',ic:'🌪️', name:'頂風而行', desc:'在「湮滅風暴」亂流中存活 3 分鐘',   rw:600,  chk:function(){return G.stage&&G.stage.id==='maelstrom'&&G.time>=180;}},
+  {id:'paradox3',  ic:'🌌', name:'悖論倖存', desc:'在「悖論深淵」存活 3 分鐘',         rw:700,  chk:function(){return G.stage&&G.stage.id==='paradox'&&G.time>=180;}},
+  {id:'inferno3',  ic:'🔥', name:'煉獄不滅', desc:'在「永劫煉獄」存活 3 分鐘',         rw:750,  chk:function(){return G.stage&&G.stage.id==='inferno'&&G.time>=180;}},
+  {id:'visionsurv',ic:'🌑', name:'盲域求生', desc:'在視野受限的關卡存活 4 分鐘',       rw:600,  chk:function(){return G.stage&&VISION_STAGES[G.stage.id]&&G.time>=240;}},
+  {id:'stormlord', ic:'⚡', hidden:true, name:'風暴主宰', desc:'在「湮滅風暴」存活 6 分鐘', rw:1000, chk:function(){return G.stage&&G.stage.id==='maelstrom'&&G.time>=360;}},
 ];
 function checkAch(){ if(!G)return; ACHIEVEMENTS.forEach(function(a){ if(!DB.achievements[a.id]){ try{ if(a.chk()){ DB.achievements[a.id]=true; DB.shards+=(a.rw||60); saveDB(); achToast(a,a.rw||60); } }catch(e){} } }); checkAchMile(); }
-var ACH_MILE=[{n:25,rw:400},{n:50,rw:800},{n:75,rw:1200},{n:100,rw:2000},{n:125,rw:3500},{n:150,rw:6000}];   // 成就里程碑：累計解鎖 N 個給階段大獎
+var ACH_MILE=[{n:25,rw:400},{n:50,rw:800},{n:75,rw:1200},{n:100,rw:2000},{n:125,rw:3500},{n:150,rw:6000},{n:156,rw:8000}];   // 成就里程碑：累計解鎖 N 個給階段大獎（156=全清）
 function checkAchMile(){ DB.achMile=DB.achMile||{}; var got=Object.keys(DB.achievements||{}).length;
   ACH_MILE.forEach(function(m){ if(got>=m.n && !DB.achMile[m.n]){ DB.achMile[m.n]=1; DB.shards+=m.rw; saveDB(); achToast({ic:'🏅',name:'成就里程碑 '+m.n+' 達成！'},m.rw); } }); }
 function achToast(a,rw){ var el=$('achpop'); if(!el)return; el.innerHTML='<div class="ai">'+a.ic+'</div><div><div class="at">成就解鎖 · +'+(rw||60)+' ◆</div><div class="an">'+a.name+'</div></div>';
@@ -4330,7 +4337,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v350 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v351 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者'];
 function renderMenu(){

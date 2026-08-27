@@ -734,6 +734,12 @@ var ACHIEVEMENTS=[
   {id:'kills3k',   ic:'💀',name:'血流成河',  desc:'單局擊殺 3000',rw:400,chk:function(){return G.kills>=3000;}},
   {id:'codemax',   ic:'🎟️',name:'兌換達人',  desc:'兌換全部 6 組創作者代碼',rw:600,chk:function(){return Object.keys(DB.codes||{}).length>=6;}},
   {id:'charskin16',ic:'🚀',name:'本色收藏',  desc:'擁有 16 款角色專屬皮膚',rw:800,chk:function(){try{return CHAR_SKINS.filter(function(s){return DB.skins[s.id];}).length>=16;}catch(e){return false;}}},
+  // —— B329 圖鑑收集成就 ——
+  {id:'wpn20',   ic:'📖',name:'軍械入門',  desc:'圖鑑發現 20 種武器',rw:400,chk:function(){return Object.keys(DB.wpnSeen||{}).length>=20;}},
+  {id:'wpnall',  ic:'📚',name:'軍械大全',  desc:'圖鑑發現全部 35 種武器',rw:1500,chk:function(){try{return WORDER.every(function(id){return DB.wpnSeen&&DB.wpnSeen[id];});}catch(e){return false;}}},
+  {id:'psv20',   ic:'🧬',name:'強化入門',  desc:'圖鑑發現 20 種被動',rw:400,chk:function(){return Object.keys(DB.psvSeen||{}).length>=20;}},
+  {id:'psvall',  ic:'🔬',name:'強化大全',  desc:'圖鑑發現全部 39 種被動',rw:1500,chk:function(){try{return PORDER.every(function(id){return DB.psvSeen&&DB.psvSeen[id];});}catch(e){return false;}}},
+  {id:'codexmaster',ic:'👑',name:'萬典宗師',desc:'集齊武器與被動全圖鑑',rw:3000,chk:function(){try{return WORDER.every(function(id){return DB.wpnSeen&&DB.wpnSeen[id];})&&PORDER.every(function(id){return DB.psvSeen&&DB.psvSeen[id];});}catch(e){return false;}}},
   {id:'wave25',  ic:'🌊',name:'波瀾不驚',desc:'抵達第 25 波',rw:150,chk:function(){return G.wave>=25;}},
   {id:'fortress',ic:'🏰',name:'要塞征服',desc:'機械要塞存活 3 分',rw:250,chk:function(){return G.stage&&G.stage.id==='fortress'&&G.time>=180;}},
   {id:'score5k', ic:'🏆',name:'高分玩家',desc:'單局達 5000 分',rw:200,chk:function(){return (G.score||0)>=5000;}},
@@ -4164,7 +4170,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v328 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v329 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

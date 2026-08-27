@@ -3052,6 +3052,12 @@ function spawnDirector(dt){
     hazards.push({kind:'pull',x:player.x+rand(-230,230),y:player.y+rand(-230,230),r:140+Math.random()*50,life:4.5,max:4.5,dtk:0}); } }
   // 環境視野阻礙關卡：一次性入場提示
   if(G.stage&&!G._visAnn){ var _va=VISION_STAGES[G.stage.id]; if(_va){ G._visAnn=true; announce(_va.msg,_va.mc); } }
+  // 環境狀態·寒獄凍原：暴風雪陣風週期性凍緩(移動變慢，呼應白幕視野)
+  if(G.stage&&G.stage.id==='tundra'){ G.blizT=(G.blizT==null?4:G.blizT-dt); if(G.blizT<=0){ G.blizT=rand(5.5,8); player.chillT=Math.max(player.chillT||0,2.6); announce('❄ 暴風雪陣風 · 移動遲緩','#8bd3ff'); flashScreen('139,211,255',0.14); } }
+  // 環境狀態·幽光星雲：瘴氣持續侵蝕(輕微中毒 DoT，鉗制最低 1 血不致命，呼應綠瘴視野)
+  if(G.stage&&G.stage.id==='nebula'){ G.miasT=(G.miasT==null?1.5:G.miasT-dt); if(G.miasT<=0){ G.miasT=1.5;
+    if(!G.over&&player.hp>1){ var _pd=(2.5+G.time/150)*(1-player.armor); player.hp=Math.max(1,player.hp-_pd);
+      dmgNum(player.x,player.y-26,Math.round(_pd),false,true); ringFx(player.x,player.y,player.radius+12,'#5dffc0'); } } }
   // 首領
   if(G.time>=G.nextBossAt){ G.nextBossAt+=120; spawnBoss(); }
 }
@@ -4308,7 +4314,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v347 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v348 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者'];
 function renderMenu(){

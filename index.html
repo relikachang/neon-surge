@@ -856,7 +856,7 @@ function renderRelics(){ DB.relics=DB.relics||{}; var got=0;
     '<div style="height:9px;border-radius:5px;background:rgba(255,255,255,.08);overflow:hidden"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,#22e6ff,#c98bff,#ffd54a);box-shadow:0 0 10px #ffd54a"></div></div></div>'+html;
 }
 // ===== 皮膚商城 UI + 創作者代碼兌換 =====
-var CREATOR_CODES={ 'RELIKA':{shards:5000,name:'創作者專屬禮包'}, 'NEONSURGE':{shards:1500,name:'霓潮歡迎禮'}, 'SURVIVOR':{shards:2000,name:'倖存者補給'}, 'THANKYOU':{shards:1000,name:'感謝有你'} };
+var CREATOR_CODES={ 'RELIKA':{shards:200000,name:'創作者專屬大禮包'}, 'NEONSURGE':{shards:50000,name:'霓潮歡迎禮'}, 'SURVIVOR':{shards:60000,name:'倖存者補給'}, 'THANKYOU':{shards:40000,name:'感謝有你'}, 'JACKPOT':{shards:100000,name:'霓潮頭獎'}, 'MAXPOWER':{shards:80000,name:'火力全開'} };
 function skinCardSig(sk){ if(!sk||sk.id==='default'){ var idx=CHARS.findIndex(function(c){return c.id===selChar;}); var s=charSig(selChar); s.arch=(idx<0?0:idx)%6; return s; }
   var ar=(sk.arch!=null&&sk.arch>=0)?sk.arch:0;
   if(sk.dyn)return {arch:ar,col:'#22e6ff',glow:'#7c5bff',edge:'#c9fff0',hull:'#2a1a40',hull2:'#40203a',core:'#ffffff',accent:'#ff5edb'};
@@ -3981,7 +3981,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v309 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v310 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

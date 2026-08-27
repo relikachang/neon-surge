@@ -450,6 +450,7 @@ if('serviceWorker' in navigator){ var __reloaded=false;
     <button class="btn ghost" id="relicbtn" style="flex:1">遺物收藏 💎</button>
     <button class="btn ghost" id="skinbtn" style="flex:1">皮膚商城 🎨</button>
   </div>
+  <button class="btn ghost" id="codebtn" style="border-color:rgba(255,213,74,.55);color:#ffe08a">🎟️ 兌換創作者代碼</button>
   <div style="display:flex;gap:10px">
     <button class="btn ghost" id="shopbtn" style="flex:1">永久強化 ◆</button>
     <button class="btn ghost" id="prestigebtn" style="flex:1;border-color:rgba(255,213,74,.5);color:#ffe08a">轉生殿堂 ✦</button>
@@ -3981,7 +3982,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v310 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v311 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -4173,6 +4174,7 @@ $('relicbtn').onclick=function(){ renderRelics(); $('menu').classList.remove('sh
 $('relicclose').onclick=function(){ $('relics').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('skinbtn').onclick=function(){ $('codemsg').textContent=''; renderSkinShop(); $('menu').classList.remove('show'); $('skinshop').classList.add('show'); };
 $('skinclose').onclick=function(){ $('skinshop').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
+$('codebtn').onclick=function(){ $('codemsg').textContent=''; renderSkinShop(); $('menu').classList.remove('show'); $('skinshop').classList.add('show'); var ci=$('codeinput'); if(ci){ try{ ci.scrollIntoView({block:'center'}); }catch(_){} setTimeout(function(){ try{ ci.focus(); }catch(_){} },60); } };   // 主選單直達代碼兌換
 $('prestigebtn').onclick=function(){ _prestigeConfirm=false; renderPrestige(); $('menu').classList.remove('show'); $('prestige').classList.add('show'); };
 $('prestigeclose').onclick=function(){ $('prestige').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
 $('coderedeem').onclick=redeemCode;

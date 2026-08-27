@@ -3048,7 +3048,7 @@ function spawnDirector(dt){
   if(actNow>G.act){ G.act=actNow; G.actMul=1+(G.act-1)*0.28;
     announce('☰ 第 '+G.act+' 幕開始 · 強敵湧現！','#ff2b5e'); flashScreen('255,43,94',0.42); shake&&shake(16); GAudio.boss&&GAudio.boss();
     for(var atr=0;atr<5;atr++)ringFx(player.x,player.y,80+atr*100,'#ff2b5e'); burst(player.x,player.y,'#ff2b5e',42,360);   // 幕轉場衝擊波
-    spawnBoss(); G.nextBossAt=G.time+120;   // 幕首領登場，並重置常規首領計時
+    spawnBoss(); G.nextBossAt=G.time+120; G.bossWarned=false;   // 幕首領登場，並重置常規首領計時
     spawnPickup(player.x+rand(-70,70),player.y+rand(-70,70),'heal'); }   // 幕間補給
   var wv=1+Math.floor(G.time/20); if(wv>G.wave){ G.wave=wv;
     if(wv%5===0){ announce('⚡ 第 '+wv+' 波 · 霓潮湧現！','#ff3df0'); flashScreen('255,61,240',0.3); GAudio.boss&&GAudio.boss();
@@ -3094,8 +3094,13 @@ function spawnDirector(dt){
     var _wf=52+Math.min(34,G.time*0.07); player.x+=Math.cos(G.windAng)*_wf*dt; player.y+=Math.sin(G.windAng)*_wf*dt;
     G.gustT=(G.gustT==null?3:G.gustT-dt); if(G.gustT<=0){ G.gustT=rand(4.5,7); flashScreen('255,90,120',0.12); }
     if(!G._windAnn){ G._windAnn=true; announce('🌪 狂暴亂流 · 頂風走位','#ff5e7a'); } }
+  // 首領登場前預警：登場前約 4 秒提示 + 警示音 + 紅光脈動，給玩家準備時間（首領亂鬥模式節奏太快故略過）
+  if(!G.over&&G.mode!=='bossrush'){
+    if(!G.bossWarned&&G.time>=G.nextBossAt-4&&G.time<G.nextBossAt){ G.bossWarned=true; G.bossWarnFx=1.4; announce('⚠ 首領逼近…嚴陣以待','#ff5e7a'); GAudio.warn&&GAudio.warn(); }
+    if(G.bossWarnFx>0)G.bossWarnFx-=dt;
+  }
   // 首領
-  if(G.time>=G.nextBossAt){ G.nextBossAt+=120; spawnBoss(); }
+  if(G.time>=G.nextBossAt){ G.nextBossAt+=120; spawnBoss(); G.bossWarned=false; }
 }
 function chooseType(m){ var r=Math.random();
   if(m<0.3)return r<0.8?'grunt':'swarm';
@@ -3586,6 +3591,11 @@ function render(){
       var vgh=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*(0.30-_lp*0.10),W/2,H/2,Math.max(W,H)*0.72);
       vgh.addColorStop(0,'rgba(0,0,0,0)'); vgh.addColorStop(1,'rgba(255,24,44,'+_la.toFixed(3)+')'); ctx.fillStyle=vgh; ctx.fillRect(0,0,W,H); } }
 
+  // 首領逼近預警：登場前螢幕邊緣脈動紅框，強化「山雨欲來」的緊張
+  if(!G.over&&(G.bossWarnFx||0)>0){ var _bw=Math.min(1,G.bossWarnFx/1.4), _bp=0.5+0.5*Math.sin(G.time*12), _ba=(0.10+0.22*_bp)*_bw;
+    var vgb=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.32,W/2,H/2,Math.max(W,H)*0.72);
+    vgb.addColorStop(0,'rgba(0,0,0,0)'); vgb.addColorStop(1,'rgba(255,50,80,'+_ba.toFixed(3)+')'); ctx.fillStyle=vgb; ctx.fillRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,60,90,'+(0.3+0.4*_bp)*_bw+')'; ctx.lineWidth=6+6*_bp; ctx.strokeRect(4,4,W-8,H-8); }
   // 傷害紅屏
   if(hurtFlash>0){ ctx.fillStyle='rgba(255,40,60,'+(hurtFlash*0.35)+')'; ctx.fillRect(0,0,W,H); }
   if(flashA>0){ ctx.fillStyle='rgba('+flashRGB+','+Math.min(0.5,flashA*0.5)+')'; ctx.fillRect(0,0,W,H); }
@@ -4350,7 +4360,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v353 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v354 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者'];
 function renderMenu(){
@@ -4502,6 +4512,7 @@ var GAudio=(function(){ var ac=null, mMusic=false, mSfx=false, mVol=0.8;
       if(big){ [1046,1318,1568,2093].forEach(function(f,i){setTimeout(function(){beep(f,0.2,'triangle',0.11);},300+i*70);}); setTimeout(function(){beep(2637,0.5,'sine',0.07);},600); noise(0.12,0.05,'highpass',2600); } },
     pick:function(){ beep(880,0.05,'triangle',0.055); },
     boss:function(){ beep(52,0.7,'sawtooth',0.2); beep(78,0.7,'sawtooth',0.12); noise(0.6,0.14,'lowpass',160); },   // Boss：低頻雙音+隆隆噪
+    warn:function(){ beep(180,0.16,'square',0.09); setTimeout(function(){beep(240,0.20,'square',0.10);},150); },   // 首領逼近警示：兩聲上行嗶
     over:function(){ [440,330,247,165,110].forEach(function(f,i){setTimeout(function(){beep(f,0.28,'sawtooth',0.16);},i*130);}); setTimeout(function(){noise(0.5,0.12,'lowpass',300);},520); },
     fuse:function(){ [330,440,554,660,880,1108].forEach(function(f,i){setTimeout(function(){beep(f,0.18,'sawtooth',0.09);},i*42);}); },
     achieve:function(){ [523,659,784,1046,1318].forEach(function(f,i){setTimeout(function(){beep(f,0.16,'triangle',0.12);},i*68);}); },

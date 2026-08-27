@@ -2620,6 +2620,7 @@ var ETYPES={
   orbiter:{r:16,hp:120,sp:104,dmg:16,color:'#5dffe0',xp:7,shape:'dia',ranged:true,orbiter:true},   // 環行者：繞著玩家定距側移(strafe)並持續射擊，逼你追打或反繞
   pouncer:{r:16,hp:130,sp:58,dmg:22,color:'#ff9a3d',xp:7,shape:'arrow',pouncer:true},   // 撲擊者：週期躍擊玩家，騰空時無敵、落地製造爆擊，逼你等落地再打並閃開落點
   mender:{r:17,hp:110,sp:60,dmg:10,color:'#5dffb0',xp:7,shape:'penta',mender:true},   // 療靈：常規支援兵，週期大範圍治療周圍受傷敵人並自癒，逼你優先擊殺
+  detonaut:{r:16,hp:60,sp:66,dmg:16,color:'#ff7a2a',xp:4,shape:'tri',detonaut:true},   // 崩解獸：死亡時原地留下延遲+預警的爆炸，懲罰貼身擊殺，逼你保持距離或速離
   // 稀有怪物（特定條件才會出現）
   phantom:{r:15,hp:54,sp:124,dmg:16,color:'#b98cff',xp:8,shape:'dia',rare:true},   // 幽影：8 分後成群高速幽靈
   golden:{r:20,hp:120,sp:56,dmg:8,color:'#ffd54a',xp:18,shape:'hex',rare:true,flee:true},   // 黃金巨獸：會逃跑的寶獸
@@ -2660,6 +2661,7 @@ var MONSTER_INFO={
   orbiter:{n:'環行者',d:'後期登場的高速游擊機體，不正面撲來而是繞著你定距側移(strafe)並持續射擊。追打時牠會反向繞開，逼你切內圈或反繞夾擊。'},
   pouncer:{n:'撲擊者',d:'後期登場的躍擊獵手，週期騰空撲向你——騰空時無敵無法被射下，落地則砸出範圍爆擊。等牠落地的破綻再打，並記得閃開落點。'},
   mender:{n:'療靈',d:'後期登場的支援兵，週期釋放大範圍治療波,替周圍受傷敵人回血並自我修復。牠本身脆弱、傷害也低,卻能讓整群敵人變得極難清光——看到綠色治療環,務必優先擊殺牠。'},
+  detonaut:{n:'崩解獸',d:'後期登場的自爆型敵人，血量偏低但擊殺後不會立即爆炸——而是在原地留下一圈延遲的預警爆炸。貼身擊殺牠等於把炸彈埋在自己腳下，務必保持距離擊破、或殺完立刻拉開。'},
   phantom:{n:'幽影',d:'第 8 分鐘後浮現的高速幽靈，成群出沒、經驗豐厚。',rare:true},
   golden:{n:'黃金巨獸',d:'膽小會逃跑的稀有寶獸，追上擊殺可獲大量碎片與道具。',rare:true},
   warden:{n:'監視者',d:'第 6 分鐘後偶爾降臨的稀有精英射手，血厚傷高。',rare:true},
@@ -2685,6 +2687,7 @@ var MONSTER_LORE={
   mortar:'從安全的遠方,把死亡拋成一道會轉彎的弧線。',
   orbiter:'牠從不與你正面相對,只在你觸不到的圓周上永恆繞行,像一顆冷漠的衛星,一邊注視、一邊開火。',
   mender:'牠不為殺戮而生,只為延續。每一道綠光都在對抗你的努力——你擊碎的,牠一次次補回。要終結這場拉鋸,先讓治療者自己失去心跳。',
+  detonaut:'牠的死亡不是結束,而是倒數的開始。急著補刀的獵人,往往和牠一起被那圈遲來的火光吞沒——耐心與距離,才是拆彈的唯一手法。',
   pouncer:'牠把自己拋向空中的那一瞬,是最安全也最危險的——你打不到牠,牠也還沒落下。真正的殺意,藏在牠著地的那一擊裡。',
   titan:'行走的災厄,每一步都讓大地為之震顫。',
   stalker:'從你的盲點裡誕生,你看見牠時,刃已及身。',
@@ -2893,6 +2896,7 @@ function killEnemy(e){
   if(e.type==='warden'||e.type==='conjurer'||e.type==='harbinger')G.rareKills=(G.rareKills||0)+1;
   if(e.type==='gargantua'){ G.rareKills=(G.rareKills||0)+1; spawnPickup(e.x,e.y,'bosschest'); for(var gg=0;gg<6;gg++)spawnPickup(e.x+rand(-50,50),e.y+rand(-50,50),'shardbag'); announce('💀 巨獸君主殞落！','#ff2b5e'); flashScreen('255,43,94',0.4); }   // 巨獸君主：爆首領戰利品
   if(e.type==='revenant'){ G.rareKills=(G.rareKills||0)+1; for(var rn=0;rn<22;rn++){ var rna=rn/22*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(rna),Math.sin(rna),205,e.dmg*0.5); } ringFx(e.x,e.y,100,'#c86bff'); ringFx(e.x,e.y,60,'#fff'); burst(e.x,e.y,'#c86bff',18,240); for(var rg=0;rg<3;rg++)spawnPickup(e.x+rand(-40,40),e.y+rand(-40,40),'shardbag'); announce('☠ 亡魂爆裂！','#c86bff'); shake(8); }   // 亡魂領主：死亡炸出整環彈幕 + 掉落
+  if(e.type==='detonaut'&&hazards.length<80){ hazards.push({kind:'strike',x:e.x,y:e.y,r:88,life:1.5,max:1.5,warn:1.0,fired:false,dtk:0}); ringFx(e.x,e.y,54,'#ff7a2a'); }   // 崩解獸：死亡遺留延遲預警爆炸，懲罰貼身擊殺
   if(e.type==='stormcaller'){ G.rareKills=(G.rareKills||0)+1; var scr=55+Math.floor(G.time/30)*7; G.shards+=scr; spawnPickup(e.x,e.y,pick(['frenzy','shield','overdrive','fullheal','jackpot'])); for(var sg=0;sg<4;sg++)spawnPickup(e.x+rand(-46,46),e.y+rand(-46,46),'shardbag'); ringFx(e.x,e.y,90,'#ffe08a'); burst(e.x,e.y,'#ffe08a',16,240); announce('⚡ 風暴使徒殞落！+◆'+scr+' + 稀有補給','#ffe08a'); flashScreen('255,224,138',0.32); }   // 風暴使徒：擊殺爆厚賞 + 稀有道具
   if(e.type==='vault'){ G.rareKills=(G.rareKills||0)+1; var vlr=180+Math.floor(G.time/20)*12; G.shards+=vlr; spawnPickup(e.x,e.y,'jackpot'); for(var vg=0;vg<8;vg++)spawnPickup(e.x+rand(-60,60),e.y+rand(-60,60),'shardbag'); for(var vg2=0;vg2<3;vg2++)ringFx(e.x,e.y,70+vg2*60,'#ffd54a'); burst(e.x,e.y,'#ffd54a',24,300); announce('💰 賞金寶庫破裂！+◆'+vlr+' 碎片大禮','#ffd54a'); flashScreen('255,213,74',0.4); GAudio.achieve&&GAudio.achieve(); }   // 賞金寶庫：擊殺爆海量碎片 + 頭獎
   var km=G.kills; if(km===100||km===250||km===500||km===1000||km===2000||km===3000||km===5000||km===7500||km===10000){ var kr=Math.floor(km/10); G.shards+=kr; player.frenzyT=Math.max(player.frenzyT,3);
@@ -3396,7 +3400,7 @@ function chooseType(m){ var r=Math.random();
   if(m<0.8)return r<0.45?'grunt':r<0.7?'swarm':r<0.85?'ranged':'charger';
   if(m<1.6)return r<0.32?'grunt':r<0.52?'swarm':r<0.66?'ranged':r<0.78?'bomber':r<0.9?'charger':'splitter';
   if(m<3.5)return r<0.24?'grunt':r<0.42?'swarm':r<0.56?'ranged':r<0.68?'bomber':r<0.8?'charger':r<0.9?'splitter':'tank';
-  if(m<6)return r<0.15?'grunt':r<0.28?'swarm':r<0.39?'ranged':r<0.49?'bomber':r<0.58?'charger':r<0.67?'splitter':r<0.76?'tank':r<0.85?'brute':r<0.92?'wraith':r<0.95?'mortar':r<0.975?'orbiter':'mender';   // 後期(3.5分後)出現蠻兵/厲魂/砲兵/環行者/療靈
+  if(m<6)return r<0.15?'grunt':r<0.28?'swarm':r<0.39?'ranged':r<0.49?'bomber':r<0.58?'charger':r<0.67?'splitter':r<0.76?'tank':r<0.85?'brute':r<0.9?'wraith':r<0.93?'mortar':r<0.955?'orbiter':r<0.975?'mender':'detonaut';   // 後期(3.5分後)出現蠻兵/厲魂/砲兵/環行者/療靈/崩解獸
   return r<0.11?'grunt':r<0.19?'swarm':r<0.28?'ranged':r<0.37?'charger':r<0.45?'splitter':r<0.53?'tank':r<0.61?'brute':r<0.68?'wraith':r<0.72?'mortar':r<0.75?'orbiter':r<0.78?'pouncer':r<0.83?'titan':r<0.87?'stalker':r<0.91?'bombard':r<0.91?'marksman':r<0.935?'smasher':r<0.955?'weaver':r<0.97?'phaseknight':r<0.982?'impaler':r<0.983?'voidreaper':r<0.988?'sentinel':r<0.992?'warlock':r<0.994?'suppressor':r<0.996?'hexer':r<0.998?'mender':'shade';   // 深後期(6分後)出現泰坦/潛襲者/重砲手/狙擊手/碎擊者/織網者/相位騎士/穿刺者/虛空收割者/哨戒者/虛空祭司/壓制者/幻影領主
 }
 
@@ -4650,7 +4654,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v411 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v412 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

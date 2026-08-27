@@ -3050,6 +3050,8 @@ function spawnDirector(dt){
   // 環境危害：事件視界黑洞吸引(更密集更強的重力井)
   if(G.stage&&G.stage.id==='eventhorizon'){ G.hazT=(G.hazT==null?2.6:G.hazT-dt); if(G.hazT<=0){ G.hazT=rand(2,3.2);
     hazards.push({kind:'pull',x:player.x+rand(-230,230),y:player.y+rand(-230,230),r:140+Math.random()*50,life:4.5,max:4.5,dtk:0}); } }
+  // 環境視野阻礙關卡：一次性入場提示
+  if(G.stage&&!G._visAnn){ var _va=VISION_STAGES[G.stage.id]; if(_va){ G._visAnn=true; announce(_va.msg,_va.mc); } }
   // 首領
   if(G.time>=G.nextBossAt){ G.nextBossAt+=120; spawnBoss(); }
 }
@@ -3272,6 +3274,14 @@ function drawStars(camx,camy){ ctx.save(); ctx.globalCompositeOperation='lighter
     if(ea>0.02){ ctx.globalAlpha=ea; ctx.beginPath(); ctx.arc(camx+ex,camy+ey,es,0,TAU); ctx.fill(); } }
   ctx.restore();
 }
+// 環境視野阻礙設定：特定關卡限制可視範圍（col=幕色 RGB，clear=清晰半徑比、outer=蔽視外緣比、a=最外緣不透明度、pulse=脈動速率、msg/mc=入場提示）
+var VISION_STAGES={
+  abyss:       {col:'6,3,16',    clear:0.34, outer:0.74, a:0.70, pulse:1.4, msg:'🌑 深淵蔽視 · 視野受限',   mc:'#b06bff'},
+  oblivion:    {col:'4,1,10',    clear:0.31, outer:0.72, a:0.80, pulse:1.1, msg:'🌑 湮滅黑幕 · 視野受限',   mc:'#b06bff'},
+  eventhorizon:{col:'1,0,5',     clear:0.28, outer:0.70, a:0.87, pulse:0.9, msg:'🌑 事件視界 · 極度黑暗',   mc:'#9d6bff'},
+  nebula:      {col:'20,52,40',  clear:0.33, outer:0.74, a:0.66, pulse:1.6, msg:'☁ 瘴氣瀰漫 · 視野受限',   mc:'#5dffc0'},
+  tundra:      {col:'210,232,255',clear:0.33, outer:0.74, a:0.66, pulse:2.0, msg:'❄ 暴風雪白幕 · 視野受限', mc:'#5dd3ff'}
+};
 function render(){
   ctx.setTransform(DPR,0,0,DPR,0,0);
   ctx.clearRect(0,0,W,H); ctx.fillStyle=(G&&G.stage?G.stage.bg:'#05070f'); ctx.fillRect(0,0,W,H);
@@ -3539,6 +3549,12 @@ function render(){
   if(flashA>0){ ctx.fillStyle='rgba('+flashRGB+','+Math.min(0.5,flashA*0.5)+')'; ctx.fillRect(0,0,W,H); }
   // 沙暴視野變暗(緋紅荒原)
   if(G.sandT>0){ ctx.save(); ctx.globalAlpha=Math.min(0.24,G.sandT*0.22); ctx.fillStyle='#c86428'; ctx.fillRect(0,0,W,H); ctx.restore(); }
+  // 環境視野阻礙：特定關卡限制可視範圍（黑暗蔽視／瘴氣／暴風雪白幕），玩家周圍一圈清晰、外圍蔽視，逼近戰、增加緊張
+  if(!G.over&&G.stage){ var _vs=VISION_STAGES[G.stage.id];
+    if(_vs){ var _vp=0.5+0.5*Math.sin(G.time*_vs.pulse), _clear=Math.min(W,H)*(_vs.clear-0.02*_vp), _outer=Math.max(W,H)*_vs.outer;
+      var _vg=ctx.createRadialGradient(W/2,H/2,_clear,W/2,H/2,_outer);
+      _vg.addColorStop(0,'rgba('+_vs.col+',0)'); _vg.addColorStop(0.55,'rgba('+_vs.col+','+(_vs.a*0.5).toFixed(3)+')'); _vg.addColorStop(1,'rgba('+_vs.col+','+_vs.a.toFixed(3)+')');
+      ctx.fillStyle=_vg; ctx.fillRect(0,0,W,H); } }
   // 低血警示：HP<28% 紅色邊緣暈影 + 脈動紅框，越危險越濃、心跳越快
   if(!G.over&&player.maxHp>0&&player.hp/player.maxHp<0.28){ var hpr2=player.hp/player.maxHp, sev=Math.min(1,(0.28-hpr2)/0.28); var lp=(Math.sin(Date.now()/(210-sev*110))+1)/2;
     ctx.save();
@@ -4292,7 +4308,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v346 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v347 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者'];
 function renderMenu(){

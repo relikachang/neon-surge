@@ -1252,7 +1252,13 @@ var SKINS=[
 var LIMITED_SKINS=[   // 限量皮膚一律傳奇級（全特效）
   {id:'ltd_prism', name:'虹光稜鏡', price:3000, r:'legend', arch:2, dyn:true, sfx:'crystal', atkCol:'#7cf0ff', killCol:'#ff5edb', desc:'色相不斷流轉的稜鏡機體 · 限量傳奇，僅此檔期'},
   {id:'ltd_sakura',name:'霓櫻',     price:3000, r:'legend', arch:4, pal:{col:'#ff8fc7',glow:'#ff6fb5',edge:'#ffd0e6',hull:'#4a2438',hull2:'#33182a',core:'#fff0f7',accent:'#ffb3d9'}, sfx:'crystal', atkCol:'#ffb3d9', killCol:'#ff8fc7', desc:'飄落霓虹櫻瓣的粉色機體 · 限量傳奇，一期一會'},
-  {id:'ltd_abyss', name:'深海幽光', price:3000, r:'legend', arch:5, pal:{col:'#2affd0',glow:'#00e0b0',edge:'#a0fff0',hull:'#082a2a',hull2:'#041e20',core:'#e0fff8',accent:'#5affe0'}, sfx:'deep', atkCol:'#5affe0', killCol:'#2affd0', desc:'幽深海溝的生物螢光 · 限量傳奇，稍縱即逝'}
+  {id:'ltd_abyss', name:'深海幽光', price:3000, r:'legend', arch:5, pal:{col:'#2affd0',glow:'#00e0b0',edge:'#a0fff0',hull:'#082a2a',hull2:'#041e20',core:'#e0fff8',accent:'#5affe0'}, sfx:'deep', atkCol:'#5affe0', killCol:'#2affd0', desc:'幽深海溝的生物螢光 · 限量傳奇，稍縱即逝'},
+  // —— B322 限量皮膚擴充（輪換檔期 3→8）——
+  {id:'ltd_phoenix',name:'烈鳳涅槃', price:3000, r:'legend', arch:3, pal:{col:'#ff7a1a',glow:'#ff9a2a',edge:'#ffd88a',hull:'#3a1004',hull2:'#280a02',core:'#fff2d0',accent:'#ffd24a'}, sfx:'crystal', atkCol:'#ff9a2a', killCol:'#ffd24a', desc:'浴火重生的烈鳳機體 · 限量傳奇，涅槃一瞬'},
+  {id:'ltd_frost',  name:'霜華女王', price:3000, r:'legend', arch:2, pal:{col:'#a8e6ff',glow:'#d0f4ff',edge:'#ffffff',hull:'#1a3648',hull2:'#0e2432',core:'#ffffff',accent:'#7cc8ff'}, sfx:'crystal', atkCol:'#d0f4ff', killCol:'#a8e6ff', desc:'凜冬加冕的霜華機體 · 限量傳奇，一冬一會'},
+  {id:'ltd_galaxy', name:'銀河漫遊', price:3000, r:'legend', arch:4, dyn:true, sfx:'deep', atkCol:'#9d7cff', killCol:'#7cf0ff', desc:'流轉星河的漫遊機體 · 限量傳奇，星移斗轉'},
+  {id:'ltd_bloodrose',name:'血薔薇', price:3000, r:'legend', arch:1, pal:{col:'#ff2b5e',glow:'#ff5a7a',edge:'#ffc0d0',hull:'#2a0410',hull2:'#1a020a',core:'#ffe0e8',accent:'#ff8fb0'}, sfx:'deep', atkCol:'#ff5a7a', killCol:'#ff2b5e', desc:'綻放於黑夜的血薔薇機體 · 限量傳奇，凋零之美'},
+  {id:'ltd_aurum',  name:'黃金聖典', price:3000, r:'legend', arch:0, pal:{col:'#ffd24a',glow:'#fff0a0',edge:'#fffbe0',hull:'#3a2e08',hull2:'#282004',core:'#ffffff',accent:'#ff9a2a'}, sfx:'crystal', atkCol:'#fff0a0', killCol:'#ffd24a', desc:'鐫刻榮光的黃金聖典機體 · 限量傳奇，唯王者配'}
 ];
 // 角色專屬皮膚：每位角色一款，以其專屬色相自動生成（不進每日隨機商店，另設專區）
 var CHAR_SKINS=CHARS.map(function(c,i){ var s=charSig(c.id); return {
@@ -4063,7 +4069,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v321 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v322 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

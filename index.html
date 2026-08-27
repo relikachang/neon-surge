@@ -3313,6 +3313,11 @@ function render(){
   // 高連擊螢幕暖光：連擊越高，畫面邊緣泛起暖橙光，烘托連殺手感
   if(!G.over&&(G.combo||0)>=30){ var cw=Math.min(0.16,(G.combo-30)/500); var vgc=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.42,W/2,H/2,Math.max(W,H)*0.72);
     vgc.addColorStop(0,'rgba(0,0,0,0)'); vgc.addColorStop(1,'rgba(255,150,60,'+cw+')'); ctx.fillStyle=vgc; ctx.fillRect(0,0,W,H); }
+  // 低血警示暈影：血量 <30% 時螢幕邊緣脈動紅光，越低越強越急（呼應瀕死心跳配樂）
+  if(!G.over&&player&&player.hp>0&&player.maxHp>0){ var _hr=player.hp/player.maxHp;
+    if(_hr<0.3){ var _lp=(0.3-_hr)/0.3, _pu=0.5+0.5*Math.sin(G.time*(7+_lp*7)), _la=(0.12+_lp*0.32)*_pu;
+      var vgh=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*(0.30-_lp*0.10),W/2,H/2,Math.max(W,H)*0.72);
+      vgh.addColorStop(0,'rgba(0,0,0,0)'); vgh.addColorStop(1,'rgba(255,24,44,'+_la.toFixed(3)+')'); ctx.fillStyle=vgh; ctx.fillRect(0,0,W,H); } }
 
   // 傷害紅屏
   if(hurtFlash>0){ ctx.fillStyle='rgba(255,40,60,'+(hurtFlash*0.35)+')'; ctx.fillRect(0,0,W,H); }
@@ -4041,7 +4046,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v318 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v319 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

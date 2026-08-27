@@ -500,7 +500,9 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   <div class="setrow"><span class="setlabel">音效</span><div class="setseg" id="setsfx"><button data-v="on">開</button><button data-v="off">關</button></div></div>
   <div class="setrow"><span class="setlabel">特效強度</span><div class="setseg" id="setfx"><button data-v="high">高</button><button data-v="med">中</button><button data-v="low">簡潔</button></div></div>
   <div class="setrow"><span class="setlabel">螢幕震動</span><div class="setseg" id="setshake"><button data-v="on">開</button><button data-v="off">關</button></div></div>
-  <div class="hint" style="margin-top:4px">特效強度「簡潔」可讓低階手機更順;不喜歡畫面晃動可關閉螢幕震動;設定會自動記憶。</div>
+  <div class="setrow"><span class="setlabel">畫面閃光</span><div class="setseg" id="setflash"><button data-v="on">開</button><button data-v="off">關</button></div></div>
+  <div class="setrow"><span class="setlabel">傷害數字</span><div class="setseg" id="setdmgnum"><button data-v="on">開</button><button data-v="off">關</button></div></div>
+  <div class="hint" style="margin-top:4px">特效強度「簡潔」可讓低階手機更順;不喜歡畫面晃動/閃光可個別關閉;傷害數字也能隱藏讓畫面更清爽;設定會自動記憶。</div>
   <button class="btn ghost" id="settingsclose" style="margin-top:14px">返回選單</button>
 </div></div>
 
@@ -2262,7 +2264,8 @@ function spawnShards(x,y,color,n,sp){ if(shards.length>260)return; n=Math.max(1,
   shards.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,ang:rand(0,TAU),spin:rand(-16,16),life:rand(0.32,0.62),max:0.62,color:color,len:rand(4,10)}); } }   // 擊殺碎裂片：旋轉飛散的霓虹碎片
 function spawnChunks(x,y,color,sides,n,sp,rad){ if(shards.length>260)return; for(var i=0;i<n;i++){ var a=rand(0,TAU),s=rand(0.4,1)*(sp||200);
   shards.push({x:x,y:y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,ang:rand(0,TAU),spin:rand(-13,13),life:rand(0.4,0.72),max:0.72,color:color,len:rand(0.35,0.6)*(rad||14),poly:sides||4}); } }   // 死亡外型碎塊：依敵種形狀噴出的多邊形殘骸
-function dmgNum(x,y,val,crit,hurt){ dmgnums.push({x:x+rand(-6,6),y:y,val:Math.round(val),life:0.7,crit:crit,hurt:hurt,vy:-40}); }
+var dmgNumOn=true; try{ if(localStorage.getItem('neon_dmgnum')==='0')dmgNumOn=false; }catch(e){}   // 傷害數字開關(記憶)
+function dmgNum(x,y,val,crit,hurt){ if(!dmgNumOn&&!hurt)return; dmgnums.push({x:x+rand(-6,6),y:y,val:Math.round(val),life:0.7,crit:crit,hurt:hurt,vy:-40}); }
 function ringFx(x,y,r,color){ fxRings.push({x:x,y:y,r:r*0.6,tr:r,color:color,life:0.25,max:0.25}); }
 
 // =====================================================================
@@ -2653,7 +2656,8 @@ window.addEventListener('mouseup',function(){pEnd();});
 var shakeOn=true; try{ if(localStorage.getItem('neon_shake')==='0')shakeOn=false; }catch(e){}   // 螢幕震動開關(記憶)
 var shakeAmt=0; function shake(v){ if(!shakeOn)return; shakeAmt=Math.min(16,shakeAmt+v); }
 var hurtFlash=0; function flashHurt(){ hurtFlash=1; }
-var flashA=0, flashRGB='255,255,255'; function flashScreen(rgb,a){ flashRGB=rgb; flashA=Math.max(flashA,a); }
+var flashOn=true; try{ if(localStorage.getItem('neon_flash')==='0')flashOn=false; }catch(e){}   // 畫面閃光開關(記憶)
+var flashA=0, flashRGB='255,255,255'; function flashScreen(rgb,a){ if(!flashOn)return; flashRGB=rgb; flashA=Math.max(flashA,a); }
 
 // =====================================================================
 // 更新
@@ -4219,7 +4223,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v332 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v333 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -4432,6 +4436,8 @@ function renderSettings(){
   var fxv='high'; try{ var f=localStorage.getItem('neon_fx'); if(f==='med')fxv='med'; else if(f==='low')fxv='low'; }catch(e){}
   seg('setfx',fxv);
   seg('setshake',shakeOn?'on':'off');
+  seg('setflash',flashOn?'on':'off');
+  seg('setdmgnum',dmgNumOn?'on':'off');
 }
 $('settingsbtn').onclick=function(){ $('menu').classList.remove('show'); $('settings').classList.add('show'); renderSettings(); };
 $('settingsclose').onclick=function(){ $('settings').classList.remove('show'); $('menu').classList.add('show'); renderMenu(); };
@@ -4441,6 +4447,8 @@ $('setmusic').onclick=function(e){ var b=e.target.closest?e.target.closest('butt
 $('setsfx').onclick=function(e){ var b=e.target.closest?e.target.closest('button'):null; if(!b)return; var on=b.getAttribute('data-v')==='on'; if(GAudio.isSfxMuted()===on)GAudio.toggleSfx(); var sb=$('mutebtn'); if(sb){sb.textContent=GAudio.isSfxMuted()?'🔇':'🔊'; sb.classList.toggle('off',GAudio.isSfxMuted());} if(!GAudio.isSfxMuted())GAudio.ping&&GAudio.ping(); renderSettings(); };
 $('setfx').onclick=function(e){ var b=e.target.closest?e.target.closest('button'):null; if(!b)return; var v=b.getAttribute('data-v'); fxScale=(v==='med'?0.6:v==='low'?0.3:1); try{localStorage.setItem('neon_fx',v);}catch(_){} renderSettings(); };
 $('setshake').onclick=function(e){ var b=e.target.closest?e.target.closest('button'):null; if(!b)return; shakeOn=(b.getAttribute('data-v')==='on'); try{localStorage.setItem('neon_shake',shakeOn?'1':'0');}catch(_){} renderSettings(); };
+$('setflash').onclick=function(e){ var b=e.target.closest?e.target.closest('button'):null; if(!b)return; flashOn=(b.getAttribute('data-v')==='on'); try{localStorage.setItem('neon_flash',flashOn?'1':'0');}catch(_){} renderSettings(); };
+$('setdmgnum').onclick=function(e){ var b=e.target.closest?e.target.closest('button'):null; if(!b)return; dmgNumOn=(b.getAttribute('data-v')==='on'); try{localStorage.setItem('neon_dmgnum',dmgNumOn?'1':'0');}catch(_){} renderSettings(); };
 $('tutplay').onclick=function(){ $('tutorial').classList.remove('show'); DB.seenTutorial=true; saveDB(); startGame(false); };
 function renderMissions(){ var today=dayKey(); var done=(DB.missions&&DB.missions.date===today)?DB.missions.done:{};
   var html=todaysMissions().map(function(m){ var ok=!!done[m.id];

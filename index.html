@@ -912,7 +912,12 @@ var RELICS=[
   {id:'voidgazer', ic:'◉', r:'legend', name:'深淵凝視',   rw:450, lore:'在視野盡失的黑幕中存活六分鐘。當你凝視深淵，深淵也已認得你。', chk:function(){return G.stage&&VISION_STAGES[G.stage.id]&&(G.time||0)>=360;}},
   {id:'ascendant', ic:'⟡', r:'legend', name:'超凡之證',   rw:500, lore:'單局登上六十級。你的力量已超越倖存，趨近於神。', chk:function(){return (G.level||0)>=60;}},
   {id:'warlord',   ic:'⚔', r:'epic',   name:'百戰統帥',   rw:320, lore:'單局擊碎八位王者。敵潮開始畏懼你的名。', chk:function(){return (G.bossKills||0)>=8;}},
-  {id:'singularitycore',ic:'🕳', r:'legend', name:'奇點之核', rw:650, lore:'在維度盡頭的絕對黑暗中存活五分鐘。你已窺見宇宙折疊自身的那一瞬——並活著回來訴說。', chk:function(){return G.stage&&G.stage.id==='singularity'&&(G.time||0)>=300;}}
+  {id:'singularitycore',ic:'🕳', r:'legend', name:'奇點之核', rw:650, lore:'在維度盡頭的絕對黑暗中存活五分鐘。你已窺見宇宙折疊自身的那一瞬——並活著回來訴說。', chk:function(){return G.stage&&G.stage.id==='singularity'&&(G.time||0)>=300;}},
+  // —— B374 遺物擴充 ——
+  {id:'hordecore',  ic:'🐝', r:'epic',   name:'蜂潮之心', rw:340, lore:'在無盡狂潮中撐過五分鐘。當敵潮化為一片轟鳴的海，你就是海中唯一沉默的礁石。', chk:function(){return G.mode==='horde'&&(G.time||0)>=300;}},
+  {id:'killstorm', ic:'💀', r:'epic',   name:'殺戮風暴', rw:400, lore:'單局收割五千條殘影。你的軌跡所過之處，只剩下逐漸黯淡的霓虹餘燼。', chk:function(){return (G.kills||0)>=5000;}},
+  {id:'cataclysm', ic:'☄',  r:'legend', name:'滅世之證', rw:600, lore:'單局傾瀉五百萬點傷害。你不再是這片霓虹的訪客，而是它親手召來的末日。', chk:function(){return (G.dmgDealt||0)>=5000000;}},
+  {id:'transcendent',ic:'✵', r:'legend', name:'超越者', rw:650, lore:'單局登上百級之巔。凡人的極限早已在你腳下崩解，前方只剩無人抵達的荒原。', chk:function(){return (G.level||0)>=100;}}
 ];
 function relicToast(rel){ var el=$('achpop'); if(!el)return; var rc=RELIC_RARITY[rel.r]||RELIC_RARITY.common;
   el.innerHTML='<div class="ai" style="color:'+rc.c+';text-shadow:0 0 12px '+rc.c+'">'+rel.ic+'</div><div><div class="at" style="color:'+rc.c+'">遺物出土 · '+rc.name+' · +'+(rel.rw||100)+' ◆</div><div class="an">'+rel.name+'</div></div>';
@@ -4496,7 +4501,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v373 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v374 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者'];
 function renderMenu(){

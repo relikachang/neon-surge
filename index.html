@@ -1473,13 +1473,14 @@ var STAGE_LORE={
   inferno:'烈焰永不熄滅的永劫煉獄。佈下地雷陣的「煉獄魔王」，是所有倒下者靈魂燃燒後凝成的最終試煉。'
 };
 var selMode='normal';
-try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde')selMode=_sm; }catch(e){}   // 記憶上次選的模式
+try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde'||_sm==='turbo')selMode=_sm; }catch(e){}   // 記憶上次選的模式
 var MODES={
   normal:{ic:'♾️',name:'標準生存',desc:'經典模式：活越久越強，挑戰無盡'},
   timeattack:{ic:'⏱️',name:'限時狂殺',desc:'120 秒內衝最高擊殺，時間到結算',dur:120},
   bossrush:{ic:'👑',name:'首領亂鬥',desc:'無雜兵，首領接連降臨，考驗火力與走位'},
   hardcore:{ic:'💀',name:'一命限定',desc:'零復活・受一次致命傷即結束，碎片獎勵 1.5 倍',reward:1.5},
-  horde:{ic:'🐝',name:'無盡狂潮',desc:'敵潮爆量湧來・考驗清場火力與極限走位，碎片獎勵 1.5 倍',reward:1.5}
+  horde:{ic:'🐝',name:'無盡狂潮',desc:'敵潮爆量湧來・考驗清場火力與極限走位，碎片獎勵 1.5 倍',reward:1.5},
+  turbo:{ic:'⚡',name:'疾速狂飆',desc:'全場敵人移速大增・考驗反應與極限走位，碎片獎勵 1.5 倍',reward:1.5}
 };
 function stageUnlocked(s){ return !s.locked || DB.stages[s.id]; }
 
@@ -2619,7 +2620,7 @@ function spawnEnemy(type,ex,ey,mul,forceElite){
   var endless=1+G.time/240+Math.pow(Math.max(0,G.time-360)/60,1.5)*0.15;   // 無盡難度：敵傷隨時間增長，6分後加速陡增
   var lateHp=1+Math.pow(Math.max(0,G.time-150)/60,1.6)*0.5+Math.pow(Math.max(0,G.time-420)/60,2)*0.5;   // 後期(2.5分)血量陡增，深後期(7分)爆炸性成長
   var am=(G.actMul||1);   // 無盡幕難度倍率
-  var hp=d.hp*mul*st.eHp*mt.eHp*lateHp*am, sp=d.sp*st.eSpd*mt.eSpd, r=d.r, xp=d.xp, dm=d.dmg*endless*am;
+  var hp=d.hp*mul*st.eHp*mt.eHp*lateHp*am, sp=d.sp*st.eSpd*mt.eSpd*(G.mode==='turbo'?1.4:1), r=d.r, xp=d.xp, dm=d.dmg*endless*am;
   // 精英變體：更大更肉、發光、掉更多、隨機詞綴（隨時間提高機率，每日變異可加成）
   var elite = forceElite || (mul>1 && Math.random()<Math.min(0.62,(0.015+G.time/1100)*mt.elite));
   var affix=null;
@@ -4541,7 +4542,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v385 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v386 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',
@@ -4606,7 +4607,7 @@ function renderMenu(){
     slb.innerHTML='<div class="slname" style="color:'+ssg.bossColor+'">'+ssg.name+' <span class="slboss" style="color:'+ssg.bossColor+';border-color:'+ssg.bossColor+'66">👑 '+ssg.bossName+'</span></div><div class="sltxt">「'+slore+'」</div>';
   }
   var ms=$('modesel'); if(ms){ ms.innerHTML='';
-    ['normal','timeattack','bossrush','hardcore','horde'].forEach(function(mid){ var md=MODES[mid];
+    ['normal','timeattack','bossrush','hardcore','horde','turbo'].forEach(function(mid){ var md=MODES[mid];
       var el=document.createElement('div'); el.className='modecard'+(selMode===mid?' on':'');
       el.innerHTML='<div class="mic">'+md.ic+'</div><div class="mn">'+md.name+'</div><div class="md">'+md.desc+'</div>';
       el.onclick=function(){ selMode=mid; try{localStorage.setItem('neon_mode',mid);}catch(_){} renderMenu(); };

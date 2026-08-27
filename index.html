@@ -254,7 +254,9 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   #charlore .clname{font-weight:800;font-size:13px;letter-spacing:1px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
   #charlore .cltxt{font-size:12.5px;line-height:1.65;color:#c3d2ee;font-style:italic}
   #charlore::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--cyan),#7c5bff)}
-  #skinlist{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .skingrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+  .shopsec{display:flex;align-items:center;gap:8px;font-weight:900;font-size:14px;color:#eaf2ff;letter-spacing:1px;margin:4px 2px 9px}
+  .shoptimer{font-size:11px;font-weight:700;color:#ffd54a;background:rgba(255,213,74,.12);border:1px solid rgba(255,213,74,.3);border-radius:20px;padding:2px 9px;letter-spacing:0}
   .skincard{background:rgba(12,18,34,.6);border:2px solid rgba(255,255,255,.1);border-radius:14px;padding:10px;text-align:center;transition:transform .15s,box-shadow .15s}
   .skincard:hover{transform:translateY(-2px)}
   .skincard.on{box-shadow:0 0 18px rgba(34,230,255,.3)}
@@ -833,18 +835,30 @@ function skinCardSig(sk){ if(!sk||sk.id==='default'){ var idx=CHARS.findIndex(fu
   if(sk.dyn)return {arch:ar,col:'#22e6ff',glow:'#7c5bff',edge:'#c9fff0',hull:'#2a1a40',hull2:'#40203a',core:'#ffffff',accent:'#ff5edb'};
   var out={arch:ar}; for(var k in sk.pal)out[k]=sk.pal[k]; return out; }
 function buySkin(id){ var sk=skinById(id); if(!sk||DB.skins[id])return; if((DB.shards||0)<sk.price)return; DB.shards-=sk.price; DB.skins[id]=1; DB.equippedSkin=id; saveDB(); GAudio.achieve&&GAudio.achieve(); renderSkinShop(); }
+function dailyShopSkins(){ var pool=SKINS.filter(function(s){return s.id!=='default';}); var day=Math.floor(Date.now()/86400000);
+  var arr=pool.slice(); var seed=(day*2654435761)%2147483647; if(seed<0)seed+=2147483647;
+  function rnd(){ seed=(seed*1103515245+12345)&0x7fffffff; return seed/0x7fffffff; }
+  for(var i=arr.length-1;i>0;i--){ var j=Math.floor(rnd()*(i+1)); var t=arr[i]; arr[i]=arr[j]; arr[j]=t; }
+  return arr.slice(0,5); }
+function shopResetLabel(){ var per=86400000; var next=(Math.floor(Date.now()/per)+1)*per; var h=Math.ceil((next-Date.now())/3600000); return '⏳ '+h+' 小時後更新'; }
+function skinCardHtml(sk){ var rc=SKIN_RARITY[sk.r]||SKIN_RARITY.common; var owned=!!DB.skins[sk.id]||sk.id==='default'; var eq=(DB.equippedSkin||'default')===sk.id; var afford=(DB.shards||0)>=sk.price; var isLtd=(sk.id||'').indexOf('ltd_')===0;
+  var btn; if(eq)btn='<div class="skinbtn eq">✓ 已裝備</div>';
+    else if(owned)btn='<button class="skinbtn own" data-eq="'+sk.id+'">裝備</button>';
+    else btn='<button class="skinbtn buy'+(afford?'':' no')+'" data-buy="'+sk.id+'"'+(afford?'':' disabled')+'>◆ '+sk.price+'</button>';
+  return '<div class="skincard'+(eq?' on':'')+'" style="border-color:'+rc.c+(eq?'':'44')+'"><canvas class="skinprev" width="80" height="64" data-skin="'+sk.id+'"></canvas>'+
+    '<div class="skname" style="color:'+rc.c+'">'+sk.name+'<br><span class="cxtag" style="color:'+rc.c+';border-color:'+rc.c+'">'+rc.name+'</span>'+(isLtd?' <span class="cxtag" style="color:#ff5edb;border-color:#ff5edb">限量 ⏳'+limitedDaysLeft()+'天</span>':'')+'</div>'+
+    '<div class="skdesc">'+sk.desc+'</div>'+btn+'</div>'; }
 function renderSkinShop(){ DB.skins=DB.skins||{default:1}; DB.equippedSkin=DB.equippedSkin||'default';
   $('skinshards').textContent='◆ '+(DB.shards||0);
-  var lim=currentLimited(); var list=SKINS.concat([lim]);
-  var html=list.map(function(sk,i){ var rc=SKIN_RARITY[sk.r]||SKIN_RARITY.common; var owned=!!DB.skins[sk.id]||sk.id==='default'; var eq=(DB.equippedSkin||'default')===sk.id; var afford=(DB.shards||0)>=sk.price; var isLtd=sk.r==='limited';
-    var btn; if(eq)btn='<div class="skinbtn eq">✓ 已裝備</div>';
-      else if(owned)btn='<button class="skinbtn own" data-eq="'+sk.id+'">裝備</button>';
-      else btn='<button class="skinbtn buy'+(afford?'':' no')+'" data-buy="'+sk.id+'"'+(afford?'':' disabled')+'>◆ '+sk.price+'</button>';
-    return '<div class="skincard'+(eq?' on':'')+'" style="border-color:'+rc.c+(eq?'':'44')+'"><canvas class="skinprev" width="80" height="64" data-i="'+i+'"></canvas>'+
-      '<div class="skname" style="color:'+rc.c+'">'+sk.name+'<br><span class="cxtag" style="color:'+rc.c+';border-color:'+rc.c+'">'+rc.name+'</span>'+(isLtd?' <span class="cxtag" style="color:#ff5edb;border-color:#ff5edb">⏳'+limitedDaysLeft()+'天</span>':'')+'</div>'+
-      '<div class="skdesc">'+sk.desc+'</div>'+btn+'</div>'; }).join('');
-  $('skinlist').innerHTML=html;
-  $('skinlist').querySelectorAll('.skinprev').forEach(function(cv){ try{ var i=+cv.getAttribute('data-i'); var g=cv.getContext('2d'); drawMiniShip(g,40,34,15,skinCardSig(list[i])); }catch(_){} });
+  var daily=dailyShopSkins(), lim=currentLimited();
+  var offers=daily.concat([lim]);
+  var owned=[skinById('default')].concat(Object.keys(DB.skins).filter(function(id){return DB.skins[id]&&id!=='default';}).map(skinById).filter(Boolean));
+  $('skinlist').innerHTML=
+    '<div class="shopsec">🛒 今日商店 <span class="shoptimer">'+shopResetLabel()+'</span></div>'+
+    '<div class="skingrid">'+offers.map(skinCardHtml).join('')+'</div>'+
+    '<div class="shopsec">🎽 我的收藏（'+owned.length+'）</div>'+
+    '<div class="skingrid">'+owned.map(skinCardHtml).join('')+'</div>';
+  $('skinlist').querySelectorAll('.skinprev').forEach(function(cv){ try{ var sk=skinById(cv.getAttribute('data-skin')); var g=cv.getContext('2d'); drawMiniShip(g,40,34,15,skinCardSig(sk)); }catch(_){} });
   $('skinlist').querySelectorAll('[data-buy]').forEach(function(b){ b.onclick=function(){ buySkin(b.getAttribute('data-buy')); }; });
   $('skinlist').querySelectorAll('[data-eq]').forEach(function(b){ b.onclick=function(){ DB.equippedSkin=b.getAttribute('data-eq'); saveDB(); GAudio.pick&&GAudio.pick(); renderSkinShop(); }; });
 }
@@ -3835,7 +3849,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v301 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v302 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

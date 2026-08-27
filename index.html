@@ -557,6 +557,7 @@ if('serviceWorker' in navigator){ var __reloaded=false;
     <div class="ost"><b id="o-combo">0</b><span>最高連擊</span></div>
   </div>
   <div class="oreward" id="o-reward">獲得 ◆ 0 碎片</div>
+  <button class="btn" id="sharebtn" style="border-color:rgba(34,230,255,.6);color:#9ff;text-shadow:0 0 10px rgba(34,230,255,.5)">📸 分享戰績卡</button>
   <button class="btn" id="againbtn">再來一場</button>
   <button class="btn ghost" id="tomenu">回主選單</button>
 </div></div>
@@ -3445,6 +3446,83 @@ function gameOver(){
   setTimeout(function(){ $('over').classList.add('show'); },700);
   GAudio.stopMusic(); GAudio.over();
 }
+// ===== 戰績分享卡：canvas 繪製漂亮成績圖，可分享 / 儲存 / 截圖 =====
+function _rr(c,x,y,w,h,r){ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
+function buildShareCard(){
+  var W=720,H=1160, cv=document.createElement('canvas'); cv.width=W; cv.height=H; var c=cv.getContext('2d');
+  var sc=G.score||0, rk=sc>=60000?['S','#ffd54a']:sc>=32000?['A','#ff5edb']:sc>=16000?['B','#7c5bff']:sc>=6000?['C','#22e6ff']:['D','#8ea0c8'];
+  var ac=rk[1]; var ch=CHARS.find(function(x){return x.id===selChar;})||CHARS[0]; var md=MODES[G.mode||'normal']||MODES.normal;
+  // 底：深色徑向漸層 + 網格
+  var bg=c.createLinearGradient(0,0,0,H); bg.addColorStop(0,'#080c1c'); bg.addColorStop(.55,'#05070f'); bg.addColorStop(1,'#0a0716'); c.fillStyle=bg; c.fillRect(0,0,W,H);
+  var rg=c.createRadialGradient(W/2,300,40,W/2,300,560); rg.addColorStop(0,ac+'26'); rg.addColorStop(1,'rgba(0,0,0,0)'); c.fillStyle=rg; c.fillRect(0,0,W,H);
+  c.strokeStyle='rgba(255,255,255,.045)'; c.lineWidth=1; for(var gx=0;gx<=W;gx+=48){c.beginPath();c.moveTo(gx,0);c.lineTo(gx,H);c.stroke();} for(var gy=0;gy<=H;gy+=48){c.beginPath();c.moveTo(0,gy);c.lineTo(W,gy);c.stroke();}
+  // 外框
+  c.strokeStyle=ac+'88'; c.lineWidth=3; c.shadowColor=ac; c.shadowBlur=24; _rr(c,20,20,W-40,H-40,26); c.stroke(); c.shadowBlur=0;
+  c.textAlign='center'; c.textBaseline='alphabetic';
+  // 標題
+  c.fillStyle='#eaf2ff'; c.font='900 20px system-ui,"Segoe UI",sans-serif'; c.save(); c.translate(W/2,78); c.fillText('N E O N   S U R G E', 0,0); c.restore();
+  c.fillStyle=ac; c.font='900 40px system-ui,"Segoe UI",sans-serif'; c.shadowColor=ac; c.shadowBlur=18; c.fillText('霓潮倖存', W/2,126); c.shadowBlur=0;
+  // 模式膠囊
+  var mtxt=md.ic+' '+md.name; c.font='700 18px system-ui,sans-serif'; var mw=c.measureText(mtxt).width+40;
+  c.fillStyle='rgba(255,255,255,.05)'; c.strokeStyle=ac+'66'; c.lineWidth=1.5; _rr(c,W/2-mw/2,146,mw,34,17); c.fill(); c.stroke();
+  c.fillStyle='#cfe0ff'; c.fillText(mtxt, W/2,169);
+  // 新紀錄緞帶
+  if(G.newRecord||G.newModeRecord){ var rt=G.newRecord?'🏆 總榜新紀錄':'🏅 '+md.name+' 新紀錄'; c.font='900 19px system-ui,sans-serif'; var rw=c.measureText(rt).width+44;
+    c.fillStyle='#ffd54a'; c.shadowColor='#ffd54a'; c.shadowBlur=16; _rr(c,W/2-rw/2,194,rw,36,18); c.fill(); c.shadowBlur=0; c.fillStyle='#3a2a00'; c.fillText(rt,W/2,219); }
+  // 評級大圓章
+  var cy=322; c.save(); c.beginPath(); c.arc(W/2,cy,86,0,7); c.fillStyle='rgba(0,0,0,.35)'; c.fill();
+  c.lineWidth=6; c.strokeStyle=ac; c.shadowColor=ac; c.shadowBlur=34; c.stroke(); c.shadowBlur=0;
+  c.fillStyle=ac; c.font='900 104px system-ui,sans-serif'; c.textBaseline='middle'; c.fillText(rk[0],W/2,cy+6); c.restore(); c.textBaseline='alphabetic';
+  c.fillStyle='#8ea6c8'; c.font='700 16px system-ui,sans-serif'; c.fillText('評 價', W/2,cy+118);
+  // 分數
+  c.fillStyle='#9fb2d8'; c.font='700 18px system-ui,sans-serif'; c.fillText('最終分數 SCORE', W/2,486);
+  c.fillStyle='#fff'; c.font='900 76px system-ui,sans-serif'; c.shadowColor=ac; c.shadowBlur=22; c.fillText(String(sc), W/2,556); c.shadowBlur=0;
+  // 角色 · 地圖
+  c.fillStyle='#dbe6ff'; c.font='700 22px system-ui,sans-serif'; c.fillText(ch.face+' '+ch.name+'   ·   '+G.stage.name, W/2,600);
+  // 數據格 2x4
+  var stats=[['存活',fmtTime(G.time)],['擊殺',String(G.kills)],['等級',String(G.level)],['波數',String(G.wave)],['首領',String(G.bossKills||0)],['精英',String(G.eliteKills||0)],['每秒傷害',String(Math.round((G.dmgDealt||0)/Math.max(1,G.time)))],['最高連擊',String(G.peakCombo||0)]];
+  var gx0=52, gy0=636, cw=(W-104-20)/2, chh=104, gap=20;
+  for(var i=0;i<stats.length;i++){ var col=i%2, row=(i/2)|0; var x=gx0+col*(cw+gap), y=gy0+row*(chh+gap);
+    c.fillStyle='rgba(255,255,255,.04)'; c.strokeStyle='rgba(255,255,255,.09)'; c.lineWidth=1.5; _rr(c,x,y,cw,chh,16); c.fill(); c.stroke();
+    c.fillStyle='#8ea6c8'; c.font='700 16px system-ui,sans-serif'; c.textAlign='left'; c.fillText(stats[i][0], x+22,y+34);
+    c.fillStyle='#eaf2ff'; c.font='900 38px system-ui,sans-serif'; c.fillText(stats[i][1], x+22,y+80); }
+  c.textAlign='center';
+  // 頁尾
+  c.fillStyle=ac; c.font='700 17px system-ui,sans-serif'; c.fillText('relikachang.github.io/neon-surge', W/2,H-58);
+  c.fillStyle='#6f82a6'; c.font='600 14px system-ui,sans-serif'; c.fillText('掃描或開啟連結，一起在霓虹潮中殺出重圍', W/2,H-34);
+  return cv;
+}
+function showCardOverlay(cv){
+  var url; try{ url=cv.toDataURL('image/png'); }catch(e){ return; }
+  var ov=document.getElementById('cardov');
+  if(!ov){ ov=document.createElement('div'); ov.id='cardov';
+    ov.style.cssText='position:fixed;inset:0;z-index:99;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(3,5,12,.92);backdrop-filter:blur(6px);padding:20px';
+    var img=document.createElement('img'); img.id='cardimg'; img.style.cssText='max-width:min(88vw,380px);max-height:66vh;border-radius:16px;box-shadow:0 0 40px rgba(34,230,255,.4);touch-action:none';
+    var hint=document.createElement('div'); hint.style.cssText='color:#bcd; font:600 14px system-ui,sans-serif; text-align:center; line-height:1.6';
+    hint.innerHTML='長按圖片即可儲存到相簿 · 或直接截圖分享';
+    var row=document.createElement('div'); row.style.cssText='display:flex;gap:12px;flex-wrap:wrap;justify-content:center';
+    var dl=document.createElement('a'); dl.id='carddl'; dl.download='neon-surge-戰績.png'; dl.textContent='⬇️ 下載圖片';
+    dl.style.cssText='padding:12px 20px;border-radius:12px;border:1.5px solid rgba(34,230,255,.6);color:#9ff;font:800 15px system-ui,sans-serif;text-decoration:none';
+    var cl=document.createElement('button'); cl.textContent='關閉'; cl.style.cssText='padding:12px 20px;border-radius:12px;border:1.5px solid rgba(255,94,122,.5);background:none;color:#ff9eb0;font:800 15px system-ui,sans-serif;cursor:pointer';
+    cl.onclick=function(){ ov.style.display='none'; };
+    row.appendChild(dl); row.appendChild(cl);
+    ov.appendChild(img); ov.appendChild(hint); ov.appendChild(row); document.body.appendChild(ov);
+  }
+  document.getElementById('cardimg').src=url; document.getElementById('carddl').href=url; ov.style.display='flex';
+}
+function shareCard(){
+  var cv; try{ cv=buildShareCard(); }catch(e){ return; }
+  GAudio&&GAudio.pick&&GAudio.pick();
+  if(navigator.canShare && cv.toBlob){
+    cv.toBlob(function(blob){
+      if(!blob){ showCardOverlay(cv); return; }
+      var file=new File([blob],'neon-surge.png',{type:'image/png'});
+      if(navigator.canShare({files:[file]})){
+        navigator.share({files:[file],title:'霓潮倖存 戰績',text:'我在霓潮倖存拿到 '+(G.score||0)+' 分（'+((CHARS.find(function(x){return x.id===selChar;})||{}).name||'')+'）！一起來挑戰 → relikachang.github.io/neon-surge'}).catch(function(){ showCardOverlay(cv); });
+      } else showCardOverlay(cv);
+    },'image/png');
+  } else showCardOverlay(cv);
+}
 function togglePause(){ if(!running||G.over)return;
   if($('levelup').classList.contains('show'))return;
   G.paused=!G.paused; $('pause').classList.toggle('show',G.paused); if(G.paused)renderPauseBuild(); if(!G.paused)last=performance.now(); }
@@ -3560,7 +3638,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v296 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v297 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -3753,6 +3831,7 @@ $('resumebtn').onclick=function(){ togglePause(); };
 $('restartbtn').onclick=function(){ var d=!!(G&&G.daily); $('pause').classList.remove('show'); startGame(d); };
 $('quitbtn').onclick=function(){ G.over=true; gameOver(); $('pause').classList.remove('show'); };
 $('tomenubtn').onclick=function(){ $('pause').classList.remove('show'); G.paused=false; toMenu(); };
+$('sharebtn').onclick=shareCard;
 $('againbtn').onclick=function(){ startGame(!!(G&&G.daily)); };
 $('tomenu').onclick=toMenu;
 $('mutebtn').onclick=function(){ var m=GAudio.toggleSfx(); this.textContent=m?'🔇':'🔊'; this.classList.toggle('off',m); };

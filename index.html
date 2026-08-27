@@ -254,6 +254,11 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   #charlore .clname{font-weight:800;font-size:13px;letter-spacing:1px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
   #charlore .cltxt{font-size:12.5px;line-height:1.65;color:#c3d2ee;font-style:italic}
   #charlore::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--cyan),#7c5bff)}
+  #stagelore{margin-top:10px;padding:11px 14px;border-radius:12px;background:linear-gradient(135deg,rgba(255,94,122,.06),rgba(124,91,255,.05));border:1px solid rgba(255,120,140,.2);position:relative;overflow:hidden}
+  #stagelore .slname{font-weight:800;font-size:13px;letter-spacing:1px;margin-bottom:4px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  #stagelore .sltxt{font-size:12.5px;line-height:1.65;color:#c3d2ee;font-style:italic}
+  #stagelore .slboss{font-size:11px;font-weight:700;font-style:normal;color:#ff9eb0;border:1px solid rgba(255,120,140,.35);border-radius:20px;padding:1px 9px}
+  #stagelore::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#ff5e7a,#7c5bff)}
   .skingrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
   .shopsec{display:flex;align-items:center;gap:8px;font-weight:900;font-size:14px;color:#eaf2ff;letter-spacing:1px;margin:4px 2px 9px}
   .shoptimer{font-size:11px;font-weight:700;color:#ffd54a;background:rgba(255,213,74,.12);border:1px solid rgba(255,213,74,.3);border-radius:20px;padding:2px 9px;letter-spacing:0}
@@ -416,6 +421,7 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   <div id="charlore"></div>
   <div class="sellabel">選擇地圖</div>
   <div class="charsel" id="stagesel"></div>
+  <div id="stagelore"></div>
   <div class="sellabel">遊戲模式</div>
   <div id="modesel"></div>
   <button class="btn" id="playbtn">開始遊戲</button>
@@ -1150,6 +1156,24 @@ var STAGES=[
   {id:'inferno', name:'永劫煉獄', desc:'烈焰永燃 · 地雷陣主宰', bg:'#0e0402', grid:'rgba(255,110,50,0.15)', eHp:4.2, eSpd:1.52, spawn:2.1, bossName:'煉獄魔王', bossColor:'#ff5a2b', pattern:'minefield', locked:true, unlock:'paradox'},
 ];
 var selStage='city';
+// 地圖 × 首領 世界觀敘事（選圖時顯示，融合場景氛圍與首領命名由來）
+var STAGE_LORE={
+  city:'霓潮最初潰堤的城市。街燈仍亮，行人已無。盤踞市中心的「監視者」是舊防衛系統的殘魂，永不闔上的眼。',
+  wastes:'一場大火把荒原燒成緋紅。灰燼中站起的「焚化者」，把每一個踏入者都當成尚未燒盡的燃料。',
+  abyss:'光無法抵達的深淵。傳說世界的裂縫從這裡開始——而「深淵之核」，就是那道裂縫跳動的心臟。',
+  fortress:'自我封閉千年的機械要塞。雙生的「核心守衛」以雙螺旋彈幕守護一個早已無人記得要守護的祕密。',
+  core:'行星地表下的熔岩心臟。以岩漿為血的「熔心魔像」，只認得一件事：靠近它的，都該熔化。',
+  rift:'現實在此崩解成碎片。橫跨裂縫的「裂隙主宰」揮舞旋轉十字，切割的不只是空間，還有時間本身。',
+  tundra:'絕對零度的凍獄。用彈幕築牆的「凍原霸主」，把每一位挑戰者都封進牠永恆的冰雕收藏。',
+  meteorite:'天空日夜落火的星隕之境。呼喚隕石雨的「隕星君王」，把整片天穹當作牠傾瀉的軍隊。',
+  oblivion:'連記憶都會被抹去的湮滅之域。緊追不放的「湮滅者」，是虛無本身派來收回一切存在的使者。',
+  eventhorizon:'黑洞的邊緣，越過即無法回頭。操縱重力場的「視界主宰」，把靠近的一切拉向那不歸的中心。',
+  nebula:'瘴氣與幽光交織的星雲。以脈衝環呼吸的「星雲之主」，美麗得讓人忘了牠每一次脈動都是死亡。',
+  maelstrom:'吞噬一切的狂暴亂流。以螺旋絞殺的「風暴煞星」，就是這場永不停歇風暴的意志核心。',
+  genesis:'萬物歸零、也萬物初生之地。集眾多形態於一身的「終焉主宰」，既是終點，也是下一次創世的起點。',
+  paradox:'因果崩壞的悖論深淵。以雙旋干涉編織矛盾的「悖論主宰」，讓你的每一步都同時是對與錯。',
+  inferno:'烈焰永不熄滅的永劫煉獄。佈下地雷陣的「煉獄魔王」，是所有倒下者靈魂燃燒後凝成的最終試煉。'
+};
 var selMode='normal';
 try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal')selMode=_sm; }catch(e){}   // 記憶上次選的模式
 var MODES={
@@ -3849,7 +3873,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v304 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v305 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';
@@ -3898,6 +3922,10 @@ function renderMenu(){
     el.onclick=function(){ if(!unlocked)return; selStage=s.id; renderMenu(); };
     ss.appendChild(el);
   });
+  // 地圖 × 首領 敘事框（顯示當前選中地圖）
+  var slb=$('stagelore'); if(slb){ var ssg=STAGES.find(function(x){return x.id===selStage;})||STAGES[0]; var slore=STAGE_LORE[selStage]||'';
+    slb.innerHTML='<div class="slname" style="color:'+ssg.bossColor+'">'+ssg.name+' <span class="slboss" style="color:'+ssg.bossColor+';border-color:'+ssg.bossColor+'66">👑 '+ssg.bossName+'</span></div><div class="sltxt">「'+slore+'」</div>';
+  }
   var ms=$('modesel'); if(ms){ ms.innerHTML='';
     ['normal','timeattack','bossrush'].forEach(function(mid){ var md=MODES[mid];
       var el=document.createElement('div'); el.className='modecard'+(selMode===mid?' on':'');

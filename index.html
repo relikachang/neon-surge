@@ -64,6 +64,8 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   @keyframes lvflash{0%{filter:brightness(2.4);box-shadow:0 0 20px #ffd54a,0 0 30px #fff}100%{filter:brightness(1);box-shadow:0 0 10px #22e6ff}}
   #hpfill.low{animation:hplow .6s ease-in-out infinite}
   @keyframes hplow{0%,100%{box-shadow:0 0 10px #ff4d5e;filter:brightness(1)}50%{box-shadow:0 0 20px #ff2b3e,0 0 34px #ff2b3e;filter:brightness(1.35)}}
+  #killn.kpop{display:inline-block;animation:kpop .26s ease}
+  @keyframes kpop{0%{transform:scale(1)}35%{transform:scale(1.6);color:#5dffe0;text-shadow:0 0 14px #5dffe0}100%{transform:scale(1)}}
   #hptxt{font-size:13px;font-weight:800;margin-top:3px;color:#ffb3bb;text-align:center;text-shadow:0 0 8px rgba(0,0,0,.6)}
   #shardchip{position:absolute;right:16px;top:16px;background:rgba(12,18,34,.7);border:1px solid rgba(255,213,74,.35);
     border-radius:10px;padding:6px 12px;font-size:13px;font-weight:800;color:var(--gold);backdrop-filter:blur(6px)}
@@ -2399,8 +2401,11 @@ function killEnemy(e){
   if(e.type==='revenant'){ G.rareKills=(G.rareKills||0)+1; for(var rn=0;rn<22;rn++){ var rna=rn/22*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(rna),Math.sin(rna),205,e.dmg*0.5); } ringFx(e.x,e.y,100,'#c86bff'); ringFx(e.x,e.y,60,'#fff'); burst(e.x,e.y,'#c86bff',18,240); for(var rg=0;rg<3;rg++)spawnPickup(e.x+rand(-40,40),e.y+rand(-40,40),'shardbag'); announce('☠ 亡魂爆裂！','#c86bff'); shake(8); }   // 亡魂領主：死亡炸出整環彈幕 + 掉落
   if(e.type==='stormcaller'){ G.rareKills=(G.rareKills||0)+1; var scr=55+Math.floor(G.time/30)*7; G.shards+=scr; spawnPickup(e.x,e.y,pick(['frenzy','shield','overdrive','fullheal','jackpot'])); for(var sg=0;sg<4;sg++)spawnPickup(e.x+rand(-46,46),e.y+rand(-46,46),'shardbag'); ringFx(e.x,e.y,90,'#ffe08a'); burst(e.x,e.y,'#ffe08a',16,240); announce('⚡ 風暴使徒殞落！+◆'+scr+' + 稀有補給','#ffe08a'); flashScreen('255,224,138',0.32); }   // 風暴使徒：擊殺爆厚賞 + 稀有道具
   if(e.type==='vault'){ G.rareKills=(G.rareKills||0)+1; var vlr=180+Math.floor(G.time/20)*12; G.shards+=vlr; spawnPickup(e.x,e.y,'jackpot'); for(var vg=0;vg<8;vg++)spawnPickup(e.x+rand(-60,60),e.y+rand(-60,60),'shardbag'); for(var vg2=0;vg2<3;vg2++)ringFx(e.x,e.y,70+vg2*60,'#ffd54a'); burst(e.x,e.y,'#ffd54a',24,300); announce('💰 賞金寶庫破裂！+◆'+vlr+' 碎片大禮','#ffd54a'); flashScreen('255,213,74',0.4); GAudio.achieve&&GAudio.achieve(); }   // 賞金寶庫：擊殺爆海量碎片 + 頭獎
-  var km=G.kills; if(km===100||km===250||km===500||km===1000||km===2000||km===5000){ var kr=Math.floor(km/10); G.shards+=kr; player.frenzyT=Math.max(player.frenzyT,3);
-    announce('擊殺 '+km+' 達成！ +◆'+kr,'#ffd54a'); GAudio.achieve&&GAudio.achieve(); }
+  var km=G.kills; if(km===100||km===250||km===500||km===1000||km===2000||km===3000||km===5000||km===7500||km===10000){ var kr=Math.floor(km/10); G.shards+=kr; player.frenzyT=Math.max(player.frenzyT,3);
+    var kmc=km>=2000?'#ff2bd0':km>=500?'#ff5a3a':'#ffd54a';
+    announce('🎯 擊殺 '+km+' 達成！ +◆'+kr,kmc); GAudio.achieve&&GAudio.achieve();
+    flashScreen(km>=2000?'255,43,208':'255,213,74',0.22); shake(km>=1000?9:6); for(var kmr=0;kmr<2;kmr++)ringFx(player.x,player.y,140+kmr*90,kmc);   // 擊殺里程碑：閃屏/震動/光環慶祝
+    var _kn=$('killn'); if(_kn){ _kn.classList.add('kpop'); clearTimeout(killEnemy._kt); killEnemy._kt=setTimeout(function(){ _kn.classList.remove('kpop'); },260); } }   // HUD 擊殺數跳動
   burst(e.x,e.y,e.color,e.boss?80:14,e.boss?300:190);
   spawnShards(e.x,e.y,e.color,e.boss?30:(e.elite||e.type==='tank'?12:6),e.boss?320:210);
   // 死亡外型碎裂：中大型/精英/首領炸出依其形狀的多邊形殘骸，屍塊感更足
@@ -4046,7 +4051,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v319 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v320 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

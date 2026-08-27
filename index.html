@@ -1075,6 +1075,11 @@ var BOOSTS=[
   {id:'barmor',   ic:'🛡️', name:'鋼鐵壁壘',   desc:'本局減傷 +15%',                cost:300, apply:function(){ player.base.armor=(player.base.armor||0)+0.15; recalc(); }},
   {id:'bxplearn', ic:'📚', name:'學者之志',   desc:'本局經驗獲取 +50%',            cost:280, apply:function(){ player.base.xpMult*=1.5; recalc(); }},
   {id:'bdemolish',ic:'💣', name:'火力起手',   desc:'本局傷害 +25%',                cost:350, apply:function(){ player.base.dmg*=1.25; recalc(); }},
+  // —— B338 局前補給擴充 ——
+  {id:'bhaste',   ic:'⏱️', name:'疾火核心',   desc:'本局攻擊速度 +25%',            cost:320, apply:function(){ player.base.fireRate*=1.25; recalc(); }},
+  {id:'boverload',ic:'⚙️', name:'超載開場',   desc:'開局 12 秒過載（射速爆增+全暴擊）', cost:300, apply:function(){ player.overdriveT=Math.max(player.overdriveT||0,12); }},
+  {id:'bturretup',ic:'🗼', name:'砲台開場',   desc:'開局部署 3 座全程自動砲塔',    cost:320, apply:function(){ for(var i=0;i<3;i++)drones.push({x:player.x+rand(-46,46),y:player.y+rand(-46,46),ang:0,orbit:0,fixed:true,color:'#5dffe0',range:640,rate:0.3,life:1e9,cd:rand(0,0.3),dmg:dmg(22)}); }},
+  {id:'blucky',   ic:'🍀', name:'幸運星',     desc:'本局幸運 +0.12（稀有強化/掉落↑）', cost:280, apply:function(){ G.luck=(G.luck||0)+0.12; }},
 ];
 function todaysMissions(){ var k=dayKey(),h=0; for(var i=0;i<k.length;i++)h=(h*31+k.charCodeAt(i))>>>0;
   var pool=MISSIONS.slice(), out=[]; for(var j=0;j<3;j++){ var p=(h+j*7)%pool.length; out.push(pool[p]); pool.splice(p,1); } return out; }
@@ -4234,7 +4239,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v337 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v338 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者'];
 function renderMenu(){

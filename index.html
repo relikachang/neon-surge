@@ -881,11 +881,14 @@ function renderSkinShop(){ DB.skins=DB.skins||{default:1}; DB.equippedSkin=DB.eq
   var daily=dailyShopSkins(), lim=currentLimited();
   var offers=daily.concat([lim]);
   var owned=[skinById('default')].concat(Object.keys(DB.skins).filter(function(id){return DB.skins[id]&&id!=='default';}).map(skinById).filter(Boolean));
+  var csOwned=CHAR_SKINS.filter(function(s){return DB.skins[s.id];}).length;
   $('skinlist').innerHTML=
     '<div class="shopsec">🛒 今日商店 <span class="shoptimer">'+shopResetLabel()+'</span></div>'+
     '<div class="skingrid">'+offers.map(skinCardHtml).join('')+'</div>'+
     '<div class="shopsec">🎽 我的收藏（'+owned.length+'）</div>'+
-    '<div class="skingrid">'+owned.map(skinCardHtml).join('')+'</div>';
+    '<div class="skingrid">'+owned.map(skinCardHtml).join('')+'</div>'+
+    '<div class="shopsec">🚀 角色專屬皮膚（'+csOwned+' / '+CHAR_SKINS.length+'）</div>'+
+    '<div class="skingrid">'+CHAR_SKINS.map(skinCardHtml).join('')+'</div>';
   $('skinlist').querySelectorAll('.skinprev').forEach(function(cv){ try{ var sk=skinById(cv.getAttribute('data-skin')); var g=cv.getContext('2d'); drawMiniShip(g,40,34,15,skinCardSig(sk)); }catch(_){} });
   $('skinlist').querySelectorAll('[data-buy]').forEach(function(b){ b.onclick=function(){ buySkin(b.getAttribute('data-buy')); }; });
   $('skinlist').querySelectorAll('[data-eq]').forEach(function(b){ b.onclick=function(){ DB.equippedSkin=b.getAttribute('data-eq'); saveDB(); GAudio.pick&&GAudio.pick(); renderSkinShop(); }; });
@@ -1204,7 +1207,12 @@ var LIMITED_SKINS=[   // 限量皮膚一律傳奇級（全特效）
   {id:'ltd_sakura',name:'霓櫻',     price:3000, r:'legend', arch:4, pal:{col:'#ff8fc7',glow:'#ff6fb5',edge:'#ffd0e6',hull:'#4a2438',hull2:'#33182a',core:'#fff0f7',accent:'#ffb3d9'}, sfx:'crystal', atkCol:'#ffb3d9', killCol:'#ff8fc7', desc:'飄落霓虹櫻瓣的粉色機體 · 限量傳奇，一期一會'},
   {id:'ltd_abyss', name:'深海幽光', price:3000, r:'legend', arch:5, pal:{col:'#2affd0',glow:'#00e0b0',edge:'#a0fff0',hull:'#082a2a',hull2:'#041e20',core:'#e0fff8',accent:'#5affe0'}, sfx:'deep', atkCol:'#5affe0', killCol:'#2affd0', desc:'幽深海溝的生物螢光 · 限量傳奇，稍縱即逝'}
 ];
-function skinById(id){ var a=SKINS.concat(LIMITED_SKINS); for(var i=0;i<a.length;i++)if(a[i].id===id)return a[i]; return null; }
+// 角色專屬皮膚：每位角色一款，以其專屬色相自動生成（不進每日隨機商店，另設專區）
+var CHAR_SKINS=CHARS.map(function(c,i){ var s=charSig(c.id); return {
+  id:'cs_'+c.id, name:c.name+'·本色', price:500, r:'rare', arch:i%6, charSkin:true, face:c.face,
+  pal:{col:s.col,glow:s.glow,edge:s.edge,hull:s.hull,hull2:s.hull2,core:s.core,accent:s.accent},
+  desc:c.face+' '+c.name+' 的專屬機體塗裝，穿上它化身該角色的霓虹本色' }; });
+function skinById(id){ var a=SKINS.concat(LIMITED_SKINS).concat(CHAR_SKINS); for(var i=0;i<a.length;i++)if(a[i].id===id)return a[i]; return null; }
 function skinTier(sk){ return sk?(SKIN_TIER[sk.r]||0):0; }
 function currentLimited(){ var period=Math.floor(Date.now()/(60*86400000)); return LIMITED_SKINS[period%LIMITED_SKINS.length]; }
 function limitedDaysLeft(){ var per=60*86400000; var next=(Math.floor(Date.now()/per)+1)*per; return Math.ceil((next-Date.now())/86400000); }
@@ -3982,7 +3990,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v312 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v313 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

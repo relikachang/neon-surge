@@ -1675,6 +1675,25 @@ var WDEFS={
         ringFx(player.x,player.y,r,'#a8f0ff'); shake(4); }
     }
   },
+  judgment:{ic:'⚖️',name:'天罰審判',color:'#ffe86a',tag:'裁決',max:8,
+    desc:function(l){return l===0?'降下神聖光柱轟擊全場「血量最高」之敵，波及周邊；專打硬敵與首領':'傷害↑ 範圍↑';},
+    cd:function(l){return Math.max(1.0,2.3-l*0.16);},
+    fire:function(w){ var best=null,bhp=-1; enemyGrid.query(player.x,player.y,780,function(e){ if(e.hp>0&&e.hp>bhp&&dist2(e.x,e.y,player.x,player.y)<780*780){bhp=e.hp;best=e;} });
+      if(!best){ best=nearestEnemy(player.x,player.y,9999); if(!best)return; }
+      var r=(64+w.level*8)*player.area, r2=r*r, core=dmg(38+w.level*15);
+      enemyGrid.query(best.x,best.y,r,function(e){ if(e.hp>0&&dist2(e.x,e.y,best.x,best.y)<r2){ hitEnemy(e,(e===best)?core:core*0.5,best.x,best.y,0.2); } });
+      ringFx(best.x,best.y,r,'#ffe86a'); ringFx(best.x,best.y,r*0.5,'#fff6c0'); shake(3); GAudio.zap&&GAudio.zap(); },
+    evo:{reqPassive:'pexec',ic:'⚡',name:'神罰裁決',color:'#fff2a0',desc:'光柱化連環天雷，同時裁決多名強敵、對高血敵斬殺加成',
+      cd:function(l){return Math.max(0.8,1.8-l*0.12);},
+      fire:function(w){ var arr=[]; enemyGrid.query(player.x,player.y,820,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<820*820)arr.push(e); });
+        if(!arr.length){ var t=nearestEnemy(player.x,player.y,9999); if(!t)return; arr=[t]; }
+        arr.sort(function(a,b){return b.hp-a.hp;}); var tn=Math.min(arr.length,2+Math.floor(player.amount));
+        for(var i=0;i<tn;i++){ var tg=arr[i]; var r=(64+w.level*9)*player.area, r2=r*r, core=dmg(30+w.level*12);
+          enemyGrid.query(tg.x,tg.y,r,function(e){ if(e.hp>0&&dist2(e.x,e.y,tg.x,tg.y)<r2){ hitEnemy(e,(e===tg)?core*1.3:core*0.5,tg.x,tg.y,0.25); } });
+          ringFx(tg.x,tg.y,r,'#fff2a0'); }
+        shake(5); GAudio.zap&&GAudio.zap(); }
+    }
+  },
   mine:{ic:'🧨',name:'地雷',color:'#ffce54',tag:'陷阱',max:8,
     desc:function(l){return l===0?'佈下感應地雷，敵人靠近即引爆':'數量↑ 傷害↑ 範圍↑';},
     cd:function(l){return Math.max(0.9,2.0-l*0.14);},
@@ -1987,7 +2006,7 @@ var WDEFS={
     }
   }
 };
-var WORDER=['plasma','ricochet','wavecannon','splitshot','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet','hornet','spiralgun','gatling','chakram','beamsweep'];
+var WORDER=['plasma','ricochet','wavecannon','splitshot','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet','hornet','spiralgun','gatling','chakram','beamsweep','judgment'];
 // 武器背景敘事（顯示於武器圖鑑，延續世界觀）
 var WEAPON_LORE={
   plasma:'倖存者護甲的標準配備。每一發電漿都是舊世界文明最後的火種。',
@@ -2003,6 +2022,7 @@ var WEAPON_LORE={
   blackhole:'虛空術士掌心的一扇門。它借你吞噬之力，也記著要償還的債。',
   laser:'狙擊手校正世界的方式——一道光，一條無可辯駁的直線。',
   frost:'極地研究站的遺產。它凍結敵人，也凍結了時間本身的流速。',
+  judgment:'審判之秤從不看數量，只稱量最重的罪。越是龐然巨物，越逃不過那道光柱。',
   mine:'工兵留給後來者的問候。踏上它的，都會後悔前進的那一步。',
   toxic:'瘟疫師的慈悲——既然治不好這世界，便讓敵人陪它一起腐爛。',
   thunder:'自稱雷神者的天罰。抬手，天便落下審判，無人知其真名。',
@@ -4573,7 +4593,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v394 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v395 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

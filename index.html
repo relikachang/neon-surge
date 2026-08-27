@@ -132,6 +132,7 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   .cxtag{font-size:10px;font-weight:700;color:#8ea0c8;border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:1px 6px;margin-left:4px}
   .cxd{font-size:12px;color:#8ea0c8;margin:2px 0 4px}
   .cxsub{font-size:12px;color:#aeb8d8;line-height:1.5}
+  .cxlore{font-size:11.5px;color:#b9c6e0;font-style:italic;line-height:1.55;margin:3px 0 5px;padding-left:8px;border-left:2px solid rgba(140,166,200,.25)}
   #bossbar{position:absolute;top:66px;left:50%;transform:translateX(-50%);width:min(560px,86vw);display:none;z-index:5}
   #bossbar.show{display:block}
   #bossname{font-size:13px;font-weight:800;letter-spacing:2px;text-align:center;margin-bottom:4px;text-shadow:0 0 10px currentColor}
@@ -1766,6 +1767,44 @@ var WDEFS={
   }
 };
 var WORDER=['plasma','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet','hornet','spiralgun','gatling','chakram','beamsweep'];
+// 武器背景敘事（顯示於武器圖鑑，延續世界觀）
+var WEAPON_LORE={
+  plasma:'倖存者護甲的標準配備。每一發電漿都是舊世界文明最後的火種。',
+  blades:'霓虹劇院的環形舞台化成的刃。它們繞著你旋轉，如同永不散場的謝幕。',
+  lightning:'從雷雲中抽取的一縷憤怒，在敵群之間跳躍，尋找下一個接地點。',
+  aura:'焚燒祭司的信仰之環。靠近它的一切，都將化為獻給黑夜的灰燼。',
+  shotgun:'礦場爆破工的粗獷智慧——與其瞄準一個，不如轟碎一片。',
+  missiles:'鎖定即宣判。這些飛彈記得每一個試圖逃跑的座標。',
+  boomerang:'流浪拾荒客的老夥伴，去而復返，正如他總會回到戰場。',
+  blackhole:'虛空術士掌心的一扇門。它借你吞噬之力，也記著要償還的債。',
+  laser:'狙擊手校正世界的方式——一道光，一條無可辯駁的直線。',
+  frost:'極地研究站的遺產。它凍結敵人，也凍結了時間本身的流速。',
+  mine:'工兵留給後來者的問候。踏上它的，都會後悔前進的那一步。',
+  toxic:'瘟疫師的慈悲——既然治不好這世界，便讓敵人陪它一起腐爛。',
+  thunder:'自稱雷神者的天罰。抬手，天便落下審判，無人知其真名。',
+  flame:'熾焰使體內休眠火山的一次吐息，將前方煉成一片焦土。',
+  sentry:'工兵最忠實的造物。它不會疲倦、不會恐懼，只會持續開火。',
+  spike:'陷陣士的宣言：想從這裡過去，先踏過我立起的每一根尖刺。',
+  lash:'鬥技場冠軍的能量鞭。既是禮儀，也是判決，抽出即定生死。',
+  saw:'解體工廠的環鋸，貼身切割的嗡鳴，是碎裂者最安心的搖籃曲。',
+  turret:'守望者部署的定點意志。他守的地方，敵人永遠攻不進來。',
+  grenade:'賭徒手中的骰子——每一發都是一次豪賭，而他從不算牌。',
+  tesla:'雷術士把自己接進電網的瘋狂結晶，血管裡流的是三萬伏特。',
+  starburst:'星爆使收攏的超新星餘燼，掌心一綻，便是一整片死亡的花火。',
+  lance:'審判者的光矛。它不審判對錯，只貫穿擋在正義軌跡上的一切。',
+  ballista:'舊時代的重弩，一發蓄滿殺意的長矢，能洞穿最厚的裝甲。',
+  meteorrain:'彗星使的呼喚，將整片天穹化為傾瀉而下的火之軍隊。',
+  prismbeam:'稜光使折射真理為刃——光與真相一樣，會在最意外的角度轉彎。',
+  shockwave:'震盪使對抗孤獨的方式，一圈圈衝擊波證明著他還在這裡。',
+  flak:'防空陣地最後的怒吼，把曾屬於天空的彈幕潑向四面八方。',
+  scythe:'月刃使在月蝕之夜覺醒的鐮月，盈虧之間收割一整片敵影。',
+  comet:'追逐墜星的觀測員最終領悟——他自己才是那顆貫穿黑夜的火。',
+  hornet:'蜂群般的微型飛彈，鎖定、俯衝、螫咬，密不透風的死亡之群。',
+  spiralgun:'螺旋師把混沌織成秩序，看似雜亂的彈幕實則是宇宙的縮影。',
+  gatling:'機炮手拒絕承認火力已被魔法取代，加特林的轟鳴就是他的證明。',
+  chakram:'輪刃客失去主家後的忠誠，迴旋而出、去而復返，無處安放。',
+  beamsweep:'守燈人日夜不熄的掃描光，為所有迷途於霓虹中的人指路。'
+};
 
 // 被動定義
 var PDEFS={
@@ -4017,9 +4056,10 @@ function renderCodex(){
     if(d.evo){ var rp=PDEFS[d.evo.reqPassive]; line+='<div class="cxsub">⚡ 進化 → <b style="color:'+d.evo.color+'">'+d.evo.name+'</b>（滿級 + '+(rp?rp.name:d.evo.reqPassive)+'）</div>'; }
     var fus=FUSIONS.filter(function(f){return f.a===id||f.b===id;});
     fus.forEach(function(f){ var other=f.a===id?f.b:f.a; line+='<div class="cxsub">🔗 合成 + '+WDEFS[other].name+' → <b style="color:'+f.color+'">'+f.name+'</b></div>'; });
+    var lore=WEAPON_LORE[id]?'<div class="cxlore">「'+WEAPON_LORE[id]+'」</div>':'';
     return '<div class="cxitem"><div class="cxic" style="color:'+d.color+'">'+d.ic+'</div>'+
       '<div class="cxmain"><div class="cxn" style="color:'+d.color+'">'+d.name+' <span class="cxtag">'+d.tag+'</span></div>'+
-      '<div class="cxd">'+d.desc(0)+'</div>'+line+'</div></div>'; }).join('');
+      '<div class="cxd">'+d.desc(0)+'</div>'+lore+line+'</div></div>'; }).join('');
   $('codexlist').innerHTML=html;
 }
 function renderBestiary(){ var order=['grunt','swarm','tank','ranged','bomber','splitter','charger','brute','wraith','mortar','titan','stalker','bombard','marksman','smasher','weaver','phaseknight','impaler','voidreaper','sentinel','warlock','suppressor','hexer','shade','phantom','golden','warden','conjurer','harbinger','revenant','gargantua','stormcaller','vault','boss'];
@@ -4081,7 +4121,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v324 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v325 · 2026-08-27';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵'];
 function renderMenu(){
   var b=DB.best; $('bestline').textContent = b.time>0 ? ('最佳存活 '+fmtTime(b.time)+' · 擊殺 '+b.kills) : '尚無紀錄 — 開創你的傳說';

@@ -2681,7 +2681,7 @@ function spawnEnemy(type,ex,ey,mul,forceElite){
   // 精英變體：更大更肉、發光、掉更多、隨機詞綴（隨時間提高機率，每日變異可加成）
   var elite = forceElite || (mul>1 && Math.random()<Math.min(0.62,(0.015+G.time/1100)*mt.elite));
   var affix=null;
-  if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst','magnetic','trail','lunger','reflector','warlord','phaser','splitburst','artillery','healer','graviton','venomous','detonator','repulsor','frostmancer','disruptor','quaker','leech','mirror','conductor','corruptor','bulwark','zealot','cursebound']); if(affix==='haste')sp*=1.6;
+  if(elite){ hp*=2.8; sp*=0.92; r*=1.4; xp*=5; dm*=1.4; affix=pick(['haste','volatile','shielded','regen','shooter','summoner','teleporter','berserk','burst','magnetic','trail','lunger','reflector','warlord','phaser','splitburst','artillery','healer','graviton','venomous','detonator','repulsor','frostmancer','disruptor','quaker','leech','mirror','conductor','corruptor','bulwark','zealot','cursebound','siphon']); if(affix==='haste')sp*=1.6;
     if(G.time-(G._eliteWarn||-9)>4){ G._eliteWarn=G.time; announce('⚠ 精英出現','#ffffff'); GAudio.elite&&GAudio.elite(); } }
   var ang,rr=Math.max(W,H)*0.62;
   if(ex==null){ ang=rand(0,TAU); ex=player.x+Math.cos(ang)*rr; ey=player.y+Math.sin(ang)*rr; }
@@ -3108,6 +3108,7 @@ function update(dt){
     if(e.affix==='summoner'){ e.esT=(e.esT==null?4:e.esT-dt); if(e.esT<=0){ e.esT=5; if(enemies.length<180){ spawnEnemy('swarm',e.x+rand(-30,30),e.y+rand(-30,30),1); spawnEnemy('swarm',e.x+rand(-30,30),e.y+rand(-30,30),1); } } }  // 召喚師詞綴
     if(e.affix==='teleporter'){ e.tpT=(e.tpT==null?3:e.tpT-dt); if(e.tpT<=0){ e.tpT=4; var tta=Math.atan2(player.y-e.y,player.x-e.x); e.x=player.x-Math.cos(tta)*170; e.y=player.y-Math.sin(tta)*170; ringFx(e.x,e.y,44,e.color); } }  // 瞬影詞綴
     if(e.affix==='burst'){ e.bt=(e.bt==null?3:e.bt-dt); if(e.bt<=0){ e.bt=3.5; for(var bk=0;bk<8;bk++){ var bka=bk/8*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(bka),Math.sin(bka),195,e.dmg*0.5); } } }  // 爆裂詞綴：週期放射彈
+    if(e.affix==='siphon'){ e.spT=(e.spT==null?1.0:e.spT-dt); if(e.spT<=0){ e.spT=1.3; var sPul=0; for(var so=0;so<orbs.length;so++){ var ob=orbs[so]; if(dist2(ob.x,ob.y,e.x,e.y)<320*320){ var sa=Math.atan2(e.y-ob.y,e.x-ob.x); ob.vx=(ob.vx||0)+Math.cos(sa)*520; ob.vy=(ob.vy||0)+Math.sin(sa)*520; sPul++; } } if(sPul){ ringFx(e.x,e.y,130,'#7cf0ff'); ringFx(e.x,e.y,70,'#c8f4ff'); } } }  // 虹吸詞綴：週期吸走附近經驗球，逼你速殺以奪回經驗
     if(e.affix==='magnetic'){ e.mgT=(e.mgT==null?2:e.mgT-dt); if(e.mgT<=0){ e.mgT=2.4; var ma=Math.atan2(e.y-player.y,e.x-player.x); player.x+=Math.cos(ma)*62; player.y+=Math.sin(ma)*62; ringFx(e.x,e.y,70,'#8b5bff'); ringFx(player.x,player.y,40,'#8b5bff'); } }  // 磁暴詞綴：週期把玩家拉向自己
     if(e.summonRare){ e.srT=(e.srT==null?3:e.srT-dt); if(e.srT<=0){ e.srT=3.2; if(enemies.length<220){ for(var q=0;q<3;q++)spawnEnemy('swarm',e.x+rand(-40,40),e.y+rand(-40,40),1.3); } ringFx(e.x,e.y,54,'#7dff9b'); } }  // 召魂者：週期召喚蟲群
     if(e.affix==='trail'){ e.trT=(e.trT==null?0.5:e.trT-dt); if(e.trT<=0 && hazards.length<80){ e.trT=0.55; hazards.push({kind:'lava',x:e.x,y:e.y,r:26,life:2.4,max:2.4,dtk:0}); } }  // 熔跡詞綴：移動留下灼熱地面
@@ -3991,7 +3992,7 @@ function drawEnemy(e){
     ctx.stroke();
     ctx.globalAlpha=0.4; ctx.lineWidth=1.6; ctx.beginPath(); ctx.arc(0,0,r*0.52,-gs*1.5,-gs*1.5+4.9); ctx.stroke();
     ctx.globalAlpha=1; }
-  if(e.elite){ var affCol=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':e.affix==='reflector'?'#3df0c8':e.affix==='warlord'?'#ffd54a':e.affix==='phaser'?'#c8c8ff':e.affix==='splitburst'?'#ff9a3d':e.affix==='artillery'?'#ff6a3d':e.affix==='healer'?'#5dff9b':e.affix==='graviton'?'#8b5cf6':e.affix==='venomous'?'#9dff5d':e.affix==='detonator'?'#ff9a3d':e.affix==='repulsor'?'#5dd3ff':e.affix==='frostmancer'?'#8bd3ff':e.affix==='disruptor'?'#ff5edb':e.affix==='quaker'?'#ff8a3a':e.affix==='leech'?'#ff4d6a':e.affix==='mirror'?'#c8c8ff':e.affix==='conductor'?'#c58bff':e.affix==='corruptor'?'#b06bff':e.affix==='bulwark'?'#7dd3ff':e.affix==='zealot'?'#ff5e3a':e.affix==='cursebound'?'#c86bff':'#ffffff';
+  if(e.elite){ var affCol=e.affix==='haste'?'#5dff9b':e.affix==='volatile'?'#ff8a3a':e.affix==='shielded'?'#7dd3ff':e.affix==='regen'?'#3dff7a':e.affix==='shooter'?'#ffce54':e.affix==='summoner'?'#c58bff':e.affix==='teleporter'?'#ff5edb':e.affix==='berserk'?'#ff2b5e':e.affix==='burst'?'#ff9a3d':e.affix==='magnetic'?'#8b5bff':e.affix==='trail'?'#ff6a2b':e.affix==='lunger'?'#ffca54':e.affix==='reflector'?'#3df0c8':e.affix==='warlord'?'#ffd54a':e.affix==='phaser'?'#c8c8ff':e.affix==='splitburst'?'#ff9a3d':e.affix==='artillery'?'#ff6a3d':e.affix==='healer'?'#5dff9b':e.affix==='graviton'?'#8b5cf6':e.affix==='venomous'?'#9dff5d':e.affix==='detonator'?'#ff9a3d':e.affix==='repulsor'?'#5dd3ff':e.affix==='frostmancer'?'#8bd3ff':e.affix==='disruptor'?'#ff5edb':e.affix==='quaker'?'#ff8a3a':e.affix==='leech'?'#ff4d6a':e.affix==='mirror'?'#c8c8ff':e.affix==='conductor'?'#c58bff':e.affix==='corruptor'?'#b06bff':e.affix==='bulwark'?'#7dd3ff':e.affix==='zealot'?'#ff5e3a':e.affix==='cursebound'?'#c86bff':e.affix==='siphon'?'#7cf0ff':'#ffffff';
     ctx.lineWidth=2.8; ctx.strokeStyle=affCol; ctx.stroke();   // 精英詞綴描邊
     if(!e.boss){ ctx.globalAlpha=0.4+0.3*Math.sin(G.time*6+e.x*0.03); ctx.lineWidth=2; ctx.strokeStyle=affCol; ctx.setLineDash([6,7]); ctx.lineDashOffset=-G.time*24;
       ctx.beginPath(); ctx.arc(0,0,r*1.55,0,TAU); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1; } }   // 精英脈動光環（旋轉虛線）
@@ -4604,7 +4605,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v398 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v399 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

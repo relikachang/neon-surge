@@ -1593,7 +1593,7 @@ var STAGE_LORE={
   ionstorm:'裂縫更深處，是一片永不平息的電磁風暴。整個空間如帶電的神經在抽搐，連思緒都會被脈衝打亂。「雷暴主宰」不是敵人，而是這道迴旋自身的放電——每一次脈衝，都在提醒你：越往深處，秩序就越不站在你這邊。'
 };
 var selMode='normal';
-try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde'||_sm==='turbo'||_sm==='chaos'||_sm==='vampire'||_sm==='titanhunt')selMode=_sm; }catch(e){}   // 記憶上次選的模式
+try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde'||_sm==='turbo'||_sm==='chaos'||_sm==='vampire'||_sm==='titanhunt'||_sm==='lonewolf')selMode=_sm; }catch(e){}   // 記憶上次選的模式
 var MODES={
   normal:{ic:'♾️',name:'標準生存',desc:'經典模式：活越久越強，挑戰無盡'},
   timeattack:{ic:'⏱️',name:'限時狂殺',desc:'120 秒內衝最高擊殺，時間到結算',dur:120},
@@ -1603,7 +1603,8 @@ var MODES={
   turbo:{ic:'⚡',name:'疾速狂飆',desc:'全場敵人移速大增・考驗反應與極限走位，碎片獎勵 1.5 倍',reward:1.5},
   chaos:{ic:'🌀',name:'混沌狂宴',desc:'絕大多數敵人皆為帶詞綴的精英・最高強度的混沌試煉，碎片獎勵 2 倍',reward:2},
   vampire:{ic:'🩸',name:'血色狩獵',desc:'無被動回血・生命上限 -20%・唯有不斷擊殺才能吸血續命，最具侵略性的生存打法，碎片獎勵 1.75 倍',reward:1.75},
-  titanhunt:{ic:'🦣',name:'巨獸狩獵',desc:'敵人數量減半、但個個化為血厚體巨的龐然巨獸・每一隻都給大量經驗與碎片，是「大型狩獵」的火力試煉，碎片獎勵 1.5 倍',reward:1.5}
+  titanhunt:{ic:'🦣',name:'巨獸狩獵',desc:'敵人數量減半、但個個化為血厚體巨的龐然巨獸・每一隻都給大量經驗與碎片，是「大型狩獵」的火力試煉，碎片獎勵 1.5 倍',reward:1.5},
+  lonewolf:{ic:'🐺',name:'獨狼',desc:'全程只能持有一把武器・不再出現新武器選項，唯有把它練到極致並進化；開局傷害 +35% 作為補償，最考驗單一武器 build 的專精試煉，碎片獎勵 1.75 倍',reward:1.75}
 };
 function stageUnlocked(s){ return !s.locked || DB.stages[s.id]; }
 
@@ -2536,6 +2537,7 @@ function newRun(daily){
     maxHp:(100+12*metaLv('hp'))*omni*pHp*(ch.stat.maxHp||1)*mut.pHp, pickup:90*(1+0.12*metaLv('pick'))*(1+0.06*prestigeLv('p_pickup'))*(ch.stat.pickup||1),
     crit:0.05+(ch.stat.crit||0)+0.03*metaLv('crit')+0.02*prestigeLv('p_crit'), critMult:2*(1+0.1*metaLv('critdmg'))*(1+0.08*prestigeLv('p_critdmg')), armor:0.04*metaLv('armor')+0.02*prestigeLv('p_armor'), regen:0.3*metaLv('regen')+0.4*prestigeLv('p_regen'), xpMult:(1+0.08*metaLv('xp'))*(1+0.05*prestigeLv('p_xp')) };
   if(G.mode==='vampire'){ player.base.maxHp*=0.8; player.base.regen=0; }   // 血色狩獵：生命上限 -20% 且無被動回血，唯有擊殺吸血才能續命
+  if(G.mode==='lonewolf'){ player.base.dmg*=1.35; }   // 獨狼：只能持一把武器，開局傷害 +35% 補償
   enemies=[]; bullets=[]; ebullets=[]; orbs=[]; particles=[]; dmgnums=[]; pickups=[]; blades=[]; fxRings=[]; wells=[]; beams=[]; mines=[]; clouds=[]; hazards=[]; drones=[]; shards=[];
   addWeapon(ch.start);
   recalc(); player.hp=player.maxHp;
@@ -3736,7 +3738,7 @@ function buildChoices(){
   // 已有武器可升級
   player.weapons.forEach(function(w){ if(!w.fused && w.level<w.def.max-1) pool.push({kind:'wup',id:w.id}); });
   // 新武器（若欄位<6）
-  if(player.weapons.length<6+metaLv('slots')){ WORDER.forEach(function(id){ if(!weaponById(id)) pool.push({kind:'wnew',id:id}); }); }
+  if(player.weapons.length<(G.mode==='lonewolf'?1:6+metaLv('slots'))){ WORDER.forEach(function(id){ if(!weaponById(id)) pool.push({kind:'wnew',id:id}); }); }   // 獨狼模式：武器上限鎖 1，只能強化那把
   // 被動
   PORDER.forEach(function(id){ var lv=player.passives[id]||0; if(lv<PDEFS[id].max) pool.push({kind:'passive',id:id}); });
   // 洗牌抽 3
@@ -4918,7 +4920,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v471 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v472 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',
@@ -4996,7 +4998,7 @@ function renderMenu(){
     slb.innerHTML='<div class="slname" style="color:'+ssg.bossColor+'">'+ssg.name+' <span class="slboss" style="color:'+ssg.bossColor+';border-color:'+ssg.bossColor+'66">👑 '+ssg.bossName+'</span></div><div class="sltxt">「'+slore+'」</div>';
   }
   var ms=$('modesel'); if(ms){ ms.innerHTML='';
-    ['normal','timeattack','bossrush','hardcore','horde','turbo','chaos','vampire','titanhunt'].forEach(function(mid){ var md=MODES[mid];
+    ['normal','timeattack','bossrush','hardcore','horde','turbo','chaos','vampire','titanhunt','lonewolf'].forEach(function(mid){ var md=MODES[mid];
       var el=document.createElement('div'); el.className='modecard'+(selMode===mid?' on':'');
       el.innerHTML='<div class="mic">'+md.ic+'</div><div class="mn">'+md.name+'</div><div class="md">'+md.desc+'</div>';
       el.onclick=function(){ selMode=mid; try{localStorage.setItem('neon_mode',mid);}catch(_){} renderMenu(); };

@@ -1326,6 +1326,7 @@ var META=[
   {id:'executioner',ic:'☠️',name:'處決核心', desc:'初始斬殺門檻（秒殺殘血普通敵）', per:'+0.5%', max:5, cost:function(l){return 120+l*100;}},
   {id:'thorncore',ic:'🌵',name:'荊棘核心', desc:'初始接觸反傷', per:'+8', max:5, cost:function(l){return 100+l*85;}},
   {id:'surgecore',ic:'⚡',name:'湧能核心', desc:'過載充能速度＋爆發威力', per:'+12%', max:6, cost:function(l){return 150+l*130;}},
+  {id:'detocore',ic:'💥',name:'連鎖引爆核心', desc:'擊殺時機率原地引爆波及周圍', per:'+12%機率', max:5, cost:function(l){return 140+l*120;}},
   {id:'omni',    ic:'🌌', name:'萬能核心 · 殿堂', desc:'傷害/生命/攻速/移速全面提升（碎片無底洞）', per:'+3%全能', max:20, cost:function(l){return 8000*(l+1)*(l+1);}},
 ];
 function metaLv(id){return DB.meta[id]||0;}
@@ -3117,6 +3118,7 @@ function killEnemy(e){
   if(G.mode==='vampire'&&player.hp<player.maxHp){ player.hp=Math.min(player.maxHp,player.hp+Math.max(2,player.maxHp*0.015)); if((G._vfx=(G._vfx||0)+1)%3===0)ringFx(e.x,e.y,20,'#ff2b5e'); }   // 血色狩獵：每次擊殺吸血回復(約 1.5% 生命上限)
   if(player.cleave>0&&(G._clv||0)<4){ G._clv=(G._clv||0)+1; var clr=(50+player.cleave*14)*player.area, clr2=clr*clr, cvd=dmg(8+player.cleave*5); enemyGrid.query(e.x,e.y,clr,function(o){ if(o.hp>0&&o!==e&&dist2(o.x,o.y,e.x,e.y)<clr2)hitEnemy(o,cvd,e.x,e.y,0.1); }); ringFx(e.x,e.y,clr,'#ff8a3a'); G._clv--; }   // 劈斬：擊殺濺射(深度上限4防爆棧)
   if(player.shrapnel>0){ var shn=3+player.shrapnel, shd=dmg(7+player.shrapnel*4); for(var shi=0;shi<shn;shi++){ var sha=shi/shn*TAU+rand(-0.2,0.2); spawnBullet(e.x,e.y,Math.cos(sha),Math.sin(sha),640,shd,'#ffd54a',2,4,1.5); } }   // 破片：擊殺炸出遠距高速貫穿彈片(可穿透、飛更遠)
+  if(metaLv('detocore')>0&&!e.boss&&(G._det||0)<3&&Math.random()<0.12*metaLv('detocore')){ G._det=(G._det||0)+1; var der=(64+G.level*1.2)*player.area, der2=der*der, ded=dmg(18+G.level*2.5); enemyGrid.query(e.x,e.y,der,function(o){ if(o.hp>0&&o!==e&&dist2(o.x,o.y,e.x,e.y)<der2)hitEnemy(o,ded,e.x,e.y,0.12); }); ringFx(e.x,e.y,der,'#ff8a3a'); ringFx(e.x,e.y,der*0.6,'#ffd0a0'); burst(e.x,e.y,'#ff8a3a',10,220); G._det--; }   // 連鎖引爆核心(永久)：擊殺機率原地爆炸波及周圍(深度上限3防爆棧)
   if(player.chain>0&&!e.boss&&(G._chd||0)<2&&Math.random()<0.5+player.chain*0.08){ G._chd=(G._chd||0)+1;   // 連鎖爆破：擊殺引發在敵人間跳躍的連環電爆(深度上限2防遞迴)
     var ct=nearestEnemy(e.x,e.y,240*240); if(ct){ chainLightning(e.x,e.y,ct,2+player.chain,dmg(16+player.chain*6)); } else { ringFx(e.x,e.y,60,'#ffb347'); burst(e.x,e.y,'#ffb347',8,180); } G._chd--; }
   if(e.type&&!DB.bestiary[e.type]){ DB.bestiary[e.type]=true; saveDB(); }   // 怪物圖鑑：首次擊殺即解鎖
@@ -4920,7 +4922,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v472 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v473 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

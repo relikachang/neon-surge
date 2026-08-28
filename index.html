@@ -2736,6 +2736,7 @@ var ETYPES={
   scatterer:{r:16,hp:78,sp:50,dmg:14,color:'#ff9a5a',xp:4,shape:'sq'},   // 散射獸：週期朝玩家噴射 5 發扇形散彈，逼你別站在正面錐形內
   warcaller:{r:18,hp:95,sp:52,dmg:12,color:'#ffb347',xp:5,shape:'penta'},   // 戰吼獸：週期鼓舞周圍敵人移速大增，逼你優先擊殺以免敵潮暴走
   cryoburst:{r:15,hp:70,sp:60,dmg:13,color:'#7dc8ff',xp:4,shape:'dia'},   // 凍爆獸：死亡時炸出冰霜爆，減速附近玩家，懲罰貼身擊殺、逼你保持距離
+  arbalest:{r:16,hp:100,sp:48,dmg:18,color:'#c0e34a',xp:6,shape:'arrow'},   // 弩獸：週期朝你射出一束高速三連窄扇弩矢，速度快、扇角窄，逼你側身橫移閃開射線而非硬扛
   // 稀有怪物（特定條件才會出現）
   phantom:{r:15,hp:54,sp:124,dmg:16,color:'#b98cff',xp:8,shape:'dia',rare:true},   // 幽影：8 分後成群高速幽靈
   golden:{r:20,hp:120,sp:56,dmg:8,color:'#ffd54a',xp:18,shape:'hex',rare:true,flee:true},   // 黃金巨獸：會逃跑的寶獸
@@ -2780,6 +2781,7 @@ var MONSTER_INFO={
   scatterer:{n:'散射獸',d:'後期登場的霰彈手，週期朝你噴射一片扇形散彈。正對牠時整片錐形都是死亡區，側移繞到牠的側翼才能安全輸出。'},
   warcaller:{n:'戰吼獸',d:'後期登場的鼓舞型支援兵，週期發出戰吼讓周圍敵人移速大增。放任牠不管，整片敵潮都會加速撲來變得難以拉開——聽到戰吼、看到金色光環，優先解決牠。'},
   cryoburst:{n:'凍爆獸',d:'後期登場的冰霜自爆兵，死亡時炸出一圈寒霜。若在牠身邊擊殺，你會被凍緩、移動變得遲鈍——保持距離擊破，或殺完立刻脫離爆點。'},
+  arbalest:{n:'弩獸',d:'後期登場的精準射手，週期朝你射出一束高速三連窄扇弩矢。彈速極快、扇角很窄，正面硬扛幾乎必中——聽準上弦聲、朝側邊橫移錯開射線，牠的窄扇就成了空砲。'},
   phantom:{n:'幽影',d:'第 8 分鐘後浮現的高速幽靈，成群出沒、經驗豐厚。',rare:true},
   golden:{n:'黃金巨獸',d:'膽小會逃跑的稀有寶獸，追上擊殺可獲大量碎片與道具。',rare:true},
   warden:{n:'監視者',d:'第 6 分鐘後偶爾降臨的稀有精英射手，血厚傷高。',rare:true},
@@ -2809,6 +2811,7 @@ var MONSTER_LORE={
   scatterer:'牠不瞄準單一目標,只把死亡潑灑成一整片扇形。站在牠正前方的人,沒有閃避的縫隙,只有被彈幕填滿的空間。',
   warcaller:'牠一聲怒吼,懦弱的殘骸都成了亡命的野獸。牠自己或許不足為懼,但牠喚醒的,是整片沉睡的敵潮。',
   cryoburst:'牠把死亡凍結成一場寒流。殺死它的人,會在牠碎裂的瞬間,感受到自己的腳步也一同結了霜。',
+  arbalest:'牠不追、不撲,只在遠處靜靜上弦。三矢齊發的剎那,空氣被劃出三道平行的白線——命中與否,早在牠扣下弦的那一刻就已寫定。',
   pouncer:'牠把自己拋向空中的那一瞬,是最安全也最危險的——你打不到牠,牠也還沒落下。真正的殺意,藏在牠著地的那一擊裡。',
   titan:'行走的災厄,每一步都讓大地為之震顫。',
   stalker:'從你的盲點裡誕生,你看見牠時,刃已及身。',
@@ -3314,6 +3317,7 @@ function update(dt){
     if(e.affix==='leech'){ e.lcT=(e.lcT==null?1:e.lcT-dt); if(e.lcT<=0){ e.lcT=1.2; if(e.hp<e.maxHp&&dist2(e.x,e.y,player.x,player.y)<260*260){ e.hp=Math.min(e.maxHp,e.hp+e.maxHp*0.12); ringFx(e.x,e.y,42,'#ff4d6a'); } } }  // 汲血鬼詞綴：玩家在附近時快速自我回血，逼你速殺或拉開
     if(e.affix==='healer'){ e.hlT=(e.hlT==null?2.8:e.hlT-dt); if(e.hlT<=0){ e.hlT=3.4; ringFx(e.x,e.y,160,'#5dff9b'); (function(ex,ey){ enemyGrid.query(ex,ey,170,function(o){ if(o.hp>0&&o.hp<o.maxHp&&dist2(o.x,o.y,ex,ey)<170*170){ o.hp=Math.min(o.maxHp,o.hp+o.maxHp*0.15); o.flash=Math.max(o.flash||0,0.12); } }); })(e.x,e.y); } }  // 治療者詞綴：週期治療周圍受傷敵人
     if(e.type==='scatterer'){ e.stT=(e.stT==null?rand(1.4,2.4):e.stT-dt); if(e.stT<=0){ e.stT=rand(2.2,3.0); if(dist2(e.x,e.y,player.x,player.y)<540*540){ var sga=Math.atan2(player.y-e.y,player.x-e.x); for(var sgk=-2;sgk<=2;sgk++)spawnEnemyBullet(e.x,e.y,Math.cos(sga+sgk*0.17),Math.sin(sga+sgk*0.17),178,e.dmg*0.5); ringFx(e.x,e.y,30,e.color); } } }  // 散射獸型別：週期朝玩家噴射五發扇形散彈
+    if(e.type==='arbalest'){ e.abT=(e.abT==null?rand(1.6,2.6):e.abT-dt); if(e.abT<=0){ e.abT=rand(2.2,2.8); if(dist2(e.x,e.y,player.x,player.y)<620*620){ var aba=Math.atan2(player.y-e.y,player.x-e.x); for(var abk=-1;abk<=1;abk++)spawnEnemyBullet(e.x,e.y,Math.cos(aba+abk*0.08),Math.sin(aba+abk*0.08),330,e.dmg*0.5); ringFx(e.x,e.y,26,e.color); } } }  // 弩獸型別：週期朝玩家射出高速三連窄扇弩矢
     if(e.type==='mender'){ e.mdT=(e.mdT==null?2.2:e.mdT-dt); if(e.mdT<=0){ e.mdT=2.6; ringFx(e.x,e.y,205,'#5dffb0'); ringFx(e.x,e.y,118,'#c8ffe8'); (function(ex,ey){ enemyGrid.query(ex,ey,210,function(o){ if(o!==e&&o.hp>0&&o.hp<o.maxHp&&dist2(o.x,o.y,ex,ey)<210*210){ o.hp=Math.min(o.maxHp,o.hp+o.maxHp*0.2); o.flash=Math.max(o.flash||0,0.14); } }); })(e.x,e.y); if(e.hp<e.maxHp)e.hp=Math.min(e.maxHp,e.hp+e.maxHp*0.12); } }  // 療靈型別：常規支援兵，週期大範圍治療周圍受傷敵人並自癒
     if(e.affix==='graviton'){ e.gvT=(e.gvT==null?3:e.gvT-dt); if(e.gvT<=0){ e.gvT=4; if(hazards.length<80)hazards.push({kind:'pull',x:e.x,y:e.y,r:155,life:2.5,max:2.5,dtk:0}); ringFx(e.x,e.y,70,'#8b5cf6'); } }  // 重力核詞綴：週期製造重力場拉扯玩家
     if(e.affix==='conductor'){ e.cdT=(e.cdT==null?3:e.cdT-dt); if(e.cdT<=0){ e.cdT=3.5; if(dist2(e.x,e.y,player.x,player.y)<380*380){ fxLightning(e.x,e.y,player.x,player.y); hurtPlayer(e.dmg*0.6); ringFx(e.x,e.y,40,'#c58bff'); } } }  // 導體詞綴：週期朝玩家射出一道電擊,懲罰停留在近距離
@@ -3544,8 +3548,8 @@ function chooseType(m){ var r=Math.random();
   if(m<0.8)return r<0.45?'grunt':r<0.7?'swarm':r<0.85?'ranged':'charger';
   if(m<1.6)return r<0.32?'grunt':r<0.52?'swarm':r<0.66?'ranged':r<0.78?'bomber':r<0.9?'charger':'splitter';
   if(m<3.5)return r<0.24?'grunt':r<0.42?'swarm':r<0.56?'ranged':r<0.68?'bomber':r<0.8?'charger':r<0.9?'splitter':'tank';
-  if(m<6)return r<0.15?'grunt':r<0.28?'swarm':r<0.39?'ranged':r<0.49?'bomber':r<0.58?'charger':r<0.67?'splitter':r<0.76?'tank':r<0.85?'brute':r<0.9?'wraith':r<0.92?'mortar':r<0.94?'orbiter':r<0.95?'mender':r<0.963?'detonaut':r<0.976?'scatterer':r<0.988?'warcaller':'cryoburst';   // 後期(3.5分後)出現蠻兵/厲魂/砲兵/環行者/療靈/崩解獸/散射獸/戰吼獸/凍爆獸
-  return r<0.11?'grunt':r<0.19?'swarm':r<0.28?'ranged':r<0.37?'charger':r<0.45?'splitter':r<0.53?'tank':r<0.61?'brute':r<0.68?'wraith':r<0.72?'mortar':r<0.75?'orbiter':r<0.78?'pouncer':r<0.83?'titan':r<0.87?'stalker':r<0.91?'bombard':r<0.91?'marksman':r<0.935?'smasher':r<0.955?'weaver':r<0.97?'phaseknight':r<0.982?'impaler':r<0.983?'voidreaper':r<0.988?'sentinel':r<0.992?'warlock':r<0.994?'suppressor':r<0.996?'hexer':r<0.998?'mender':'shade';   // 深後期(6分後)出現泰坦/潛襲者/重砲手/狙擊手/碎擊者/織網者/相位騎士/穿刺者/虛空收割者/哨戒者/虛空祭司/壓制者/幻影領主
+  if(m<6)return r<0.15?'grunt':r<0.28?'swarm':r<0.39?'ranged':r<0.49?'bomber':r<0.58?'charger':r<0.67?'splitter':r<0.76?'tank':r<0.85?'brute':r<0.9?'wraith':r<0.92?'mortar':r<0.94?'orbiter':r<0.95?'mender':r<0.963?'detonaut':r<0.976?'scatterer':r<0.986?'warcaller':r<0.994?'arbalest':'cryoburst';   // 後期(3.5分後)出現蠻兵/厲魂/砲兵/環行者/療靈/崩解獸/散射獸/戰吼獸/弩獸/凍爆獸
+  return r<0.11?'grunt':r<0.19?'swarm':r<0.28?'ranged':r<0.37?'charger':r<0.45?'splitter':r<0.53?'tank':r<0.61?'brute':r<0.68?'wraith':r<0.72?'mortar':r<0.75?'orbiter':r<0.78?'pouncer':r<0.83?'titan':r<0.87?'stalker':r<0.91?'bombard':r<0.91?'marksman':r<0.935?'smasher':r<0.955?'weaver':r<0.97?'phaseknight':r<0.982?'impaler':r<0.983?'voidreaper':r<0.988?'sentinel':r<0.992?'warlock':r<0.994?'suppressor':r<0.996?'hexer':r<0.9975?'mender':r<0.999?'arbalest':'shade';   // 深後期(6分後)出現泰坦/潛襲者/重砲手/狙擊手/碎擊者/織網者/相位騎士/穿刺者/虛空收割者/哨戒者/虛空祭司/壓制者/幻影領主
 }
 
 // ---- 經驗 / 升級 ----
@@ -4798,7 +4802,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v452 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v453 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

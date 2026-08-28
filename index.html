@@ -732,7 +732,7 @@ var ACHIEVEMENTS=[
   {id:'bossrush5',ic:'👹',name:'亂鬥屠王', desc:'首領亂鬥單局擊敗 5 首領',rw:400,chk:function(){return G.mode==='bossrush'&&(G.bossKills||0)>=5;}},
   {id:'timeatk',  ic:'⏱️',name:'限時高手', desc:'限時狂殺單局得分破 8000',rw:350,chk:function(){return G.mode==='timeattack'&&(G.score||0)>=8000;}},
   {id:'code1',    ic:'🎟️',name:'幸運兌換', desc:'兌換任一創作者代碼',rw:150,chk:function(){return Object.keys(DB.codes||{}).length>=1;}},
-  {id:'allstages',ic:'🗺️',name:'走遍霓虹', desc:'解鎖全部 17 張地圖',rw:600,chk:function(){try{return STAGES.every(function(s){return !s.locked||DB.stages[s.id];});}catch(e){return false;}}},
+  {id:'allstages',ic:'🗺️',name:'走遍霓虹', desc:'解鎖全部地圖',rw:600,chk:function(){try{return STAGES.every(function(s){return !s.locked||DB.stages[s.id];});}catch(e){return false;}}},
   // —— B326 新系統成就 ——
   {id:'skinlover', ic:'🎨',name:'塗裝愛好者',desc:'擁有 20 款皮膚',rw:500,chk:function(){return Object.keys(DB.skins||{}).length>=20;}},
   {id:'skinmaster',ic:'🌈',name:'塗裝大師',  desc:'擁有 45 款皮膚',rw:1500,chk:function(){return Object.keys(DB.skins||{}).length>=45;}},
@@ -1544,6 +1544,7 @@ var STAGES=[
   {id:'antimatter',name:'反物質核心', desc:'湮滅奇界 · 反物質主宰', bg:'#0a0206', grid:'rgba(255,94,219,0.13)', eHp:5.0, eSpd:1.62, spawn:2.25, bossName:'反物質主宰', bossColor:'#ff5edb', pattern:'paradoxnova', locked:true, unlock:'singularity'},
   {id:'omega',   name:'終末奇界', desc:'萬象歸寂 · 星雨終主', bg:'#010104', grid:'rgba(220,220,255,0.12)', eHp:5.4, eSpd:1.66, spawn:2.32, bossName:'終末主宰', bossColor:'#e8e8ff', pattern:'starrain', locked:true, unlock:'antimatter'},
   {id:'origin',  name:'太初之境', desc:'萬物初生 · 太初主宰', bg:'#020206', grid:'rgba(200,200,255,0.10)', eHp:5.8, eSpd:1.7, spawn:2.4, bossName:'太初主宰', bossColor:'#c8c8ff', pattern:'ringpulse', locked:true, unlock:'omega'},
+  {id:'voidseam',name:'萬象裂縫', desc:'循環之外 · 裂縫主宰', bg:'#010103', grid:'rgba(190,160,255,0.10)', eHp:6.2, eSpd:1.74, spawn:2.48, bossName:'裂縫主宰', bossColor:'#d8c0ff', pattern:'starmill', locked:true, unlock:'origin'},
 ];
 var selStage='city';
 // 地圖 × 首領 世界觀敘事（選圖時顯示，融合場景氛圍與首領命名由來）
@@ -1566,7 +1567,8 @@ var STAGE_LORE={
   maelstrom:'吞噬一切的狂暴亂流。以螺旋絞殺的「風暴煞星」，就是這場永不停歇風暴的意志核心。',
   genesis:'萬物歸零、也萬物初生之地。集眾多形態於一身的「終焉主宰」，既是終點，也是下一次創世的起點。',
   paradox:'因果崩壞的悖論深淵。以雙旋干涉編織矛盾的「悖論主宰」，讓你的每一步都同時是對與錯。',
-  inferno:'烈焰永不熄滅的永劫煉獄。佈下地雷陣的「煉獄魔王」，是所有倒下者靈魂燃燒後凝成的最終試煉。'
+  inferno:'烈焰永不熄滅的永劫煉獄。佈下地雷陣的「煉獄魔王」，是所有倒下者靈魂燃燒後凝成的最終試煉。',
+  voidseam:'走完太初，你以為循環終於閉合。但硬幣有第三個面——那道連接正反、薄得幾乎不存在的邊緣。棲身於終末與太初裂縫間的「裂縫主宰」，是這個循環怎麼也自圓不了的一道破綻。踏進此處，等於承認：從來就沒有真正的盡頭，只有一圈比一圈更深的迴旋。'
 };
 var selMode='normal';
 try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde'||_sm==='turbo'||_sm==='chaos')selMode=_sm; }catch(e){}   // 記憶上次選的模式
@@ -4815,7 +4817,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v454 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v455 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

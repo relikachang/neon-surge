@@ -3417,6 +3417,11 @@ function update(dt){
       for(var dr=0;dr<3;dr++)ringFx(e.x,e.y,140+dr*90,'#c86bff'); ringFx(e.x,e.y,90,'#fff'); }
     if(e.boss&&!e.enraged&&e.hp/e.maxHp<0.4){ e.enraged=true; e.shoot=0.2; announce('⚠ '+(e.name||'首領')+' 狂暴化！','#ff2b5e'); flashScreen('255,43,94',0.45); shake(12); GAudio.boss&&GAudio.boss();
       for(var pk3=0;pk3<28;pk3++){ var pk3a=pk3/28*TAU+0.11; spawnEnemyBullet(e.x,e.y,Math.cos(pk3a),Math.sin(pk3a),245,e.dmg*0.5); } ringFx(e.x,e.y,180,'#ff2b5e'); ringFx(e.x,e.y,100,'#fff'); }
+    if(e.boss&&!e.phConverge&&e.hp/e.maxHp<0.28){ e.phConverge=true; e.shoot=0.2;   // 湮滅收束：在你周身生成兩圈全部向內收束的彈幕網,逼你在網合攏前移出缺口(收束型走位挑戰)
+      announce('🌀 '+(e.name||'首領')+' 湮滅收束！','#b06bff'); flashScreen('176,107,255',0.4); shake(13); GAudio.boss&&GAudio.boss();
+      var ccx=player.x, ccy=player.y;
+      for(var cvr=0;cvr<2;cvr++){ var crad=250+cvr*72, ccnt=26; for(var cvk=0;cvk<ccnt;cvk++){ var cva=cvk/ccnt*TAU; var cbx=ccx+Math.cos(cva)*crad, cby=ccy+Math.sin(cva)*crad; var cia=Math.atan2(ccy-cby,ccx-cbx); spawnEnemyBullet(cbx,cby,Math.cos(cia),Math.sin(cia),150+cvr*22,e.dmg*0.5); } }
+      ringFx(ccx,ccy,250,'#b06bff'); ringFx(ccx,ccy,170,'#fff'); }
     if(e.boss&&!e.frenzied&&e.hp/e.maxHp<0.15){ e.frenzied=true; e.enraged=true; e.shoot=0.15; announce('☠ '+(e.name||'首領')+' 絕命狂暴！','#ff1030'); flashScreen('255,20,48',0.55); shake(18); GAudio.boss&&GAudio.boss();
       for(var pk4=0;pk4<3;pk4++)ringFx(e.x,e.y,120+pk4*80,'#ff1030'); for(var pk5=0;pk5<36;pk5++){ var pk5a=pk5/36*TAU; spawnEnemyBullet(e.x,e.y,Math.cos(pk5a),Math.sin(pk5a),260,e.dmg*0.55); } }
     if(e.boss){ e.summonT-=dt; if(e.summonT<=0 && enemies.length<200){ e.summonT=e.enraged?6:10; var sn=e.enraged?4:2;
@@ -4953,7 +4958,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v477 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v478 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

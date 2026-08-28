@@ -1603,7 +1603,7 @@ var STAGE_LORE={
   resonance:'這裡的一切都會共振。當「共鳴主宰」撥動那根看不見的弦，整片深淵的敵意會在同一瞬間指向你——那不是攻擊，而是一場齊聲的宣判。學會聽見弦聲響起的前兆，在萬箭同發之前，找到那道唯一的靜默縫隙。'
 };
 var selMode='normal';
-try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde'||_sm==='turbo'||_sm==='chaos'||_sm==='vampire'||_sm==='titanhunt'||_sm==='lonewolf'||_sm==='countdown')selMode=_sm; }catch(e){}   // 記憶上次選的模式
+try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde'||_sm==='turbo'||_sm==='chaos'||_sm==='vampire'||_sm==='titanhunt'||_sm==='lonewolf'||_sm==='countdown'||_sm==='bossfrenzy')selMode=_sm; }catch(e){}   // 記憶上次選的模式
 var MODES={
   normal:{ic:'♾️',name:'標準生存',desc:'經典模式：活越久越強，挑戰無盡'},
   timeattack:{ic:'⏱️',name:'限時狂殺',desc:'120 秒內衝最高擊殺，時間到結算',dur:120},
@@ -1615,7 +1615,8 @@ var MODES={
   vampire:{ic:'🩸',name:'血色狩獵',desc:'無被動回血・生命上限 -20%・唯有不斷擊殺才能吸血續命，最具侵略性的生存打法，碎片獎勵 1.75 倍',reward:1.75},
   titanhunt:{ic:'🦣',name:'巨獸狩獵',desc:'敵人數量減半、但個個化為血厚體巨的龐然巨獸・每一隻都給大量經驗與碎片，是「大型狩獵」的火力試煉，碎片獎勵 1.5 倍',reward:1.5},
   lonewolf:{ic:'🐺',name:'獨狼',desc:'全程只能持有一把武器・不再出現新武器選項，唯有把它練到極致並進化；開局傷害 +35% 作為補償，最考驗單一武器 build 的專精試煉，碎片獎勵 1.75 倍',reward:1.75},
-  countdown:{ic:'⏳',name:'倒數殺戮',desc:'開局只有 30 秒・每擊殺一名敵人 +0.3 秒、精英/首領給更多，時間歸零即結束——逼你永不停手、越殺越久的高壓生存，碎片獎勵 1.5 倍',reward:1.5,dur:30}
+  countdown:{ic:'⏳',name:'倒數殺戮',desc:'開局只有 30 秒・每擊殺一名敵人 +0.3 秒、精英/首領給更多，時間歸零即結束——逼你永不停手、越殺越久的高壓生存，碎片獎勵 1.5 倍',reward:1.5,dur:30},
+  bossfrenzy:{ic:'👑',name:'首領狂潮',desc:'首領以約兩倍頻率接連降臨（雜兵照常）・持續的王者壓力與豐厚報酬，考驗你在兵潮中同時處理接踵而來的首領，碎片獎勵 1.5 倍',reward:1.5}
 };
 function stageUnlocked(s){ return !s.locked || DB.stages[s.id]; }
 
@@ -2582,6 +2583,7 @@ function newRun(daily){
      charge:0, chargeMax:100, overcharges:0, lastStandUsed:false, btCd:0, grazes:0,
      mode:(daily?'normal':selMode), modeTimer:(daily?0:selMode==='timeattack'?MODES.timeattack.dur:selMode==='countdown'?MODES.countdown.dur:0) };
   if(G.mode==='bossrush')G.nextBossAt=4;   // 首領亂鬥：快速首波首領
+  if(G.mode==='bossfrenzy')G.nextBossAt=55;   // 首領狂潮：更早的首波首領
   player={ x:0,y:0, radius:15, hp:0, maxHp:0, speed:0, iframe:0, aimAngle:0, frenzyT:0, overdriveT:0,
     weapons:[], passives:{}, base:{}, charId:ch.id, sig:charSig(ch.id) };
   var _ci=CHARS.indexOf(ch); if(_ci>=0)player.sig.arch=_ci%6;   // 依名冊序號分派船體原型，六型平均分佈
@@ -3748,7 +3750,7 @@ function spawnDirector(dt){
     if(G.bossWarnFx>0)G.bossWarnFx-=dt;
   }
   // 首領
-  if(G.time>=G.nextBossAt){ G.nextBossAt+=120; spawnBoss(); G.bossWarned=false; }
+  if(G.time>=G.nextBossAt){ G.nextBossAt+=(G.mode==='bossfrenzy'?60:120); spawnBoss(); G.bossWarned=false; }   // 首領狂潮：約兩倍頻率
 }
 function chooseType(m){ var r=Math.random();
   if(m<0.3)return r<0.8?'grunt':'swarm';
@@ -5014,7 +5016,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v487 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v488 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',
@@ -5092,7 +5094,7 @@ function renderMenu(){
     slb.innerHTML='<div class="slname" style="color:'+ssg.bossColor+'">'+ssg.name+' <span class="slboss" style="color:'+ssg.bossColor+';border-color:'+ssg.bossColor+'66">👑 '+ssg.bossName+'</span></div><div class="sltxt">「'+slore+'」</div>';
   }
   var ms=$('modesel'); if(ms){ ms.innerHTML='';
-    ['normal','timeattack','bossrush','hardcore','horde','turbo','chaos','vampire','titanhunt','lonewolf','countdown'].forEach(function(mid){ var md=MODES[mid];
+    ['normal','timeattack','bossrush','hardcore','horde','turbo','chaos','vampire','titanhunt','lonewolf','countdown','bossfrenzy'].forEach(function(mid){ var md=MODES[mid];
       var el=document.createElement('div'); el.className='modecard'+(selMode===mid?' on':'');
       el.innerHTML='<div class="mic">'+md.ic+'</div><div class="mn">'+md.name+'</div><div class="md">'+md.desc+'</div>';
       el.onclick=function(){ selMode=mid; try{localStorage.setItem('neon_mode',mid);}catch(_){} renderMenu(); };

@@ -1583,7 +1583,7 @@ var STAGE_LORE={
   voidseam:'走完太初，你以為循環終於閉合。但硬幣有第三個面——那道連接正反、薄得幾乎不存在的邊緣。棲身於終末與太初裂縫間的「裂縫主宰」，是這個循環怎麼也自圓不了的一道破綻。踏進此處，等於承認：從來就沒有真正的盡頭，只有一圈比一圈更深的迴旋。'
 };
 var selMode='normal';
-try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde'||_sm==='turbo'||_sm==='chaos')selMode=_sm; }catch(e){}   // 記憶上次選的模式
+try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde'||_sm==='turbo'||_sm==='chaos'||_sm==='vampire')selMode=_sm; }catch(e){}   // 記憶上次選的模式
 var MODES={
   normal:{ic:'♾️',name:'標準生存',desc:'經典模式：活越久越強，挑戰無盡'},
   timeattack:{ic:'⏱️',name:'限時狂殺',desc:'120 秒內衝最高擊殺，時間到結算',dur:120},
@@ -1591,7 +1591,8 @@ var MODES={
   hardcore:{ic:'💀',name:'一命限定',desc:'零復活・受一次致命傷即結束，碎片獎勵 1.5 倍',reward:1.5},
   horde:{ic:'🐝',name:'無盡狂潮',desc:'敵潮爆量湧來・考驗清場火力與極限走位，碎片獎勵 1.5 倍',reward:1.5},
   turbo:{ic:'⚡',name:'疾速狂飆',desc:'全場敵人移速大增・考驗反應與極限走位，碎片獎勵 1.5 倍',reward:1.5},
-  chaos:{ic:'🌀',name:'混沌狂宴',desc:'絕大多數敵人皆為帶詞綴的精英・最高強度的混沌試煉，碎片獎勵 2 倍',reward:2}
+  chaos:{ic:'🌀',name:'混沌狂宴',desc:'絕大多數敵人皆為帶詞綴的精英・最高強度的混沌試煉，碎片獎勵 2 倍',reward:2},
+  vampire:{ic:'🩸',name:'血色狩獵',desc:'無被動回血・生命上限 -20%・唯有不斷擊殺才能吸血續命，最具侵略性的生存打法，碎片獎勵 1.75 倍',reward:1.75}
 };
 function stageUnlocked(s){ return !s.locked || DB.stages[s.id]; }
 
@@ -2496,6 +2497,7 @@ function newRun(daily){
     fireRate:1*(ch.stat.fireRate||1)*(1+0.05*metaLv('haste'))*omni*pHaste, speed:230*(1+0.05*metaLv('spd'))*omni*pSpd2*(ch.stat.speed||1)*mut.pSpd,
     maxHp:(100+12*metaLv('hp'))*omni*pHp*(ch.stat.maxHp||1)*mut.pHp, pickup:90*(1+0.12*metaLv('pick'))*(1+0.06*prestigeLv('p_pickup'))*(ch.stat.pickup||1),
     crit:0.05+(ch.stat.crit||0)+0.03*metaLv('crit')+0.02*prestigeLv('p_crit'), critMult:2*(1+0.1*metaLv('critdmg'))*(1+0.08*prestigeLv('p_critdmg')), armor:0.04*metaLv('armor')+0.02*prestigeLv('p_armor'), regen:0.3*metaLv('regen')+0.4*prestigeLv('p_regen'), xpMult:(1+0.08*metaLv('xp'))*(1+0.05*prestigeLv('p_xp')) };
+  if(G.mode==='vampire'){ player.base.maxHp*=0.8; player.base.regen=0; }   // 血色狩獵：生命上限 -20% 且無被動回血，唯有擊殺吸血才能續命
   enemies=[]; bullets=[]; ebullets=[]; orbs=[]; particles=[]; dmgnums=[]; pickups=[]; blades=[]; fxRings=[]; wells=[]; beams=[]; mines=[]; clouds=[]; hazards=[]; drones=[]; shards=[];
   addWeapon(ch.start);
   recalc(); player.hp=player.maxHp;
@@ -3061,6 +3063,7 @@ function killEnemy(e){
   if(e.boss)G.hitStop=Math.max(G.hitStop||0,0.12); else if(e.elite)G.hitStop=Math.max(G.hitStop||0,0.06);   // 頓幀：擊殺首領/精英瞬間慢動作衝擊
   if(player.skinKill){ burst(e.x,e.y,player.skinKill,6,220); if(fxScale>=0.6&&(G._skfx=(G._skfx||0)+1)%2===0)ringFx(e.x,e.y,26,player.skinKill); }   // 傳奇皮膚：擊殺特效(彩色迸射+間隔光環，吃fxScale不爆量)
   if(player.lifesteal>0&&player.hp<player.maxHp){ player.hp=Math.min(player.maxHp,player.hp+player.lifesteal); }   // 吸血被動：擊殺回血
+  if(G.mode==='vampire'&&player.hp<player.maxHp){ player.hp=Math.min(player.maxHp,player.hp+Math.max(2,player.maxHp*0.015)); if((G._vfx=(G._vfx||0)+1)%3===0)ringFx(e.x,e.y,20,'#ff2b5e'); }   // 血色狩獵：每次擊殺吸血回復(約 1.5% 生命上限)
   if(player.cleave>0&&(G._clv||0)<4){ G._clv=(G._clv||0)+1; var clr=(50+player.cleave*14)*player.area, clr2=clr*clr, cvd=dmg(8+player.cleave*5); enemyGrid.query(e.x,e.y,clr,function(o){ if(o.hp>0&&o!==e&&dist2(o.x,o.y,e.x,e.y)<clr2)hitEnemy(o,cvd,e.x,e.y,0.1); }); ringFx(e.x,e.y,clr,'#ff8a3a'); G._clv--; }   // 劈斬：擊殺濺射(深度上限4防爆棧)
   if(player.shrapnel>0){ var shn=3+player.shrapnel, shd=dmg(7+player.shrapnel*4); for(var shi=0;shi<shn;shi++){ var sha=shi/shn*TAU+rand(-0.2,0.2); spawnBullet(e.x,e.y,Math.cos(sha),Math.sin(sha),640,shd,'#ffd54a',2,4,1.5); } }   // 破片：擊殺炸出遠距高速貫穿彈片(可穿透、飛更遠)
   if(player.chain>0&&!e.boss&&(G._chd||0)<2&&Math.random()<0.5+player.chain*0.08){ G._chd=(G._chd||0)+1;   // 連鎖爆破：擊殺引發在敵人間跳躍的連環電爆(深度上限2防遞迴)
@@ -4843,7 +4846,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v461 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v462 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',
@@ -4921,7 +4924,7 @@ function renderMenu(){
     slb.innerHTML='<div class="slname" style="color:'+ssg.bossColor+'">'+ssg.name+' <span class="slboss" style="color:'+ssg.bossColor+';border-color:'+ssg.bossColor+'66">👑 '+ssg.bossName+'</span></div><div class="sltxt">「'+slore+'」</div>';
   }
   var ms=$('modesel'); if(ms){ ms.innerHTML='';
-    ['normal','timeattack','bossrush','hardcore','horde','turbo','chaos'].forEach(function(mid){ var md=MODES[mid];
+    ['normal','timeattack','bossrush','hardcore','horde','turbo','chaos','vampire'].forEach(function(mid){ var md=MODES[mid];
       var el=document.createElement('div'); el.className='modecard'+(selMode===mid?' on':'');
       el.innerHTML='<div class="mic">'+md.ic+'</div><div class="mn">'+md.name+'</div><div class="md">'+md.desc+'</div>';
       el.onclick=function(){ selMode=mid; try{localStorage.setItem('neon_mode',mid);}catch(_){} renderMenu(); };

@@ -3128,6 +3128,7 @@ function slashArc(x,y,ang,radius,half,color){ arcSeg.push({x:x,y:y,ang:ang,r:rad
 function hitEnemy(e,amount,fromx,fromy,knock){
   if(e.hp<=0)return; if(e.phaseEnd&&e.phaseEnd>G.time){ e.flash=0.08; return; }   // 相位詞綴：無敵窗內免疫傷害
   if(e.affix==='shielded')amount*=0.5;   // 護盾詞綴：減傷 50%
+  if(e._matrixT&&e._matrixT>G.time)amount*=0.4;   // 首領守護矩陣：護盾期間受傷 -60%
   if(e.warded&&e.warded>G.time-0.35)amount*=0.55;   // 壁壘光環：被壁壘者庇護的敵人減傷 45%(先殺壁壘才好打)
   if(e.boss&&player.bossDmg>1)amount*=player.bossDmg;   // 屠龍核心：對首領增傷
   if(player.coldblood>0&&((e.frozen||0)>0||(e.slow||0)>0))amount*=(1+0.14*player.coldblood+((e.frozen||0)>0?0.2*player.coldblood:0));   // 寒血：對減速敵增傷；對「凍結」敵額外碎冰重傷(每級再+20%)
@@ -3442,6 +3443,10 @@ function update(dt){
       for(var ds=0;ds<24;ds++){ var dsa=ds/24*TAU+0.13; spawnEnemyBullet(e.x,e.y,Math.cos(dsa),Math.sin(dsa),210,e.dmg*0.5); }
       if(enemies.length<200)for(var dm=0;dm<3;dm++){ var dmx=e.x+rand(-60,60),dmy=e.y+rand(-60,60); spawnEnemy(chooseType(G.time/60),dmx,dmy,1.3); ringFx(dmx,dmy,40,e.color); }
       for(var dr=0;dr<3;dr++)ringFx(e.x,e.y,140+dr*90,'#c86bff'); ringFx(e.x,e.y,90,'#fff'); }
+    if(e.boss&&!e.phMatrix&&e.hp/e.maxHp<0.48){ e.phMatrix=true; e._matrixT=G.time+5;   // 守護矩陣：一次性防禦階段——展開 5 秒限時減傷護盾(受傷-60%) + 召喚 4 名精英護衛,逼你先清護衛/走位撐過護盾而非硬拆
+      announce('🛡 '+(e.name||'首領')+' 守護矩陣！護盾展開','#5dd3ff'); flashScreen('93,211,255',0.36); shake(10); GAudio.boss&&GAudio.boss();
+      if(enemies.length<200)for(var gm=0;gm<4;gm++){ var gma=gm/4*TAU, gmx=e.x+Math.cos(gma)*90, gmy=e.y+Math.sin(gma)*90; spawnEnemy(chooseType(G.time/60),gmx,gmy,1.6,true); ringFx(gmx,gmy,44,'#5dd3ff'); }
+      for(var gr=0;gr<3;gr++)ringFx(e.x,e.y,110+gr*70,'#5dd3ff'); ringFx(e.x,e.y,80,'#ffffff'); }
     if(e.boss&&!e.enraged&&e.hp/e.maxHp<0.4){ e.enraged=true; e.shoot=0.2; announce('⚠ '+(e.name||'首領')+' 狂暴化！','#ff2b5e'); flashScreen('255,43,94',0.45); shake(12); GAudio.boss&&GAudio.boss();
       for(var pk3=0;pk3<28;pk3++){ var pk3a=pk3/28*TAU+0.11; spawnEnemyBullet(e.x,e.y,Math.cos(pk3a),Math.sin(pk3a),245,e.dmg*0.5); } ringFx(e.x,e.y,180,'#ff2b5e'); ringFx(e.x,e.y,100,'#fff'); }
     if(e.boss&&!e.phConverge&&e.hp/e.maxHp<0.28){ e.phConverge=true; e.shoot=0.2;   // 湮滅收束：在你周身生成兩圈全部向內收束的彈幕網,逼你在網合攏前移出缺口(收束型走位挑戰)
@@ -4991,7 +4996,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v484 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v485 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

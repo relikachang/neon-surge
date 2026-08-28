@@ -1577,6 +1577,7 @@ var STAGES=[
   {id:'ionstorm', name:'電磁風暴', desc:'更深的迴旋 · 雷暴主宰', bg:'#02040a', grid:'rgba(125,211,255,0.12)', eHp:6.5, eSpd:1.78, spawn:2.52, bossName:'雷暴主宰', bossColor:'#7dd3ff', pattern:'helix', locked:true, unlock:'voidseam'},
   {id:'sacrifice',name:'獻祭之淵', desc:'以血換力 · 獻祭主宰', bg:'#0a0206', grid:'rgba(255,43,94,0.11)', eHp:6.8, eSpd:1.8, spawn:2.55, bossName:'獻祭主宰', bossColor:'#ff2b5e', pattern:'vortexnova', locked:true, unlock:'ionstorm'},
   {id:'resonance',name:'共鳴之淵', desc:'全場齊射 · 共鳴主宰', bg:'#060410', grid:'rgba(200,107,255,0.12)', eHp:7.0, eSpd:1.82, spawn:2.58, bossName:'共鳴主宰', bossColor:'#c86bff', pattern:'prismspray', locked:true, unlock:'sacrifice'},
+  {id:'gravtide',name:'潮汐深淵', desc:'引力潮汐 · 潮汐主宰', bg:'#04060f', grid:'rgba(139,92,246,0.12)', eHp:7.2, eSpd:1.85, spawn:2.62, bossName:'潮汐主宰', bossColor:'#8b5cf6', pattern:'blackhole', locked:true, unlock:'resonance'},
 ];
 var selStage='city';
 // 地圖 × 首領 世界觀敘事（選圖時顯示，融合場景氛圍與首領命名由來）
@@ -1603,7 +1604,8 @@ var STAGE_LORE={
   voidseam:'走完太初，你以為循環終於閉合。但硬幣有第三個面——那道連接正反、薄得幾乎不存在的邊緣。棲身於終末與太初裂縫間的「裂縫主宰」，是這個循環怎麼也自圓不了的一道破綻。踏進此處，等於承認：從來就沒有真正的盡頭，只有一圈比一圈更深的迴旋。',
   ionstorm:'裂縫更深處，是一片永不平息的電磁風暴。整個空間如帶電的神經在抽搐，連思緒都會被脈衝打亂。「雷暴主宰」不是敵人，而是這道迴旋自身的放電——每一次脈衝，都在提醒你：越往深處，秩序就越不站在你這邊。',
   sacrifice:'再往深處，規則變得赤裸而殘忍：這裡的力量，只用鮮血交換。每一次血祭脈動，都從你身上抽走一部分，換來一瞬燃燒般的爆發。「獻祭主宰」端坐於這場永恆的交易中心——牠不奪走你的性命，只是不斷提醒你，你願意為了活下去，付出多少。',
-  resonance:'這裡的一切都會共振。當「共鳴主宰」撥動那根看不見的弦，整片深淵的敵意會在同一瞬間指向你——那不是攻擊，而是一場齊聲的宣判。學會聽見弦聲響起的前兆，在萬箭同發之前，找到那道唯一的靜默縫隙。'
+  resonance:'這裡的一切都會共振。當「共鳴主宰」撥動那根看不見的弦，整片深淵的敵意會在同一瞬間指向你——那不是攻擊，而是一場齊聲的宣判。學會聽見弦聲響起的前兆，在萬箭同發之前，找到那道唯一的靜默縫隙。',
+  gravtide:'這片深淵有自己的呼吸。每隔一段時間，一股無形的引力潮便席捲全場，把四散的敵人牽引、擠壓成一團——「潮汐主宰」正是這股潮汐的心臟，它從不追逐你，只是靜靜地一收一放，讓萬物在它的節律裡漲落。學會在潮起時借勢收割成堆的敵群，也提防那被壓縮的殺意在你腳邊漲成滅頂之浪。'
 };
 var selMode='normal';
 try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde'||_sm==='turbo'||_sm==='chaos'||_sm==='vampire'||_sm==='titanhunt'||_sm==='lonewolf'||_sm==='countdown'||_sm==='bossfrenzy')selMode=_sm; }catch(e){}   // 記憶上次選的模式
@@ -3734,6 +3736,12 @@ function spawnDirector(dt){
     announce('🔊 共鳴脈動！全場齊射','#c86bff'); flashScreen('200,107,255',0.28); shake(6);
     for(var _ri=0;_ri<enemies.length;_ri++){ var _re=enemies[_ri]; if(_re.hp>0&&!_re.boss){ var _ra=Math.atan2(player.y-_re.y,player.x-_re.x); spawnEnemyBullet(_re.x,_re.y,Math.cos(_ra),Math.sin(_ra),200,_re.dmg*0.5); _re.rally=Math.max(_re.rally||0,1.5); } }
     ringFx(player.x,player.y,210,'#c86bff'); ringFx(player.x,player.y,130,'#e0c0ff'); } }
+  // 環境機制·潮汐深淵：週期「引力潮汐」——把全場敵人一齊牽引向玩家附近某一點聚成一團，利於範圍收割但集中威脅，逼你讀節奏借勢
+  if(G.stage&&G.stage.id==='gravtide'){ G.gtT=(G.gtT==null?8:G.gtT-dt); if(G.gtT<=0){ G.gtT=rand(9,13);
+    var _gang=rand(0,TAU), _gdist=rand(150,260), _gcx=player.x+Math.cos(_gang)*_gdist, _gcy=player.y+Math.sin(_gang)*_gdist;
+    announce('🌀 引力潮汐！敵群被牽引','#8b5cf6'); flashScreen('139,92,246',0.22); shake(5);
+    for(var _gi=0;_gi<enemies.length;_gi++){ var _ge=enemies[_gi]; if(_ge.hp>0&&!_ge.boss){ var _gd=Math.atan2(_gcy-_ge.y,_gcx-_ge.x), _gp=110+rand(0,55); _ge.x+=Math.cos(_gd)*_gp; _ge.y+=Math.sin(_gd)*_gp; } }
+    ringFx(_gcx,_gcy,150,'#8b5cf6'); ringFx(_gcx,_gcy,90,'#c8a0ff'); } }
   // 環境視野阻礙關卡：一次性入場提示
   if(G.stage&&!G._visAnn){ var _va=VISION_STAGES[G.stage.id]; if(_va){ G._visAnn=true; announce(_va.msg,_va.mc); } }
   // 環境狀態·寒獄凍原：暴風雪陣風週期性凍緩(移動變慢，呼應白幕視野)
@@ -5020,7 +5028,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v490 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v491 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

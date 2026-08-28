@@ -1401,6 +1401,7 @@ var CHARS=[
   {id:'nemesis',  face:'👁️',name:'獵神', desc:'獵殺巨獸 · 起手死眼 · 高暴擊薄血', start:'deadeye', locked:true, unlock:'nemesis', stat:{crit:0.12,dmg:1.1,maxHp:0.9}},
   {id:'ravager',  face:'🗡️',name:'狂刃', desc:'極端玻璃大砲 · 起手加特林 · 高攻高射速極薄血', start:'gatling', locked:true, unlock:'ravager', stat:{dmg:1.25,fireRate:1.12,maxHp:0.72,crit:0.05}},
   {id:'shinobi',  face:'🥷',name:'疾影', desc:'瞬斬刺客 · 起手瞬斬 · 極速高暴薄血', start:'blinkstrike', locked:true, unlock:'shinobi', stat:{speed:1.2,crit:0.14,maxHp:0.85}},
+  {id:'templar',  face:'🛡️',name:'聖盾衛', desc:'極致生存 · 起手淨化波 · 最硬肉盾慢移', start:'purgewave', locked:true, unlock:'templar', stat:{maxHp:1.3,speed:0.92,dmg:0.95}},
 ];
 var selChar='ranger';
 // 角色背景故事（世界觀敘事，選角時顯示）
@@ -1439,9 +1440,10 @@ var CHAR_LORE={
   warden2:'孤島燈塔最後的守燈人。掃描雷射是他日夜不熄的燈——為所有迷途者指路。',
   nemesis:'他從不追殺弱小。人群之中，他的瞳孔只鎖定那頭最龐然的身影——越是不可撼動，越值得他扣下唯一的一發。傳說他的眼，見過連神都會流血的角度。',
   ravager:'他把裝甲全數卸下，只為換取更快的心跳。旁人視之為瘋狂，他卻笑稱那是清醒——當死亡近在咫尺，他的刀，才真正活了過來。',
-  shinobi:'沒有人看清過他出手。你只會在三個敵人同時倒下的那一刻，隱約感覺到——方才擦身而過的那道風，原來是一把刀。他不與敵人纏鬥，他只是路過，然後決定誰該留下。'
+  shinobi:'沒有人看清過他出手。你只會在三個敵人同時倒下的那一刻，隱約感覺到——方才擦身而過的那道風，原來是一把刀。他不與敵人纏鬥，他只是路過，然後決定誰該留下。',
+  templar:'他走得慢，慢到彷彿整個世界的攻勢都追不上他的從容。飛來的死亡在他身周化為烏有，敵人的絕望在他盾前一寸寸崩解。他不需要贏得快——他只需要，永遠不倒。'
 };
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕',lunar:'單局擊殺1200敵人',enigma:'？？？ 隱藏任務',spiralist:'單局擊殺2500敵人',gunslinger:'單局造成100萬傷害',ronin:'單局擊殺60精英',warden2:'單局存活12分',nemesis:'單局擊敗15首領',ravager:'單局達成250連擊',shinobi:'單局擊殺1800敵人'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕',lunar:'單局擊殺1200敵人',enigma:'？？？ 隱藏任務',spiralist:'單局擊殺2500敵人',gunslinger:'單局造成100萬傷害',ronin:'單局擊殺60精英',warden2:'單局存活12分',nemesis:'單局擊敗15首領',ravager:'單局達成250連擊',shinobi:'單局擊殺1800敵人',templar:'單局存活10分鐘'};
 
 // ===== 皮膚商城：機體外觀塗裝，用碎片購買（含每 2 個月輪換的限量皮膚）=====
 function mkpal(hue){ return {col:'hsl('+hue+',85%,60%)',glow:'hsl('+hue+',90%,62%)',edge:'hsl('+hue+',92%,78%)',hull:'hsl('+hue+',46%,30%)',hull2:'hsl('+((hue+22)%360)+',50%,23%)',core:'hsl('+((hue+16)%360)+',82%,88%)',accent:'hsl('+((hue+40)%360)+',90%,64%)'}; }
@@ -4727,6 +4729,7 @@ function gameOver(){
   if((G.bossKills||0)>=15&&!DB.chars.nemesis){DB.chars.nemesis=true; announce&&announce('👁️ 角色「獵神」解鎖！','#ffe14a');}
   if((G.peakCombo||0)>=250&&!DB.chars.ravager){DB.chars.ravager=true; announce&&announce('🗡️ 角色「狂刃」解鎖！','#ff5a3a');}
   if((G.kills||0)>=1800&&!DB.chars.shinobi){DB.chars.shinobi=true; announce&&announce('🥷 角色「疾影」解鎖！','#a0f0ff');}
+  if(G.time>=600&&!DB.chars.templar){DB.chars.templar=true; announce&&announce('🛡️ 角色「聖盾衛」解鎖！','#7cf0ff');}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; GAudio.unlock&&GAudio.unlock(); } }
@@ -4978,7 +4981,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v481 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v482 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

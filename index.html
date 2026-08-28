@@ -1327,6 +1327,7 @@ var META=[
   {id:'thorncore',ic:'🌵',name:'荊棘核心', desc:'初始接觸反傷', per:'+8', max:5, cost:function(l){return 100+l*85;}},
   {id:'surgecore',ic:'⚡',name:'湧能核心', desc:'過載充能速度＋爆發威力', per:'+12%', max:6, cost:function(l){return 150+l*130;}},
   {id:'detocore',ic:'💥',name:'連鎖引爆核心', desc:'擊殺時機率原地引爆波及周圍', per:'+12%機率', max:5, cost:function(l){return 140+l*120;}},
+  {id:'barrier', ic:'🔰',name:'晶盾核心', desc:'開局獲得可吸收數次傷害的晶盾', per:'+1 次', max:3, cost:function(l){return 180+l*160;}},
   {id:'omni',    ic:'🌌', name:'萬能核心 · 殿堂', desc:'傷害/生命/攻速/移速全面提升（碎片無底洞）', per:'+3%全能', max:20, cost:function(l){return 8000*(l+1)*(l+1);}},
 ];
 function metaLv(id){return DB.meta[id]||0;}
@@ -2587,6 +2588,7 @@ function newRun(daily){
   addWeapon(ch.start);
   recalc(); player.hp=player.maxHp;
   player.iframe=1.5*metaLv('startshield');   // 啟動護盾：開局無敵
+  player.crystalShield=metaLv('barrier');   // 晶盾核心：開局獲得可吸收數次傷害的晶盾
   var gd=metaLv('guardian'); for(var gi=0;gi<gd;gi++)drones.push({x:player.x,y:player.y,ang:gi/Math.max(1,gd)*TAU,orbit:82,life:1e9,cd:rand(0,0.3),dmg:dmg(14),color:'#ffd54a'});   // 守護核心：金色環繞護衛無人機
   // 局前補給：套用已購買的一次性增益後清空
   if(DB.boost){ var used=false; BOOSTS.forEach(function(b){ if(DB.boost[b.id]){ used=true; try{ b.apply(); }catch(e){} } }); if(used){ DB.boost={}; saveDB(); } }
@@ -3253,6 +3255,7 @@ function hurtPlayer(amount){
   if(G.over||player.iframe>0)return;
   if(player.dodge>0 && Math.random()<player.dodge){ player.iframe=0.3; ringFx(player.x,player.y,32,'#5dff9b'); floatText('閃避！','#5dff9b'); return; }   // 閃避被動：機率完全免傷
   if(player.blockReady){ player.blockReady=false; player.blockT=0; player.iframe=0.6; ringFx(player.x,player.y,40,'#5dd3ff'); floatText('護盾抵擋！','#5dd3ff'); return; }   // 能量護盾：抵擋一次攻擊
+  if(player.crystalShield>0){ player.crystalShield--; player.iframe=0.8; ringFx(player.x,player.y,46,'#8befff'); ringFx(player.x,player.y,28,'#dffbff'); floatText('🔰 晶盾吸收！','#8befff'); GAudio.shatter&&GAudio.shatter(); return; }   // 晶盾核心：吸收一次傷害(開局緩衝)
   amount*=(1-player.armor);
   if(player.tenacity>0&&player.maxHp>0&&player.hp/player.maxHp<0.45)amount*=(1-Math.min(0.6,player.tenacity*0.08));   // 韌命：低血時減傷(越危險越硬)
   player.hp-=amount; player.iframe=0.6; shake(6); G.flawless=false;
@@ -4981,7 +4984,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v482 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v483 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

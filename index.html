@@ -1393,6 +1393,7 @@ var CHARS=[
   {id:'gunslinger',face:'🔫',name:'機炮手', desc:'單體壓制 · 起手加特林', start:'gatling', locked:true, unlock:'gunslinger', stat:{fireRate:1.12,crit:0.05,maxHp:0.95}},
   {id:'ronin',    face:'☸️',name:'輪刃客', desc:'迴旋絞殺 · 起手迴旋輪刃', start:'chakram', locked:true, unlock:'ronin', stat:{dmg:1.08,speed:1.08,crit:0.05}},
   {id:'warden2',  face:'📡',name:'守燈人', desc:'環場掃射 · 起手掃描雷射', start:'beamsweep', locked:true, unlock:'warden2', stat:{fireRate:1.06,maxHp:1.08,pickup:1.1}},
+  {id:'nemesis',  face:'👁️',name:'獵神', desc:'獵殺巨獸 · 起手死眼 · 高暴擊薄血', start:'deadeye', locked:true, unlock:'nemesis', stat:{crit:0.12,dmg:1.1,maxHp:0.9}},
 ];
 var selChar='ranger';
 // 角色背景故事（世界觀敘事，選角時顯示）
@@ -1428,9 +1429,10 @@ var CHAR_LORE={
   spiralist:'把混沌織成秩序的螺旋師。她的彈幕看似雜亂，實則是宇宙運行的縮影。',
   gunslinger:'舊時代的槍手，拒絕承認火力已被魔法取代。加特林的轟鳴是他的證明。',
   ronin:'失去主家的流浪劍者。迴旋輪刃去而復返，正如他無處安放的忠誠。',
-  warden2:'孤島燈塔最後的守燈人。掃描雷射是他日夜不熄的燈——為所有迷途者指路。'
+  warden2:'孤島燈塔最後的守燈人。掃描雷射是他日夜不熄的燈——為所有迷途者指路。',
+  nemesis:'他從不追殺弱小。人群之中，他的瞳孔只鎖定那頭最龐然的身影——越是不可撼動，越值得他扣下唯一的一發。傳說他的眼，見過連神都會流血的角度。'
 };
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕',lunar:'單局擊殺1200敵人',enigma:'？？？ 隱藏任務',spiralist:'單局擊殺2500敵人',gunslinger:'單局造成100萬傷害',ronin:'單局擊殺60精英',warden2:'單局存活12分'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕',lunar:'單局擊殺1200敵人',enigma:'？？？ 隱藏任務',spiralist:'單局擊殺2500敵人',gunslinger:'單局造成100萬傷害',ronin:'單局擊殺60精英',warden2:'單局存活12分',nemesis:'單局擊敗15首領'};
 
 // ===== 皮膚商城：機體外觀塗裝，用碎片購買（含每 2 個月輪換的限量皮膚）=====
 function mkpal(hue){ return {col:'hsl('+hue+',85%,60%)',glow:'hsl('+hue+',90%,62%)',edge:'hsl('+hue+',92%,78%)',hull:'hsl('+hue+',46%,30%)',hull2:'hsl('+((hue+22)%360)+',50%,23%)',core:'hsl('+((hue+16)%360)+',82%,88%)',accent:'hsl('+((hue+40)%360)+',90%,64%)'}; }
@@ -4595,6 +4597,7 @@ function gameOver(){
   if((G.dmgDealt||0)>=1000000&&!DB.chars.gunslinger){DB.chars.gunslinger=true;}
   if((G.eliteKills||0)>=60&&!DB.chars.ronin){DB.chars.ronin=true;}
   if(G.time>=720&&!DB.chars.warden2){DB.chars.warden2=true;}
+  if((G.bossKills||0)>=15&&!DB.chars.nemesis){DB.chars.nemesis=true; announce&&announce('👁️ 角色「獵神」解鎖！','#ffe14a');}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; GAudio.unlock&&GAudio.unlock(); } }
@@ -4846,7 +4849,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v462 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v463 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

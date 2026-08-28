@@ -1834,6 +1834,25 @@ var WDEFS={
       fire:function(w){ if(bullets.length<450){ var petals=10+w.level, spin=(w._nb2=(w._nb2||0)+0.35); for(var k=0;k<petals;k++){ var a=k/petals*TAU+spin, a2=-a; spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),400,dmg(14+w.level*5),'#ff8ae0',2,6,1.6); spawnBullet(player.x,player.y,Math.cos(a2),Math.sin(a2),340,dmg(14+w.level*5),'#ffb0ec',2,6,1.6); } } }
     }
   },
+  blinkstrike:{ic:'🌠',name:'瞬斬',color:'#a0f0ff',tag:'連斬',max:8,
+    desc:function(l){return l===0?'瞬移連斬——以自身為起點，在最近的數名敵人間閃電般連續突斬':'連斬數↑ 傷害↑';},
+    cd:function(l){return Math.max(0.6,1.4-l*0.1);},
+    fire:function(w){ var hits=3+Math.floor(w.level/2), rq=560, r2=rq*rq, cx=player.x, cy=player.y, dmgv=dmg(22+w.level*8), chain=[];
+      for(var h=0;h<hits;h++){ var best=null,bd=1e9;
+        enemyGrid.query(cx,cy,rq,function(o){ if(o.hp>0&&!o._blk){ var dd=dist2(o.x,o.y,cx,cy); if(dd<r2&&dd<bd){bd=dd;best=o;} } });
+        if(!best)break; best._blk=1; chain.push(best); hitEnemy(best,dmgv,cx,cy,0.12); fxLightning(cx,cy,best.x,best.y); ringFx(best.x,best.y,best.r*1.9,'#a0f0ff'); cx=best.x; cy=best.y; }
+      for(var c=0;c<chain.length;c++)chain[c]._blk=0;
+      if(chain.length){ shake(2); GAudio.zap&&GAudio.zap(); } },
+    evo:{reqPassive:'pchain',ic:'⚡',name:'雷神無盡斬',color:'#dffcff',desc:'連斬數翻倍，且末端沿原路折返再斬一輪，雷光連綿不絕',
+      cd:function(l){return Math.max(0.45,1.1-l*0.08);},
+      fire:function(w){ var hits=6+w.level, rq=620, r2=rq*rq, cx=player.x, cy=player.y, dmgv=dmg(26+w.level*9), chain=[];
+        for(var h=0;h<hits;h++){ var best=null,bd=1e9;
+          enemyGrid.query(cx,cy,rq,function(o){ if(o.hp>0&&!o._blk){ var dd=dist2(o.x,o.y,cx,cy); if(dd<r2&&dd<bd){bd=dd;best=o;} } });
+          if(!best)break; best._blk=1; chain.push(best); hitEnemy(best,dmgv,cx,cy,0.14); fxLightning(cx,cy,best.x,best.y); ringFx(best.x,best.y,best.r*2,'#dffcff'); cx=best.x; cy=best.y; }
+        for(var c=chain.length-1;c>=0;c--){ if(chain[c].hp>0)hitEnemy(chain[c],dmgv*0.7,cx,cy,0.12); chain[c]._blk=0; }
+        if(chain.length){ shake(3); GAudio.zap&&GAudio.zap(); } }
+    }
+  },
   brand:{ic:'🏷️',name:'獵殺烙印',color:'#ff3bd0',tag:'標記',max:8,
     desc:function(l){return l===0?'為周身敵人烙上獵殺印記，下次擊發時同步引爆所有印記，造成範圍連環爆':'印記數↑ 引爆傷害↑';},
     cd:function(l){return Math.max(0.8,1.6-l*0.1);},
@@ -2196,7 +2215,7 @@ var WDEFS={
     }
   }
 };
-var WORDER=['plasma','ricochet','wavecannon','splitshot','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet','hornet','spiralgun','gatling','chakram','beamsweep','judgment','skewer','tether','guillotine','novabloom','deadeye','brand'];
+var WORDER=['plasma','ricochet','wavecannon','splitshot','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet','hornet','spiralgun','gatling','chakram','beamsweep','judgment','skewer','tether','guillotine','novabloom','deadeye','brand','blinkstrike'];
 // 武器背景敘事（顯示於武器圖鑑，延續世界觀）
 var WEAPON_LORE={
   plasma:'倖存者護甲的標準配備。每一發電漿都是舊世界文明最後的火種。',
@@ -2219,6 +2238,7 @@ var WEAPON_LORE={
   novabloom:'綻放，是它唯一的語言。每一次盛開都是一場屠殺，每一片花瓣都朝著不同的死亡飛去。',
   deadeye:'它不理會腳邊的雜兵，只在人群中尋找那頭最龐大的身影。越是不可撼動的巨獸，越是它眼中唯一值得扣下的一發。',
   brand:'它不急著殺。先在獵物身上刻下一枚只有它看得見的印記——然後在某個它選定的瞬間，讓所有被標記者同時明白：狩獵，早在牠們被烙印的那一刻就結束了。',
+  blinkstrike:'快到連光都追不上的一瞬，它已在三個敵人之間走過一遍。你看見的不是它的移動，而是它移動後留下的三道殘影——與三具還來不及倒下的軀體。',
   mine:'工兵留給後來者的問候。踏上它的，都會後悔前進的那一步。',
   toxic:'瘟疫師的慈悲——既然治不好這世界，便讓敵人陪它一起腐爛。',
   thunder:'自稱雷神者的天罰。抬手，天便落下審判，無人知其真名。',
@@ -4922,7 +4942,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v473 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v474 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

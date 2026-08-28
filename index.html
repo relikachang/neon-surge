@@ -1569,6 +1569,7 @@ var STAGES=[
   {id:'origin',  name:'太初之境', desc:'萬物初生 · 太初主宰', bg:'#020206', grid:'rgba(200,200,255,0.10)', eHp:5.8, eSpd:1.7, spawn:2.4, bossName:'太初主宰', bossColor:'#c8c8ff', pattern:'ringpulse', locked:true, unlock:'omega'},
   {id:'voidseam',name:'萬象裂縫', desc:'循環之外 · 裂縫主宰', bg:'#010103', grid:'rgba(190,160,255,0.10)', eHp:6.2, eSpd:1.74, spawn:2.48, bossName:'裂縫主宰', bossColor:'#d8c0ff', pattern:'starmill', locked:true, unlock:'origin'},
   {id:'ionstorm', name:'電磁風暴', desc:'更深的迴旋 · 雷暴主宰', bg:'#02040a', grid:'rgba(125,211,255,0.12)', eHp:6.5, eSpd:1.78, spawn:2.52, bossName:'雷暴主宰', bossColor:'#7dd3ff', pattern:'helix', locked:true, unlock:'voidseam'},
+  {id:'sacrifice',name:'獻祭之淵', desc:'以血換力 · 獻祭主宰', bg:'#0a0206', grid:'rgba(255,43,94,0.11)', eHp:6.8, eSpd:1.8, spawn:2.55, bossName:'獻祭主宰', bossColor:'#ff2b5e', pattern:'vortexnova', locked:true, unlock:'ionstorm'},
 ];
 var selStage='city';
 // 地圖 × 首領 世界觀敘事（選圖時顯示，融合場景氛圍與首領命名由來）
@@ -1593,7 +1594,8 @@ var STAGE_LORE={
   paradox:'因果崩壞的悖論深淵。以雙旋干涉編織矛盾的「悖論主宰」，讓你的每一步都同時是對與錯。',
   inferno:'烈焰永不熄滅的永劫煉獄。佈下地雷陣的「煉獄魔王」，是所有倒下者靈魂燃燒後凝成的最終試煉。',
   voidseam:'走完太初，你以為循環終於閉合。但硬幣有第三個面——那道連接正反、薄得幾乎不存在的邊緣。棲身於終末與太初裂縫間的「裂縫主宰」，是這個循環怎麼也自圓不了的一道破綻。踏進此處，等於承認：從來就沒有真正的盡頭，只有一圈比一圈更深的迴旋。',
-  ionstorm:'裂縫更深處，是一片永不平息的電磁風暴。整個空間如帶電的神經在抽搐，連思緒都會被脈衝打亂。「雷暴主宰」不是敵人，而是這道迴旋自身的放電——每一次脈衝，都在提醒你：越往深處，秩序就越不站在你這邊。'
+  ionstorm:'裂縫更深處，是一片永不平息的電磁風暴。整個空間如帶電的神經在抽搐，連思緒都會被脈衝打亂。「雷暴主宰」不是敵人，而是這道迴旋自身的放電——每一次脈衝，都在提醒你：越往深處，秩序就越不站在你這邊。',
+  sacrifice:'再往深處，規則變得赤裸而殘忍：這裡的力量，只用鮮血交換。每一次血祭脈動，都從你身上抽走一部分，換來一瞬燃燒般的爆發。「獻祭主宰」端坐於這場永恆的交易中心——牠不奪走你的性命，只是不斷提醒你，你願意為了活下去，付出多少。'
 };
 var selMode='normal';
 try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde'||_sm==='turbo'||_sm==='chaos'||_sm==='vampire'||_sm==='titanhunt'||_sm==='lonewolf')selMode=_sm; }catch(e){}   // 記憶上次選的模式
@@ -3663,6 +3665,10 @@ function spawnDirector(dt){
   if(G.stage&&G.stage.id==='ionstorm'){
     G.empCd=(G.empCd==null?9:G.empCd-dt); if(G.empCd<=0){ G.empCd=rand(11,16); player.jamT=Math.max(player.jamT||0,2.2); announce('⚡ 電磁脈衝！武器射速受擾','#7dd3ff'); flashScreen('125,211,255',0.28); ringFx(player.x,player.y,180,'#7dd3ff'); }
     G.hazT=(G.hazT==null?2.2:G.hazT-dt); if(G.hazT<=0){ G.hazT=rand(1.6,2.6); if(hazards.length<80)hazards.push({kind:'strike',x:player.x+rand(-190,190),y:player.y+rand(-190,190),r:66+Math.random()*30,life:1.9,max:1.9,warn:1.0,fired:false,dtk:0}); } }
+  // 環境狀態·獻祭之淵：週期「血祭脈動」抽走部分當前血量(鉗最低 1 不致命)，換取一段狂化爆發，高風險高回報的節奏
+  if(G.stage&&G.stage.id==='sacrifice'){ G.bloodT=(G.bloodT==null?7:G.bloodT-dt); if(G.bloodT<=0){ G.bloodT=rand(8,11);
+    if(!G.over&&player.hp>1){ var _bd=Math.min(player.hp-1,player.hp*0.08); player.hp=Math.max(1,player.hp-_bd); dmgNum(player.x,player.y-26,Math.round(_bd),false,true); }
+    player.frenzyT=Math.max(player.frenzyT||0,4); announce('🩸 血祭脈動！以血換力 · 狂化','#ff2b5e'); flashScreen('255,43,94',0.3); ringFx(player.x,player.y,120,'#ff2b5e'); ringFx(player.x,player.y,64,'#ff8fb0'); GAudio.hurt&&GAudio.hurt(); } }
   // 環境視野阻礙關卡：一次性入場提示
   if(G.stage&&!G._visAnn){ var _va=VISION_STAGES[G.stage.id]; if(_va){ G._visAnn=true; announce(_va.msg,_va.mc); } }
   // 環境狀態·寒獄凍原：暴風雪陣風週期性凍緩(移動變慢，呼應白幕視野)
@@ -4947,7 +4953,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v476 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v477 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

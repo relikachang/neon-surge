@@ -1328,6 +1328,7 @@ var META=[
   {id:'surgecore',ic:'⚡',name:'湧能核心', desc:'過載充能速度＋爆發威力', per:'+12%', max:6, cost:function(l){return 150+l*130;}},
   {id:'detocore',ic:'💥',name:'連鎖引爆核心', desc:'擊殺時機率原地引爆波及周圍', per:'+12%機率', max:5, cost:function(l){return 140+l*120;}},
   {id:'barrier', ic:'🔰',name:'晶盾核心', desc:'開局獲得可吸收數次傷害的晶盾', per:'+1 次', max:3, cost:function(l){return 180+l*160;}},
+  {id:'grazecore',ic:'✨',name:'擦彈核心', desc:'擦彈充能量＋擦彈判定範圍', per:'+15%', max:5, cost:function(l){return 120+l*100;}},
   {id:'omni',    ic:'🌌', name:'萬能核心 · 殿堂', desc:'傷害/生命/攻速/移速全面提升（碎片無底洞）', per:'+3%全能', max:20, cost:function(l){return 8000*(l+1)*(l+1);}},
 ];
 function metaLv(id){return DB.meta[id]||0;}
@@ -3348,7 +3349,7 @@ function update(dt){
   // 子彈時間：被大量敵彈近距離包圍(危險)時，短暫觸發全域慢動作助你閃避(7 秒冷卻)
   if(player&&player.iframe<=0){ G.btCd=(G.btCd||0)-dt; if(G.btCd<=0){ var _bt=0,_br2=68*68; for(var _bi=0;_bi<ebullets.length;_bi++){ var _bdx=ebullets[_bi].x-player.x,_bdy=ebullets[_bi].y-player.y; if(_bdx*_bdx+_bdy*_bdy<_br2&&++_bt>=5)break; } if(_bt>=5){ G.hitStop=Math.max(G.hitStop||0,0.4); G.btCd=7; ringFx(player.x,player.y,92,'#c8f0ff'); ringFx(player.x,player.y,52,'#ffffff'); floatText('⏳ 子彈時間','#c8f0ff'); GAudio.warn&&GAudio.warn(); } } }
   // 擦彈(graze)：敵彈從身邊極近掠過(未命中)時，注入少量過載充能，獎勵貼身走位的技巧表現(每 15 次額外給碎片)
-  if(player&&player.iframe<=0){ var _gzh=player.radius+7, _gzg=player.radius+30, _gzh2=_gzh*_gzh, _gzg2=_gzg*_gzg; for(var _gi=0;_gi<ebullets.length;_gi++){ var _gb=ebullets[_gi]; if(_gb._grz)continue; var _gdx=_gb.x-player.x,_gdy=_gb.y-player.y,_gd=_gdx*_gdx+_gdy*_gdy; if(_gd<_gzg2&&_gd>_gzh2){ _gb._grz=1; G.charge=Math.min(G.chargeMax,(G.charge||0)+0.4); G.grazes=(G.grazes||0)+1; ringFx(_gb.x,_gb.y,9,'#a0f0ff'); if((G.grazes%15)===0){ G.shards+=6; floatText('✨ 擦彈 x'+G.grazes,'#a0f0ff'); GAudio.ping&&GAudio.ping(); } } } }
+  if(player&&player.iframe<=0){ var _gzc=metaLv('grazecore'), _gzh=player.radius+7, _gzg=player.radius+30+8*_gzc, _gzh2=_gzh*_gzh, _gzg2=_gzg*_gzg, _gzch=0.4*(1+0.15*_gzc); for(var _gi=0;_gi<ebullets.length;_gi++){ var _gb=ebullets[_gi]; if(_gb._grz)continue; var _gdx=_gb.x-player.x,_gdy=_gb.y-player.y,_gd=_gdx*_gdx+_gdy*_gdy; if(_gd<_gzg2&&_gd>_gzh2){ _gb._grz=1; G.charge=Math.min(G.chargeMax,(G.charge||0)+_gzch); G.grazes=(G.grazes||0)+1; ringFx(_gb.x,_gb.y,9,'#a0f0ff'); if((G.grazes%15)===0){ G.shards+=6; floatText('✨ 擦彈 x'+G.grazes,'#a0f0ff'); GAudio.ping&&GAudio.ping(); } } } }
   G._relicT=(G._relicT||0)+dt; if(G._relicT>=1.5){ G._relicT=0; checkRelics(); }   // 遺物：局內每 1.5 秒檢查一次，達成即刻出土
   if(G.entranceT>0)G.entranceT-=dt;   // 傳奇皮膚出場動畫計時
   if(G.eventAt==null)G.eventAt=rand(28,38);   // 局內隨機事件：首發約 30 秒
@@ -5019,7 +5020,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v489 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v490 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

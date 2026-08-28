@@ -1598,7 +1598,7 @@ var STAGE_LORE={
   sacrifice:'再往深處，規則變得赤裸而殘忍：這裡的力量，只用鮮血交換。每一次血祭脈動，都從你身上抽走一部分，換來一瞬燃燒般的爆發。「獻祭主宰」端坐於這場永恆的交易中心——牠不奪走你的性命，只是不斷提醒你，你願意為了活下去，付出多少。'
 };
 var selMode='normal';
-try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde'||_sm==='turbo'||_sm==='chaos'||_sm==='vampire'||_sm==='titanhunt'||_sm==='lonewolf')selMode=_sm; }catch(e){}   // 記憶上次選的模式
+try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde'||_sm==='turbo'||_sm==='chaos'||_sm==='vampire'||_sm==='titanhunt'||_sm==='lonewolf'||_sm==='countdown')selMode=_sm; }catch(e){}   // 記憶上次選的模式
 var MODES={
   normal:{ic:'♾️',name:'標準生存',desc:'經典模式：活越久越強，挑戰無盡'},
   timeattack:{ic:'⏱️',name:'限時狂殺',desc:'120 秒內衝最高擊殺，時間到結算',dur:120},
@@ -1609,7 +1609,8 @@ var MODES={
   chaos:{ic:'🌀',name:'混沌狂宴',desc:'絕大多數敵人皆為帶詞綴的精英・最高強度的混沌試煉，碎片獎勵 2 倍',reward:2},
   vampire:{ic:'🩸',name:'血色狩獵',desc:'無被動回血・生命上限 -20%・唯有不斷擊殺才能吸血續命，最具侵略性的生存打法，碎片獎勵 1.75 倍',reward:1.75},
   titanhunt:{ic:'🦣',name:'巨獸狩獵',desc:'敵人數量減半、但個個化為血厚體巨的龐然巨獸・每一隻都給大量經驗與碎片，是「大型狩獵」的火力試煉，碎片獎勵 1.5 倍',reward:1.5},
-  lonewolf:{ic:'🐺',name:'獨狼',desc:'全程只能持有一把武器・不再出現新武器選項，唯有把它練到極致並進化；開局傷害 +35% 作為補償，最考驗單一武器 build 的專精試煉，碎片獎勵 1.75 倍',reward:1.75}
+  lonewolf:{ic:'🐺',name:'獨狼',desc:'全程只能持有一把武器・不再出現新武器選項，唯有把它練到極致並進化；開局傷害 +35% 作為補償，最考驗單一武器 build 的專精試煉，碎片獎勵 1.75 倍',reward:1.75},
+  countdown:{ic:'⏳',name:'倒數殺戮',desc:'開局只有 30 秒・每擊殺一名敵人 +0.3 秒、精英/首領給更多，時間歸零即結束——逼你永不停手、越殺越久的高壓生存，碎片獎勵 1.5 倍',reward:1.5,dur:30}
 };
 function stageUnlocked(s){ return !s.locked || DB.stages[s.id]; }
 
@@ -2541,7 +2542,7 @@ function newRun(daily){
      nextBossAt:105, usedRevive:false, luck:0.06*metaLv('luck')+0.05*prestigeLv('p_luck'), stage:st, mut:mut, daily:!!daily,
      dmgDealt:0, peakCombo:0, bossKills:0, eliteKills:0, act:1, actMul:1, flawless:true,
      charge:0, chargeMax:100, overcharges:0, lastStandUsed:false, btCd:0,
-     mode:(daily?'normal':selMode), modeTimer:(!daily&&selMode==='timeattack'?(MODES.timeattack.dur):0) };
+     mode:(daily?'normal':selMode), modeTimer:(daily?0:selMode==='timeattack'?MODES.timeattack.dur:selMode==='countdown'?MODES.countdown.dur:0) };
   if(G.mode==='bossrush')G.nextBossAt=4;   // 首領亂鬥：快速首波首領
   player={ x:0,y:0, radius:15, hp:0, maxHp:0, speed:0, iframe:0, aimAngle:0, frenzyT:0, overdriveT:0,
     weapons:[], passives:{}, base:{}, charId:ch.id, sig:charSig(ch.id) };
@@ -3137,6 +3138,7 @@ function killEnemy(e){
   e.dead=true; G.kills++; if(e.elite){G.eliteKills=(G.eliteKills||0)+1; GAudio.elite&&GAudio.elite();} addCombo();
   G.charge=Math.min(G.chargeMax,(G.charge||0)+(e.boss?30:e.elite?7:1.2)*(1+0.12*metaLv('surgecore'))); if(G.charge>=G.chargeMax&&!G.over)triggerOvercharge();   // 過載充能：擊殺累積(湧能核心加速),滿槽自動爆發
   if(e.elite&&!e.boss){ G.charge=Math.min(G.chargeMax,(G.charge||0)+12); if(G.charge>=G.chargeMax&&!G.over)triggerOvercharge(); var _elb=8+Math.floor(G.time/20); G.shards+=_elb; for(var _eq=0;_eq<2;_eq++)ringFx(e.x,e.y,48+_eq*34,'#ffd54a'); burst(e.x,e.y,'#ffd54a',14,260); GAudio.jackpot&&GAudio.jackpot(); }   // 精英賞金：擊破精英額外注入過載充能 +12 + 隨時間遞增的碎片賞金 + 金色破擊光環
+  if(G.mode==='countdown'){ G.modeTimer=(G.modeTimer||0)+(e.boss?8:e.elite?1.5:0.3); }   // 倒數殺戮：每擊殺延長剩餘時間(首領/精英給更多)
   if(e.boss)G.hitStop=Math.max(G.hitStop||0,0.12); else if(e.elite)G.hitStop=Math.max(G.hitStop||0,0.06);   // 頓幀：擊殺首領/精英瞬間慢動作衝擊
   if(player.skinKill){ burst(e.x,e.y,player.skinKill,6,220); if(fxScale>=0.6&&(G._skfx=(G._skfx||0)+1)%2===0)ringFx(e.x,e.y,26,player.skinKill); }   // 傳奇皮膚：擊殺特效(彩色迸射+間隔光環，吃fxScale不爆量)
   if(player.lifesteal>0&&player.hp<player.maxHp){ player.hp=Math.min(player.maxHp,player.hp+player.lifesteal); }   // 吸血被動：擊殺回血
@@ -3304,7 +3306,7 @@ function update(dt){
   if(G.entranceT>0)G.entranceT-=dt;   // 傳奇皮膚出場動畫計時
   if(G.eventAt==null)G.eventAt=rand(28,38);   // 局內隨機事件：首發約 30 秒
   if(!G.over&&G.time>=G.eventAt){ triggerRandomEvent(); G.eventAt=G.time+rand(32,46); }   // 之後每 32~46 秒一次
-  if(G.mode==='timeattack'&&!G.over){ G.modeTimer-=dt; if(G.modeTimer<=0){ G.modeTimer=0; announce('⏱️ 時間到！','#ffd54a'); G.over=true; gameOver(); return; } }   // 限時狂殺：時間到結算
+  if((G.mode==='timeattack'||G.mode==='countdown')&&!G.over){ G.modeTimer-=dt; if(G.modeTimer<=0){ G.modeTimer=0; announce(G.mode==='countdown'?'⏳ 時間耗盡！':'⏱️ 時間到！','#ffd54a'); G.over=true; gameOver(); return; } }   // 限時狂殺/倒數殺戮：時間到結算
   // combo 衰減
   if(G.comboTimer>0){ G.comboTimer-=dt; if(G.comboTimer<=0){ if(G.combo>=15)floatText('連擊中斷 x'+G.combo,'#ff8a3a'); G.combo=0; var cb=$('combo'); cb.style.opacity='0'; cb.classList.remove('flame','inferno');} }
   // ---- 玩家移動 ----
@@ -4601,7 +4603,7 @@ function drawPickup(p){ var ic={heal:'❤️',bomb:'💣',magnet:'🧲',chest:'�
 // HUD 更新
 // =====================================================================
 function updateHud(){
-  var tel=$('timer'); if(G.mode==='timeattack'){ tel.textContent='⏱ '+fmtTime(Math.max(0,G.modeTimer)); tel.style.color=G.modeTimer<=15?'#ff4d5e':'#ffd54a'; } else { tel.textContent=fmtTime(G.time); tel.style.color=''; }
+  var tel=$('timer'); if(G.mode==='timeattack'||G.mode==='countdown'){ tel.textContent=(G.mode==='countdown'?'⏳ ':'⏱ ')+fmtTime(Math.max(0,G.modeTimer)); tel.style.color=G.modeTimer<=10?'#ff4d5e':'#ffd54a'; } else { tel.textContent=fmtTime(G.time); tel.style.color=''; }
   $('killn').textContent=G.kills; $('waven').textContent=G.wave; var acn=$('actn'); acn.textContent=G.act; acn.style.color=G.act>=15?'#ff2b5e':G.act>=8?'#ff5a3a':G.act>=4?'#ff9a3d':'#ffffff'; acn.style.textShadow=G.act>=8?'0 0 10px currentColor':'none';
   var amn=$('actmuln'); if(amn){ amn.textContent='×'+(G.actMul||1).toFixed(1); amn.style.color=G.actMul>=3?'#ff2b5e':G.actMul>=2?'#ff5a3a':'#ff9a3d'; }
   $('dpsn').textContent=Math.round((G.dmgDealt||0)/Math.max(1,G.time));
@@ -4959,7 +4961,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v479 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v480 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',
@@ -5037,7 +5039,7 @@ function renderMenu(){
     slb.innerHTML='<div class="slname" style="color:'+ssg.bossColor+'">'+ssg.name+' <span class="slboss" style="color:'+ssg.bossColor+';border-color:'+ssg.bossColor+'66">👑 '+ssg.bossName+'</span></div><div class="sltxt">「'+slore+'」</div>';
   }
   var ms=$('modesel'); if(ms){ ms.innerHTML='';
-    ['normal','timeattack','bossrush','hardcore','horde','turbo','chaos','vampire','titanhunt','lonewolf'].forEach(function(mid){ var md=MODES[mid];
+    ['normal','timeattack','bossrush','hardcore','horde','turbo','chaos','vampire','titanhunt','lonewolf','countdown'].forEach(function(mid){ var md=MODES[mid];
       var el=document.createElement('div'); el.className='modecard'+(selMode===mid?' on':'');
       el.innerHTML='<div class="mic">'+md.ic+'</div><div class="mn">'+md.name+'</div><div class="md">'+md.desc+'</div>';
       el.onclick=function(){ selMode=mid; try{localStorage.setItem('neon_mode',mid);}catch(_){} renderMenu(); };

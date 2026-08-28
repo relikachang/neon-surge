@@ -67,6 +67,9 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   #killn.kpop{display:inline-block;animation:kpop .26s ease}
   @keyframes kpop{0%{transform:scale(1)}35%{transform:scale(1.6);color:#5dffe0;text-shadow:0 0 14px #5dffe0}100%{transform:scale(1)}}
   #hptxt{font-size:13px;font-weight:800;margin-top:3px;color:#ffb3bb;text-align:center;text-shadow:0 0 8px rgba(0,0,0,.6)}
+  #ovbar{height:7px;margin-top:4px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden;border:1px solid rgba(255,225,74,.22)}
+  #ovfill{height:100%;width:0%;background:linear-gradient(90deg,#ffb03a,#ffe14a 60%,#fff6b0);box-shadow:0 0 8px #ffe14a;transition:width .12s}
+  #ovbar.ready{border-color:#ffe14a;box-shadow:0 0 12px rgba(255,225,74,.6);animation:hplow .5s ease-in-out infinite}
   #shardchip{position:absolute;right:16px;top:16px;background:rgba(12,18,34,.7);border:1px solid rgba(255,213,74,.35);
     border-radius:10px;padding:6px 12px;font-size:13px;font-weight:800;color:var(--gold);backdrop-filter:blur(6px)}
   #weprow{position:absolute;right:12px;bottom:calc(64px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:5px;align-items:flex-end}
@@ -417,7 +420,7 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   <div id="buffbar"></div>
   <div id="announce2"></div>
   <div id="bossintro"><div class="bi-warn">⚠ 首領降臨 ⚠</div><div class="bi-name">BOSS</div></div>
-  <div id="hpwrap"><div id="hpbar"><div id="hpfill"></div></div><div id="hptxt">100 / 100</div></div>
+  <div id="hpwrap"><div id="hpbar"><div id="hpfill"></div></div><div id="ovbar"><div id="ovfill"></div></div><div id="hptxt">100 / 100</div></div>
   <div id="weprow"></div>
   <div id="pausebtn">⏸</div>
   <div id="suicidebtn" title="自殺 · 結束本局">💀</div>
@@ -2479,6 +2482,7 @@ function newRun(daily){
      spawnTimer:0, bossTimer:0, eliteTimer:0, over:false, paused:false,
      nextBossAt:105, usedRevive:false, luck:0.06*metaLv('luck')+0.05*prestigeLv('p_luck'), stage:st, mut:mut, daily:!!daily,
      dmgDealt:0, peakCombo:0, bossKills:0, eliteKills:0, act:1, actMul:1, flawless:true,
+     charge:0, chargeMax:100, overcharges:0,
      mode:(daily?'normal':selMode), modeTimer:(!daily&&selMode==='timeattack'?(MODES.timeattack.dur):0) };
   if(G.mode==='bossrush')G.nextBossAt=4;   // 首領亂鬥：快速首波首領
   player={ x:0,y:0, radius:15, hp:0, maxHp:0, speed:0, iframe:0, aimAngle:0, frenzyT:0, overdriveT:0,
@@ -3060,8 +3064,18 @@ function hitEnemy(e,amount,fromx,fromy,knock){
   if(e.hp>0&&!e.boss&&player.execute>0&&e.hp<e.maxHp*player.execute){ e.hp=0; ringFx(e.x,e.y,e.r*2.2,'#ff2b5e'); }   // 處決技能：斬殺殘血普通敵
   if(e.hp<=0)killEnemy(e);
 }
+function triggerOvercharge(){ if(!G||G.over)return; G.charge=0; G.overcharges=(G.overcharges||0)+1;   // 過載爆發：充能滿即自動釋放的全場清場終極技
+  var dm=dmg(180+G.level*6);
+  for(var i=0;i<enemies.length;i++){ var e=enemies[i]; if(e.hp>0)hitEnemy(e,dm,player.x,player.y,0.3); }
+  ebullets.length=0;   // 淨化全場敵彈
+  player.overdriveT=Math.max(player.overdriveT||0,5); player.iframe=Math.max(player.iframe||0,1.2);   // 5 秒過載 + 短暫無敵
+  for(var nk=0;nk<4;nk++)ringFx(player.x,player.y,140+nk*150,'#ffe14a'); ringFx(player.x,player.y,760,'#fff'); burst(player.x,player.y,'#ffe14a',48,340);
+  flashScreen('255,225,74',0.5); shake(16); announce('⚡ 過載爆發！全場淨化 + 5 秒過載','#ffe14a');
+  GAudio.boss&&GAudio.boss();
+}
 function killEnemy(e){
   e.dead=true; G.kills++; if(e.elite){G.eliteKills=(G.eliteKills||0)+1; GAudio.elite&&GAudio.elite();} addCombo();
+  G.charge=Math.min(G.chargeMax,(G.charge||0)+(e.boss?30:e.elite?7:1.2)); if(G.charge>=G.chargeMax&&!G.over)triggerOvercharge();   // 過載充能：擊殺累積,滿槽自動爆發
   if(e.boss)G.hitStop=Math.max(G.hitStop||0,0.12); else if(e.elite)G.hitStop=Math.max(G.hitStop||0,0.06);   // 頓幀：擊殺首領/精英瞬間慢動作衝擊
   if(player.skinKill){ burst(e.x,e.y,player.skinKill,6,220); if(fxScale>=0.6&&(G._skfx=(G._skfx||0)+1)%2===0)ringFx(e.x,e.y,26,player.skinKill); }   // 傳奇皮膚：擊殺特效(彩色迸射+間隔光環，吃fxScale不爆量)
   if(player.lifesteal>0&&player.hp<player.maxHp){ player.hp=Math.min(player.maxHp,player.hp+player.lifesteal); }   // 吸血被動：擊殺回血
@@ -4503,6 +4517,7 @@ function updateHud(){
   var hpr=Math.max(0,player.hp/player.maxHp); var hpf=$('hpfill'); hpf.style.width=(hpr*100)+'%';
   if(hpr<0.25){ if(!hpf.classList.contains('low'))hpf.classList.add('low'); } else if(hpf.classList.contains('low'))hpf.classList.remove('low');
   $('hptxt').textContent=Math.ceil(player.hp)+' / '+Math.round(player.maxHp);
+  var ovf=$('ovfill'); if(ovf){ var ovr=Math.max(0,Math.min(1,(G.charge||0)/(G.chargeMax||100))); ovf.style.width=(ovr*100)+'%'; var ovb=$('ovbar'); if(ovb){ if(ovr>=1){ if(!ovb.classList.contains('ready'))ovb.classList.add('ready'); } else if(ovb.classList.contains('ready'))ovb.classList.remove('ready'); } }   // 過載充能條
   // 首領血條
   var boss=null; for(var bi=0;bi<enemies.length;bi++){ if(enemies[bi].boss&&enemies[bi].hp>0){boss=enemies[bi];break;} }
   var bb=$('bossbar'); if(boss){ bb.classList.add('show'); bb.classList.toggle('enraged',!!boss.enraged);
@@ -4849,7 +4864,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v463 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v464 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

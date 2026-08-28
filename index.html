@@ -2510,7 +2510,7 @@ function newRun(daily){
      spawnTimer:0, bossTimer:0, eliteTimer:0, over:false, paused:false,
      nextBossAt:105, usedRevive:false, luck:0.06*metaLv('luck')+0.05*prestigeLv('p_luck'), stage:st, mut:mut, daily:!!daily,
      dmgDealt:0, peakCombo:0, bossKills:0, eliteKills:0, act:1, actMul:1, flawless:true,
-     charge:0, chargeMax:100, overcharges:0,
+     charge:0, chargeMax:100, overcharges:0, lastStandUsed:false,
      mode:(daily?'normal':selMode), modeTimer:(!daily&&selMode==='timeattack'?(MODES.timeattack.dur):0) };
   if(G.mode==='bossrush')G.nextBossAt=4;   // 首領亂鬥：快速首波首領
   player={ x:0,y:0, radius:15, hp:0, maxHp:0, speed:0, iframe:0, aimAngle:0, frenzyT:0, overdriveT:0,
@@ -3187,6 +3187,14 @@ function addCombo(){ G.combo++; G.comboTimer=2.2*(1+0.15*metaLv('combo')); if(G.
     var mcol=G.combo>=200?'#ff2bd0':G.combo>=100?'#ff5a3a':'#ff9a3d';
     announce('連擊 '+G.combo+'！狂化 + ◆'+cs,mcol); for(var mr=0;mr<3;mr++)ringFx(player.x,player.y,120+mr*90,mcol); burst(player.x,player.y,mcol,28,300); flashScreen(G.combo>=200?'255,43,208':'255,138,60',0.28); shake(8); GAudio.achieve&&GAudio.achieve(); } }
 
+function triggerLastStand(){ G.lastStandUsed=true;   // 絕境反擊：每局第一次瀕危(≤20%血)自動觸發的一次性翻盤——短暫無敵 + 狂化 + 清空周身敵彈 + 防禦震波擊退
+  player.iframe=Math.max(player.iframe||0,2.6); player.frenzyT=Math.max(player.frenzyT||0,6);
+  ebullets.length=0;
+  var lsd=dmg(120+G.level*5), r=260*player.area, r2=r*r;
+  enemyGrid.query(player.x,player.y,r,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<r2){ hitEnemy(e,lsd,player.x,player.y,0.3); var ka=Math.atan2(e.y-player.y,e.x-player.x); e.x+=Math.cos(ka)*70; e.y+=Math.sin(ka)*70; } });
+  for(var lk=0;lk<4;lk++)ringFx(player.x,player.y,120+lk*110,'#5dff9b'); ringFx(player.x,player.y,700,'#fff'); burst(player.x,player.y,'#5dff9b',44,320);
+  flashScreen('93,255,155',0.5); shake(16); G.hitStop=Math.max(G.hitStop||0,0.25); announce('🛡 絕境反擊！短暫無敵 + 狂化','#5dff9b'); GAudio.revive&&GAudio.revive();
+}
 function hurtPlayer(amount){
   if(G.over||player.iframe>0)return;
   if(player.dodge>0 && Math.random()<player.dodge){ player.iframe=0.3; ringFx(player.x,player.y,32,'#5dff9b'); floatText('閃避！','#5dff9b'); return; }   // 閃避被動：機率完全免傷
@@ -3194,6 +3202,7 @@ function hurtPlayer(amount){
   amount*=(1-player.armor);
   if(player.tenacity>0&&player.maxHp>0&&player.hp/player.maxHp<0.45)amount*=(1-Math.min(0.6,player.tenacity*0.08));   // 韌命：低血時減傷(越危險越硬)
   player.hp-=amount; player.iframe=0.6; shake(6); G.flawless=false;
+  if(G.mode!=='hardcore'&&!G.lastStandUsed&&player.hp>0&&player.hp<=player.maxHp*0.2){ triggerLastStand(); }   // 絕境反擊：瀕危一次性翻盤(一命限定除外)
   if(player.secondwind>0&&player.hp>0&&player.hp<player.maxHp*0.3&&(G.swT||0)<=0){ G.swT=Math.max(5,12-player.secondwind*1.4); player.hp=Math.min(player.maxHp,player.hp+player.maxHp*(0.12+player.secondwind*0.04)); ringFx(player.x,player.y,120,'#5dff9b'); ringFx(player.x,player.y,70,'#dfffe8'); floatText('🌬️ 二度呼吸！','#5dff9b'); }   // 二度呼吸：瀕危自動回復
   if(player.retaliate>0){ var rtr=(90+player.retaliate*20)*player.area,rtr2=rtr*rtr,rtd=dmg(20+player.retaliate*10); enemyGrid.query(player.x,player.y,rtr,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<rtr2)hitEnemy(e,rtd,player.x,player.y,0.7); }); ringFx(player.x,player.y,rtr,'#ff6a3d'); }   // 反擊波：受傷震開周圍(iframe已設,不會無限遞迴)
   if(amount>=0.5)dmgNum(player.x,player.y-26,amount,false,true);   // 玩家中彈：明顯紅色 -N
@@ -4900,7 +4909,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v468 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v469 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

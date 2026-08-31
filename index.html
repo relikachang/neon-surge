@@ -67,6 +67,7 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   #killn.kpop{display:inline-block;animation:kpop .26s ease}
   @keyframes kpop{0%{transform:scale(1)}35%{transform:scale(1.6);color:#5dffe0;text-shadow:0 0 14px #5dffe0}100%{transform:scale(1)}}
   #hptxt{font-size:13px;font-weight:800;margin-top:3px;color:#ffb3bb;text-align:center;text-shadow:0 0 8px rgba(0,0,0,.6)}
+  #flstreak{font-size:12px;font-weight:800;margin-top:2px;text-align:center;color:#7dffd0;text-shadow:0 0 8px rgba(125,255,208,.55);min-height:14px;letter-spacing:.3px}
   #ovbar{height:7px;margin-top:4px;border-radius:6px;background:rgba(255,255,255,.07);overflow:hidden;border:1px solid rgba(255,225,74,.22)}
   #ovfill{height:100%;width:0%;background:linear-gradient(90deg,#ffb03a,#ffe14a 60%,#fff6b0);box-shadow:0 0 8px #ffe14a;transition:width .12s}
   #ovbar.ready{border-color:#ffe14a;box-shadow:0 0 12px rgba(255,225,74,.6);animation:hplow .5s ease-in-out infinite}
@@ -423,7 +424,7 @@ if('serviceWorker' in navigator){ var __reloaded=false;
   <div id="buffbar"></div>
   <div id="announce2"></div>
   <div id="bossintro"><div class="bi-warn">⚠ 首領降臨 ⚠</div><div class="bi-name">BOSS</div></div>
-  <div id="hpwrap"><div id="hpbar"><div id="hpfill"></div></div><div id="ovbar"><div id="ovfill"></div></div><div id="htbar"><div id="htfill"></div></div><div id="hptxt">100 / 100</div></div>
+  <div id="hpwrap"><div id="hpbar"><div id="hpfill"></div></div><div id="ovbar"><div id="ovfill"></div></div><div id="htbar"><div id="htfill"></div></div><div id="hptxt">100 / 100</div><div id="flstreak"></div></div>
   <div id="weprow"></div>
   <div id="pausebtn">⏸</div>
   <div id="suicidebtn" title="自殺 · 結束本局">💀</div>
@@ -2609,7 +2610,7 @@ function newRun(daily){
      spawnTimer:0, bossTimer:0, eliteTimer:0, over:false, paused:false,
      nextBossAt:105, usedRevive:false, luck:0.06*metaLv('luck')+0.05*prestigeLv('p_luck'), stage:st, mut:mut, daily:!!daily,
      dmgDealt:0, peakCombo:0, bossKills:0, eliteKills:0, act:1, actMul:1, flawless:true,
-     charge:0, chargeMax:100, overcharges:0, lastStandUsed:false, btCd:0, grazes:0, heat:0, heatMax:100,
+     charge:0, chargeMax:100, overcharges:0, lastStandUsed:false, btCd:0, grazes:0, heat:0, heatMax:100, noHitT:0,
      mode:(daily?'normal':selMode), modeTimer:(daily?0:selMode==='timeattack'?MODES.timeattack.dur:selMode==='countdown'?MODES.countdown.dur:0) };
   if(G.mode==='bossrush')G.nextBossAt=4;   // 首領亂鬥：快速首波首領
   if(G.mode==='bossfrenzy')G.nextBossAt=55;   // 首領狂潮：更早的首波首領
@@ -2698,6 +2699,7 @@ function recalc(){
 }
 function dmg(base){ var d=base*player.dmgMult*(player.frenzyT>0?1.4:1)*((G.curseT||0)>0?0.7:1)*(1+0.015*metaLv('growth')*(G.time/60)); if(player.fury>0)d*=(1+player.fury*(1-player.hp/player.maxHp)); if(player.veteran>0)d*=(1+0.015*player.veteran*Math.min(20,Math.floor(G.kills/100))); if(player.momentum>0)d*=(1+0.001*player.momentum*Math.min(200,G.combo||0));
   if(G.heat>0)d*=(1+0.0025*G.heat);   // 殺戮過熱：連殺熱度提升全武器傷害（滿熱 heat=100 → +25%）
+  if(G.noHitT>0)d*=(1+Math.min(0.30,G.noHitT*0.01));   // 無瑕連段：越久不受傷傷害越高（每秒 +1%，上限 +30%＠30秒無傷），被打中歸零
   var critC=player.crit+(player.fury>0?player.fury*(1-player.hp/player.maxHp)*0.6:0);   // 血怒：低血時額外提升暴擊率(絕境精準)
   if(player.overdriveT>0||Math.random()<critC)d*=player.critMult*(player.veteran>0?(1+0.02*player.veteran*Math.min(20,Math.floor(G.kills/100))):1);   // 百戰：暴擊傷害隨擊殺數提升(老兵致命一擊)
   return d; }
@@ -3318,6 +3320,7 @@ function hurtPlayer(amount){
   amount*=(1-player.armor);
   if(player.tenacity>0&&player.maxHp>0&&player.hp/player.maxHp<0.45)amount*=(1-Math.min(0.6,player.tenacity*0.08));   // 韌命：低血時減傷(越危險越硬)
   player.hp-=amount; player.iframe=0.6; shake(6); G.flawless=false;
+  if((G.noHitT||0)>=10){ floatText('💔 無瑕連段中斷','#ff6a8a'); } G.noHitT=0; G._flawTier=0;   // 無瑕連段：真實受傷即歸零(閃避/護盾/晶盾提前 return 不影響)
   if(G.mode!=='hardcore'&&!G.lastStandUsed&&player.hp>0&&player.hp<=player.maxHp*0.2){ triggerLastStand(); }   // 絕境反擊：瀕危一次性翻盤(一命限定除外)
   if(player.secondwind>0&&player.hp>0&&player.hp<player.maxHp*0.3&&(G.swT||0)<=0){ G.swT=Math.max(5,12-player.secondwind*1.4); player.hp=Math.min(player.maxHp,player.hp+player.maxHp*(0.12+player.secondwind*0.04)); ringFx(player.x,player.y,120,'#5dff9b'); ringFx(player.x,player.y,70,'#dfffe8'); floatText('🌬️ 二度呼吸！','#5dff9b'); }   // 二度呼吸：瀕危自動回復
   if(player.retaliate>0){ var rtr=(90+player.retaliate*20)*player.area,rtr2=rtr*rtr,rtd=dmg(20+player.retaliate*10); enemyGrid.query(player.x,player.y,rtr,function(e){ if(e.hp>0&&dist2(e.x,e.y,player.x,player.y)<rtr2)hitEnemy(e,rtd,player.x,player.y,0.7); }); ringFx(player.x,player.y,rtr,'#ff6a3d'); }   // 反擊波：受傷震開周圍(iframe已設,不會無限遞迴)
@@ -3393,6 +3396,7 @@ function update(dt){
   // combo 衰減
   if(G.comboTimer>0){ G.comboTimer-=dt; if(G.comboTimer<=0){ if(G.combo>=15)floatText('連擊中斷 x'+G.combo,'#ff8a3a'); G.combo=0; var cb=$('combo'); cb.style.opacity='0'; cb.classList.remove('flame','inferno');} }
   if(G.heat>0&&G.mode!=='forge'){ G.heat=Math.max(0,G.heat-14*dt); }   // 殺戮過熱：停止擊殺則熱度逐漸冷卻(14/秒)；熔爐試煉模式熱度永不冷卻
+  if(!G.over){ G.noHitT=(G.noHitT||0)+dt; var _flt=(G.noHitT>=30)?3:(G.noHitT>=20)?2:(G.noHitT>=10)?1:0; if(_flt>(G._flawTier||0)){ G._flawTier=_flt; floatText('🎯 無瑕連段 +'+Math.round(Math.min(0.30,G.noHitT*0.01)*100)+'% 傷害','#7dffd0'); ringFx(player.x,player.y,player.radius+18,'#7dffd0'); } }   // 無瑕連段：不受傷計時，跨越 10/20/30 秒里程碑時提示強化
   if(G._overheat&&G.heat<G.heatMax*0.6){ G._overheat=false; }   // 降到60%以下重置,可再次觸發過熱
   // ---- 玩家移動 ----
   var mx=0,my=0;
@@ -4726,6 +4730,7 @@ function updateHud(){
   $('hptxt').textContent=Math.ceil(player.hp)+' / '+Math.round(player.maxHp);
   var ovf=$('ovfill'); if(ovf){ var ovr=Math.max(0,Math.min(1,(G.charge||0)/(G.chargeMax||100))); ovf.style.width=(ovr*100)+'%'; var ovb=$('ovbar'); if(ovb){ if(ovr>=1){ if(!ovb.classList.contains('ready'))ovb.classList.add('ready'); } else if(ovb.classList.contains('ready'))ovb.classList.remove('ready'); } }   // 過載充能條
   var htf=$('htfill'); if(htf){ var htr=Math.max(0,Math.min(1,(G.heat||0)/(G.heatMax||100))); htf.style.width=(htr*100)+'%'; var htb=$('htbar'); if(htb){ if(htr>=1){ if(!htb.classList.contains('hot'))htb.classList.add('hot'); } else if(htb.classList.contains('hot'))htb.classList.remove('hot'); } }   // 殺戮過熱條
+  var fls=$('flstreak'); if(fls){ var _nb=Math.min(0.30,(G.noHitT||0)*0.01); fls.textContent=((G.noHitT||0)>=1)?('🎯 無瑕連段 +'+Math.round(_nb*100)+'% 傷害'):''; }   // 無瑕連段徽章
   // 首領血條
   var boss=null; for(var bi=0;bi<enemies.length;bi++){ if(enemies[bi].boss&&enemies[bi].hp>0){boss=enemies[bi];break;} }
   var bb=$('bossbar'); if(boss){ bb.classList.add('show'); bb.classList.toggle('enraged',!!boss.enraged);
@@ -5077,7 +5082,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v499 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v500 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

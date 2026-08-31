@@ -1908,6 +1908,21 @@ var WDEFS={
         if(hi){ ringFx(player.x,player.y,44,'#c8fff0'); } }
     }
   },
+  killchain:{ic:'⛓️',name:'連殺鏈炮',color:'#ffb347',tag:'連擊',max:8,
+    desc:function(l){return l===0?'朝最近敵人噴射散彈；連擊數越高散彈越多（2→5）、傷害越猛，連擊拉滿時追加一發貫穿處決彈——獎勵不間斷的連殺鏈':'散彈↑ 傷害↑';},
+    cd:function(l){return Math.max(0.16,0.42-l*0.032);},
+    fire:function(w){ var t=nearestEnemy(player.x,player.y,540); if(!t)return; var a=Math.atan2(t.y-player.y,t.x-player.x);
+      var cf=Math.min(1,(G.combo||0)/40), n=2+Math.round(cf*3), spread=0.14+cf*0.10;
+      for(var k=0;k<n;k++){ var off=(n>1)?(k/(n-1)-0.5)*2*spread:0; spawnBullet(player.x,player.y,Math.cos(a+off),Math.sin(a+off),700,dmg((13+w.level*5)*(1+cf*0.5)),'#ffb347',3+Math.floor(w.level/2),2,0.6); }
+      if(cf>=0.99){ spawnBullet(player.x,player.y,Math.cos(a),Math.sin(a),1000,dmg(40+w.level*16),'#ffe14a',5+w.level,999,1.2); ringFx(player.x,player.y,40,'#ffe14a'); } },
+    evo:{reqPassive:'pdmg',ic:'💥',name:'殲滅連鎖',color:'#ffd24a',desc:'散彈更多更猛、更早滿載；連擊拉滿時追加雙發貫穿處決彈',
+      cd:function(l){return Math.max(0.13,0.36-l*0.028);},
+      fire:function(w){ var t=nearestEnemy(player.x,player.y,580); if(!t)return; var a=Math.atan2(t.y-player.y,t.x-player.x);
+        var cf=Math.min(1,(G.combo||0)/28), n=3+Math.round(cf*3), spread=0.15+cf*0.12;
+        for(var k=0;k<n;k++){ var off=(n>1)?(k/(n-1)-0.5)*2*spread:0; spawnBullet(player.x,player.y,Math.cos(a+off),Math.sin(a+off),760,dmg((16+w.level*6)*(1+cf*0.6)),'#ffd24a',4+Math.floor(w.level/2),3,0.62); }
+        if(cf>=0.99){ for(var ex=-1;ex<=1;ex+=2){ spawnBullet(player.x,player.y,Math.cos(a+ex*0.04),Math.sin(a+ex*0.04),1050,dmg(48+w.level*18),'#ffe14a',6+w.level,999,1.2); } ringFx(player.x,player.y,48,'#ffe14a'); GAudio.crit&&GAudio.crit(); } }
+    }
+  },
   purgewave:{ic:'🛡️',name:'淨化波',color:'#7cf0ff',tag:'防禦',max:8,
     desc:function(l){return l===0?'以自身為中心震盪出淨化波，擊傷並擊退周圍敵人，同時清除範圍內來襲的敵彈':'範圍↑ 傷害↑';},
     cd:function(l){return Math.max(1.0,2.2-l*0.14);},
@@ -2305,7 +2320,7 @@ var WDEFS={
     }
   }
 };
-var WORDER=['plasma','ricochet','wavecannon','splitshot','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet','hornet','spiralgun','gatling','chakram','beamsweep','judgment','skewer','tether','guillotine','novabloom','deadeye','brand','blinkstrike','purgewave','railcharge','pyroclast','flawblade'];
+var WORDER=['plasma','ricochet','wavecannon','splitshot','blades','lightning','aura','shotgun','missiles','boomerang','blackhole','laser','frost','mine','toxic','thunder','flame','sentry','spike','lash','saw','turret','grenade','tesla','starburst','lance','ballista','meteorrain','prismbeam','shockwave','flak','scythe','comet','hornet','spiralgun','gatling','chakram','beamsweep','judgment','skewer','tether','guillotine','novabloom','deadeye','brand','blinkstrike','purgewave','railcharge','pyroclast','flawblade','killchain'];
 // 武器背景敘事（顯示於武器圖鑑，延續世界觀）
 var WEAPON_LORE={
   plasma:'倖存者護甲的標準配備。每一發電漿都是舊世界文明最後的火種。',
@@ -2333,6 +2348,7 @@ var WEAPON_LORE={
   railcharge:'它總是先沉默地積蓄，再在某個臨界點一次傾瀉。那道貫穿全場的藍白軌跡，是它把三次克制凝成的一次答覆——所過之處，沒有什麼配得上第二發。',
   pyroclast:'它從不獨自燃燒。你殺得越急，槍膛就燒得越紅——那股熱度會回流進噴口，讓每一次噴發都比上一次更狂。它不是武器，而是你連殺節奏的延伸：當你停手，它冷卻；當你不停，它成災。煉獄從不點燃自己，是你替它添的柴。',
   flawblade:'刃身薄得幾乎透明，只有在絕對的專注中才會顯形。它不獎勵蠻力，只獎勵那份滴血不沾的從容——你躲得越乾淨，它就割得越深。真正的鋒利不在刃上，而在於：這一路走來，你連一次都沒讓對手碰到。',
+  killchain:'它靠殺意運轉。每一次擊殺都是上膛，連得越長，槍管就轉得越急、吐得越狂。一旦你停手，那條灼熱的鏈也隨之冷卻——所以它只屬於那些永不鬆手、把整場戰鬥串成一道不斷裂的殺戮鎖鏈的人。',
   mine:'工兵留給後來者的問候。踏上它的，都會後悔前進的那一步。',
   toxic:'瘟疫師的慈悲——既然治不好這世界，便讓敵人陪它一起腐爛。',
   thunder:'自稱雷神者的天罰。抬手，天便落下審判，無人知其真名。',
@@ -5121,7 +5137,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v507 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v508 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

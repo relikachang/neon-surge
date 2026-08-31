@@ -2935,6 +2935,7 @@ var ETYPES={
   cryoburst:{r:15,hp:70,sp:60,dmg:13,color:'#7dc8ff',xp:4,shape:'dia'},   // 凍爆獸：死亡時炸出冰霜爆，減速附近玩家，懲罰貼身擊殺、逼你保持距離
   arbalest:{r:16,hp:100,sp:48,dmg:18,color:'#c0e34a',xp:6,shape:'arrow'},   // 弩獸：週期朝你射出一束高速三連窄扇弩矢，速度快、扇角窄，逼你側身橫移閃開射線而非硬扛
   hive:{r:20,hp:150,sp:34,dmg:14,color:'#9aff6a',xp:7,shape:'hex',hive:true},   // 孵化巢：緩慢肉盾，週期孵化一小群雜兵，放任不管敵潮暴增，逼你優先擊殺
+  sapper:{r:16,hp:95,sp:52,dmg:14,color:'#ffb347',xp:5,shape:'sq',sapper:true},   // 佈雷獸：邊遊走邊週期在腳下佈下延遲預警轟炸，行經路徑化為計時雷區，逼你別無腦追擊
   // 稀有怪物（特定條件才會出現）
   phantom:{r:15,hp:54,sp:124,dmg:16,color:'#b98cff',xp:8,shape:'dia',rare:true},   // 幽影：8 分後成群高速幽靈
   golden:{r:20,hp:120,sp:56,dmg:8,color:'#ffd54a',xp:18,shape:'hex',rare:true,flee:true},   // 黃金巨獸：會逃跑的寶獸
@@ -2981,6 +2982,7 @@ var MONSTER_INFO={
   cryoburst:{n:'凍爆獸',d:'後期登場的冰霜自爆兵，死亡時炸出一圈寒霜。若在牠身邊擊殺，你會被凍緩、移動變得遲鈍——保持距離擊破，或殺完立刻脫離爆點。'},
   arbalest:{n:'弩獸',d:'後期登場的精準射手，週期朝你射出一束高速三連窄扇弩矢。彈速極快、扇角很窄，正面硬扛幾乎必中——聽準上弦聲、朝側邊橫移錯開射線，牠的窄扇就成了空砲。'},
   hive:{n:'孵化巢',d:'後期登場的緩慢肉盾，週期孵化出一小群高速雜兵。牠本身傷害不高，卻能源源不絕地餵養敵潮——放任不管，你會被越滾越大的蟲群活活淹沒。看到綠色孵化光環，優先擊破巢體，才能截斷源頭。'},
+  sapper:{n:'佈雷獸',d:'後期登場的工兵型敵人，邊遊走邊每隔一兩秒在腳下佈下一枚延遲引爆的預警地雷。牠本身不強，麻煩的是牠走過的路——一整條計時雷區。別無腦貼著牠追打，讀好落點、繞開牠身後的軌跡，再從側翼收掉牠。'},
   phantom:{n:'幽影',d:'第 8 分鐘後浮現的高速幽靈，成群出沒、經驗豐厚。',rare:true},
   golden:{n:'黃金巨獸',d:'膽小會逃跑的稀有寶獸，追上擊殺可獲大量碎片與道具。',rare:true},
   warden:{n:'監視者',d:'第 6 分鐘後偶爾降臨的稀有精英射手，血厚傷高。',rare:true},
@@ -3012,6 +3014,7 @@ var MONSTER_LORE={
   cryoburst:'牠把死亡凍結成一場寒流。殺死它的人,會在牠碎裂的瞬間,感受到自己的腳步也一同結了霜。',
   arbalest:'牠不追、不撲,只在遠處靜靜上弦。三矢齊發的剎那,空氣被劃出三道平行的白線——命中與否,早在牠扣下弦的那一刻就已寫定。',
   hive:'牠不為戰鬥而生,只為繁衍。臃腫的甲殼下是永不停歇的孵化室,一批批新生的飢餓被吐向你。殺死一隻不算什麼——你要殺的,是牠不斷把黑暗變成敵人的那份耐心。',
+  sapper:'牠不與你正面交鋒,只是安靜地走過,把死亡一枚枚埋進你我之間的土地。牠深諳一個道理:最可怕的不是攻擊,而是讓每一寸退路都變得不再安全。追牠的人,往往先葬身於牠的來時路。',
   pouncer:'牠把自己拋向空中的那一瞬,是最安全也最危險的——你打不到牠,牠也還沒落下。真正的殺意,藏在牠著地的那一擊裡。',
   titan:'行走的災厄,每一步都讓大地為之震顫。',
   stalker:'從你的盲點裡誕生,你看見牠時,刃已及身。',
@@ -3058,7 +3061,7 @@ function spawnEnemy(type,ex,ey,mul,forceElite){
   if(ex==null){ ang=rand(0,TAU); ex=player.x+Math.cos(ang)*rr; ey=player.y+Math.sin(ang)*rr; }
   enemies.push({x:ex,y:ey,type:type,r:r,hp:hp,maxHp:hp,sp:sp,dmg:dm,color:d.color,
     xp:xp,shape:d.shape,ranged:d.ranged,explode:d.explode,split:d.split,charger:d.charger,elite:elite,affix:affix,
-    titan:d.titan,stalker:d.stalker,bombard:d.bombard,sniper:d.sniper,smasher:d.smasher,weaver:d.weaver,phaseknight:d.phaseknight,impaler:d.impaler,voidreaper:d.voidreaper,beamer:d.beamer,converger:d.converger,suppressor:d.suppressor,hexer:d.hexer,orbiter:d.orbiter,pouncer:d.pouncer,mender:d.mender,shade:d.shade,hive:d.hive,homer:d.homer,flee:d.flee,summonRare:d.summonRare,seekerRare:d.seekerRare,stormRare:d.stormRare,
+    titan:d.titan,stalker:d.stalker,bombard:d.bombard,sniper:d.sniper,smasher:d.smasher,weaver:d.weaver,phaseknight:d.phaseknight,impaler:d.impaler,voidreaper:d.voidreaper,beamer:d.beamer,converger:d.converger,suppressor:d.suppressor,hexer:d.hexer,orbiter:d.orbiter,pouncer:d.pouncer,mender:d.mender,shade:d.shade,hive:d.hive,sapper:d.sapper,homer:d.homer,flee:d.flee,summonRare:d.summonRare,seekerRare:d.seekerRare,stormRare:d.stormRare,
     flash:0,shoot:rand(1,3),chargeT:rand(2,4),dash:0,dvx:0,dvy:0,knx:0,kny:0,boss:false,slow:0,frozen:0,spawnT:0.24});
 }
 function spawnBoss(){
@@ -3611,6 +3614,7 @@ function update(dt){
     if(e.smasher){ e.smT=(e.smT==null?rand(2,3):e.smT-dt); if(e.smT<=0){ e.smT=rand(3,4); if(hazards.length<80)hazards.push({kind:'strike',x:e.x,y:e.y,r:118,life:1.4,max:1.4,warn:0.9,fired:false,dtk:0}); ringFx(e.x,e.y,80,'#ff7a3d'); } }   // 碎擊者：週期在自身周圍震地爆擊
     if(e.weaver){ e.wvA=(e.wvA||0)+dt*2.2; e.wvT=(e.wvT==null?0.3:e.wvT-dt); if(e.wvT<=0){ e.wvT=0.36; for(var wv=0;wv<3;wv++){ var wva=e.wvA+wv*(TAU/3); spawnEnemyBullet(e.x,e.y,Math.cos(wva),Math.sin(wva),160,e.dmg*0.4); } } }   // 織網者：持續吐出旋轉螺旋彈網
     if(e.hive){ e.hvT=(e.hvT==null?rand(3,4):e.hvT-dt); if(e.hvT<=0){ e.hvT=rand(4.5,6.5); if(enemies.length<170){ for(var hv=0;hv<2;hv++){ var hva=rand(0,TAU), hvx=e.x+Math.cos(hva)*36, hvy=e.y+Math.sin(hva)*36; spawnEnemy('swarm',hvx,hvy,0.9); ringFx(hvx,hvy,26,'#9aff6a'); } ringFx(e.x,e.y,e.r*2,'#9aff6a'); burst(e.x,e.y,'#9aff6a',8,150); } } }   // 孵化巢：週期孵化一小群雜兵(場上敵量上限保護)，逼你優先擊殺
+    if(e.sapper){ e.saT=(e.saT==null?rand(1.4,2.4):e.saT-dt); if(e.saT<=0 && hazards.length<80){ e.saT=rand(2,3); hazards.push({kind:'strike',x:e.x,y:e.y,r:70,life:1.6,max:1.6,warn:1.1,fired:false,dtk:0}); ringFx(e.x,e.y,44,'#ffb347'); } }   // 佈雷獸：邊走邊在腳下佈下延遲預警轟炸，沿路留下計時雷區
     if(e.phaseknight&&e.dash<=0){ e.pkT=(e.pkT==null?rand(2,3):e.pkT-dt); if(e.pkT<=0){ e.pkT=rand(3,4); var pka=rand(0,TAU); e.x=player.x+Math.cos(pka)*150; e.y=player.y+Math.sin(pka)*150; e.phaseEnd=G.time+0.8; ringFx(e.x,e.y,46,'#c8c8ff'); var pda=Math.atan2(player.y-e.y,player.x-e.x); e.dash=0.35; e.dvx=Math.cos(pda)*600; e.dvy=Math.sin(pda)*600; } }   // 相位騎士：瞬移+短暫無敵+突刺
     if(e.impaler){ if(e.dash>0){ e.imT=(e.imT==null?0.08:e.imT-dt); if(e.imT<=0 && hazards.length<80){ e.imT=0.09; hazards.push({kind:'lava',x:e.x,y:e.y,r:30,life:2.2,max:2.2,dtk:0}); } } else { e.icT=(e.icT==null?rand(2,3):e.icT-dt); if(e.icT<=0){ e.icT=rand(3,4.5); var ia=Math.atan2(player.y-e.y,player.x-e.x); e.dash=0.6; e.dvx=Math.cos(ia)*520; e.dvy=Math.sin(ia)*520; ringFx(e.x,e.y,e.r*2,'#ff6a3d'); } } }   // 穿刺者：週期猛衝，衝鋒中留下灼熱火痕
     if(e.pouncer){ if(e.dash>0){ if(e.dash<=0.1 && !e._pounced && hazards.length<80){ e._pounced=true; hazards.push({kind:'strike',x:e.x,y:e.y,r:74,life:1.3,max:1.3,warn:0.7,fired:false,dtk:0}); ringFx(e.x,e.y,54,'#ff9a3d'); } } else { e._pounced=false; e.poT=(e.poT==null?rand(1.8,2.8):e.poT-dt); if(e.poT<=0){ e.poT=rand(2.8,4); var poa=Math.atan2(player.y-e.y,player.x-e.x); e.dash=0.5; e.dvx=Math.cos(poa)*560; e.dvy=Math.sin(poa)*560; e.phaseEnd=G.time+0.5; ringFx(e.x,e.y,e.r*2.2,'#ffca54'); } } }   // 撲擊者：週期躍擊(騰空無敵)，落地爆擊
@@ -3849,8 +3853,8 @@ function chooseType(m){ var r=Math.random();
   if(m<0.8)return r<0.45?'grunt':r<0.7?'swarm':r<0.85?'ranged':'charger';
   if(m<1.6)return r<0.32?'grunt':r<0.52?'swarm':r<0.66?'ranged':r<0.78?'bomber':r<0.9?'charger':'splitter';
   if(m<3.5)return r<0.24?'grunt':r<0.42?'swarm':r<0.56?'ranged':r<0.68?'bomber':r<0.8?'charger':r<0.9?'splitter':'tank';
-  if(m<6)return r<0.15?'grunt':r<0.28?'swarm':r<0.39?'ranged':r<0.49?'bomber':r<0.58?'charger':r<0.67?'splitter':r<0.76?'tank':r<0.85?'brute':r<0.9?'wraith':r<0.92?'mortar':r<0.94?'orbiter':r<0.95?'mender':r<0.955?'hive':r<0.963?'detonaut':r<0.976?'scatterer':r<0.986?'warcaller':r<0.994?'arbalest':'cryoburst';   // 後期(3.5分後)出現蠻兵/厲魂/砲兵/環行者/療靈/崩解獸/散射獸/戰吼獸/弩獸/凍爆獸
-  return r<0.11?'grunt':r<0.19?'swarm':r<0.28?'ranged':r<0.37?'charger':r<0.45?'splitter':r<0.53?'tank':r<0.61?'brute':r<0.68?'wraith':r<0.72?'mortar':r<0.75?'orbiter':r<0.78?'pouncer':r<0.79?'hive':r<0.83?'titan':r<0.87?'stalker':r<0.91?'bombard':r<0.91?'marksman':r<0.935?'smasher':r<0.955?'weaver':r<0.97?'phaseknight':r<0.982?'impaler':r<0.983?'voidreaper':r<0.988?'sentinel':r<0.992?'warlock':r<0.994?'suppressor':r<0.996?'hexer':r<0.9975?'mender':r<0.999?'arbalest':'shade';   // 深後期(6分後)出現泰坦/潛襲者/重砲手/狙擊手/碎擊者/織網者/相位騎士/穿刺者/虛空收割者/哨戒者/虛空祭司/壓制者/幻影領主
+  if(m<6)return r<0.15?'grunt':r<0.28?'swarm':r<0.39?'ranged':r<0.49?'bomber':r<0.58?'charger':r<0.67?'splitter':r<0.76?'tank':r<0.85?'brute':r<0.9?'wraith':r<0.92?'mortar':r<0.94?'orbiter':r<0.95?'mender':r<0.955?'hive':r<0.958?'sapper':r<0.963?'detonaut':r<0.976?'scatterer':r<0.986?'warcaller':r<0.994?'arbalest':'cryoburst';   // 後期(3.5分後)出現蠻兵/厲魂/砲兵/環行者/療靈/崩解獸/散射獸/戰吼獸/弩獸/凍爆獸
+  return r<0.11?'grunt':r<0.19?'swarm':r<0.28?'ranged':r<0.37?'charger':r<0.45?'splitter':r<0.53?'tank':r<0.61?'brute':r<0.68?'wraith':r<0.72?'mortar':r<0.75?'orbiter':r<0.78?'pouncer':r<0.79?'hive':r<0.80?'sapper':r<0.83?'titan':r<0.87?'stalker':r<0.91?'bombard':r<0.91?'marksman':r<0.935?'smasher':r<0.955?'weaver':r<0.97?'phaseknight':r<0.982?'impaler':r<0.983?'voidreaper':r<0.988?'sentinel':r<0.992?'warlock':r<0.994?'suppressor':r<0.996?'hexer':r<0.9975?'mender':r<0.999?'arbalest':'shade';   // 深後期(6分後)出現泰坦/潛襲者/重砲手/狙擊手/碎擊者/織網者/相位騎士/穿刺者/虛空收割者/哨戒者/虛空祭司/壓制者/幻影領主
 }
 
 // ---- 經驗 / 升級 ----
@@ -5113,7 +5117,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v504 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v505 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

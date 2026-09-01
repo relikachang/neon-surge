@@ -1588,6 +1588,7 @@ var STAGES=[
   {id:'resonance',name:'共鳴之淵', desc:'全場齊射 · 共鳴主宰', bg:'#060410', grid:'rgba(200,107,255,0.12)', eHp:7.0, eSpd:1.82, spawn:2.58, bossName:'共鳴主宰', bossColor:'#c86bff', pattern:'prismspray', locked:true, unlock:'sacrifice'},
   {id:'gravtide',name:'潮汐深淵', desc:'引力潮汐 · 潮汐主宰', bg:'#04060f', grid:'rgba(139,92,246,0.12)', eHp:7.2, eSpd:1.85, spawn:2.62, bossName:'潮汐主宰', bossColor:'#8b5cf6', pattern:'blackhole', locked:true, unlock:'resonance'},
   {id:'mire',name:'酸蝕沼域', desc:'酸雨侵蝕 · 沼域主宰', bg:'#080f05', grid:'rgba(157,255,93,0.11)', eHp:7.4, eSpd:1.86, spawn:2.64, bossName:'沼域主宰', bossColor:'#9dff5d', pattern:'spiralgap', locked:true, unlock:'gravtide'},
+  {id:'collapse',name:'塌縮之淵', desc:'領域塌縮 · 塌縮主宰', bg:'#0a0616', grid:'rgba(176,107,255,0.12)', eHp:7.6, eSpd:1.87, spawn:2.66, bossName:'塌縮主宰', bossColor:'#b06bff', pattern:'tidalsweep', locked:true, unlock:'mire'},
 ];
 var selStage='city';
 // 地圖 × 首領 世界觀敘事（選圖時顯示，融合場景氛圍與首領命名由來）
@@ -1616,7 +1617,8 @@ var STAGE_LORE={
   sacrifice:'再往深處，規則變得赤裸而殘忍：這裡的力量，只用鮮血交換。每一次血祭脈動，都從你身上抽走一部分，換來一瞬燃燒般的爆發。「獻祭主宰」端坐於這場永恆的交易中心——牠不奪走你的性命，只是不斷提醒你，你願意為了活下去，付出多少。',
   resonance:'這裡的一切都會共振。當「共鳴主宰」撥動那根看不見的弦，整片深淵的敵意會在同一瞬間指向你——那不是攻擊，而是一場齊聲的宣判。學會聽見弦聲響起的前兆，在萬箭同發之前，找到那道唯一的靜默縫隙。',
   gravtide:'這片深淵有自己的呼吸。每隔一段時間，一股無形的引力潮便席捲全場，把四散的敵人牽引、擠壓成一團——「潮汐主宰」正是這股潮汐的心臟，它從不追逐你，只是靜靜地一收一放，讓萬物在它的節律裡漲落。學會在潮起時借勢收割成堆的敵群，也提防那被壓縮的殺意在你腳邊漲成滅頂之浪。',
-  mire:'一整片被腐蝕啃食殆盡的低地。空氣是酸的，雨也是酸的——每一場降下的都不是水，而是能把鋼鐵蝕成蜂窩的劇毒。「沼域主宰」蟄伏在這片永不乾涸的酸澤中央，它從不追殺你，只需靜靜等這片土地替它把你溶解。在這裡，連立足之地都會背叛你：學會永遠比酸雨快上一步。'
+  mire:'一整片被腐蝕啃食殆盡的低地。空氣是酸的，雨也是酸的——每一場降下的都不是水，而是能把鋼鐵蝕成蜂窩的劇毒。「沼域主宰」蟄伏在這片永不乾涸的酸澤中央，它從不追殺你，只需靜靜等這片土地替它把你溶解。在這裡，連立足之地都會背叛你：學會永遠比酸雨快上一步。',
+  collapse:'空間在這裡不再穩定。每隔一段時間，整片領域便朝你所在之處猛然向內塌縮，四面八方的殺意化作一圈收束的環，只在某處留下一線幾不可見的裂隙。「塌縮主宰」端坐於這場永恆內爆的中心——它不需要瞄準你，因為在它的領域裡，所有方向最終都指向同一點：你站的地方。要活下去，就得學會在世界合攏之前，讀出那道唯一的縫。'
 };
 var selMode='normal';
 try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde'||_sm==='turbo'||_sm==='chaos'||_sm==='vampire'||_sm==='titanhunt'||_sm==='lonewolf'||_sm==='countdown'||_sm==='bossfrenzy'||_sm==='forge'||_sm==='eclipse')selMode=_sm; }catch(e){}   // 記憶上次選的模式
@@ -3847,6 +3849,12 @@ function spawnDirector(dt){
     announce('☣ 酸雨侵蝕！地面腐蝕擴散','#9dff5d'); flashScreen('157,255,93',0.16); shake(4);
     for(var _ac=0;_ac<9;_ac++){ if(hazards.length<80){ var _aca=rand(0,TAU), _acd=rand(50,330); hazards.push({kind:'lava',x:player.x+Math.cos(_aca)*_acd,y:player.y+Math.sin(_aca)*_acd,r:52,life:4.5,max:4.5,dtk:0}); } }
     ringFx(player.x,player.y,130,'#9dff5d'); } }
+  // 環境機制·塌縮之淵：週期「領域塌縮」——在玩家四周大半徑生成一圈向內收束的密集彈環(留一道逃生缺口),逼你逆本能向外衝出縫隙或退守中心
+  if(G.stage&&G.stage.id==='collapse'){ G.clT=(G.clT==null?7:G.clT-dt); if(G.clT<=0){ G.clT=rand(8,11);
+    announce('🌀 領域塌縮！彈環向內收束','#b06bff'); flashScreen('176,107,255',0.3); shake(6);
+    var _cn=30, _crad=340, _cgap=randi(0,_cn-1), _cdmg=11+G.time*0.05;
+    for(var _ci=0;_ci<_cn;_ci++){ if(_ci>=_cgap&&_ci<_cgap+4)continue; var _cca=_ci/_cn*TAU, _csx=player.x+Math.cos(_cca)*_crad, _csy=player.y+Math.sin(_cca)*_crad, _cia=Math.atan2(player.y-_csy,player.x-_csx); spawnEnemyBullet(_csx,_csy,Math.cos(_cia),Math.sin(_cia),130,_cdmg); }
+    ringFx(player.x,player.y,_crad,'#b06bff'); ringFx(player.x,player.y,_crad-60,'#c8a0ff'); } }
   // 環境視野阻礙關卡：一次性入場提示
   if(G.stage&&!G._visAnn){ var _va=VISION_STAGES[G.stage.id]; if(_va){ G._visAnn=true; announce(_va.msg,_va.mc); } }
   // 環境狀態·寒獄凍原：暴風雪陣風週期性凍緩(移動變慢，呼應白幕視野)
@@ -5137,7 +5145,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v508 · 2026-08-28';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v509 · 2026-09-01';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

@@ -1628,7 +1628,7 @@ var STAGE_LORE={
   chrono:'在這片領域裡，時間不是流動，而是脈動。每當「時滯主宰」撥動那口看不見的鐘，整個世界便陷入一瞬凝滯——你的腳步變得沉重、扳機也彷彿凝結，連呼吸都慢了半拍。它從不加快自己，只是讓你變慢；因為它深知，在絕對的遲滯面前，再快的反應也追不上早已寫定的結局。學會在鐘聲落下之前就站定該站的位置，因為當時滯降臨，你將再無餘裕修正。'
 };
 var selMode='normal';
-try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde'||_sm==='turbo'||_sm==='chaos'||_sm==='vampire'||_sm==='titanhunt'||_sm==='lonewolf'||_sm==='countdown'||_sm==='bossfrenzy'||_sm==='forge'||_sm==='eclipse'||_sm==='unbroken')selMode=_sm; }catch(e){}   // 記憶上次選的模式
+try{ var _sm=localStorage.getItem('neon_mode'); if(_sm==='timeattack'||_sm==='bossrush'||_sm==='normal'||_sm==='hardcore'||_sm==='horde'||_sm==='turbo'||_sm==='chaos'||_sm==='vampire'||_sm==='titanhunt'||_sm==='lonewolf'||_sm==='countdown'||_sm==='bossfrenzy'||_sm==='forge'||_sm==='eclipse'||_sm==='unbroken'||_sm==='goldrush')selMode=_sm; }catch(e){}   // 記憶上次選的模式
 var MODES={
   normal:{ic:'♾️',name:'標準生存',desc:'經典模式：活越久越強，挑戰無盡'},
   timeattack:{ic:'⏱️',name:'限時狂殺',desc:'120 秒內衝最高擊殺，時間到結算',dur:120},
@@ -1644,7 +1644,8 @@ var MODES={
   bossfrenzy:{ic:'👑',name:'首領狂潮',desc:'首領以約兩倍頻率接連降臨（雜兵照常）・持續的王者壓力與豐厚報酬，考驗你在兵潮中同時處理接踵而來的首領，碎片獎勵 1.5 倍',reward:1.5},
   forge:{ic:'🔥',name:'熔爐試煉',desc:'殺戮熱度永不冷卻・只增不減——把火燒旺就能滾雪球到永久過熱、全武器傷害暴漲；代價是敵人更硬、湧來更密，逼你搶在被淹沒前點燃連殺，最純粹的進攻滾雪球試煉，碎片獎勵 1.75 倍',reward:1.75},
   eclipse:{ic:'🌑',name:'血月狂潮',desc:'平靜與狂潮交替降臨——每隔約半分鐘血月升起，敵潮暴漲、群敵狂化爆走十餘秒；挺過血月即得喘息，考驗你在張與弛之間的節奏掌控，碎片獎勵 1.6 倍',reward:1.6},
-  unbroken:{ic:'⛓️',name:'連鎖狂潮',desc:'連擊永不中斷——連擊計時不再衰竭，整場滾出無盡連擊，讓所有連擊系加成（連殺鏈炮／連擊傷害／經驗）全面暴走；考驗你能否一路串起不斷裂的殺戮鎖鏈，碎片獎勵 1.6 倍',reward:1.6}
+  unbroken:{ic:'⛓️',name:'連鎖狂潮',desc:'連擊永不中斷——連擊計時不再衰竭，整場滾出無盡連擊，讓所有連擊系加成（連殺鏈炮／連擊傷害／經驗）全面暴走；考驗你能否一路串起不斷裂的殺戮鎖鏈，碎片獎勵 1.6 倍',reward:1.6},
+  goldrush:{ic:'💰',name:'賞金獵場',desc:'每擊殺都額外掉落碎片・碎片獎勵大增，代價是敵人更硬（HP +25%）——專為快速積累碎片、衝刺永久強化樹的淘金模式，碎片獎勵 2.5 倍',reward:2.5}
 };
 function stageUnlocked(s){ return !s.locked || DB.stages[s.id]; }
 
@@ -3095,6 +3096,7 @@ function spawnEnemy(type,ex,ey,mul,forceElite){
   var hp=d.hp*mul*st.eHp*mt.eHp*lateHp*am, sp=d.sp*st.eSpd*mt.eSpd*(G.mode==='turbo'?1.4:1), r=d.r, xp=d.xp, dm=d.dmg*endless*am;
   if(G.mode==='titanhunt'){ hp*=2.4; r*=1.4; xp*=3; dm*=1.15; }   // 巨獸狩獵：敵人化為血厚體巨的龐然巨獸,給大量經驗
   if(G.mode==='forge'){ hp*=1.5; dm*=1.12; xp*=1.2; }   // 熔爐試煉：敵人更硬更兇(平衡永不冷卻的熱度滾雪球),但給更多經驗助你快速起火
+  if(G.mode==='goldrush'){ hp*=1.25; }   // 賞金獵場：敵人更硬(平衡每殺掉碎片的淘金收益)
   if(G.mode==='eclipse'&&G.bmActive){ sp*=1.35; }   // 血月狂潮：血月期間新生敵人也更迅捷
   // 精英變體：更大更肉、發光、掉更多、隨機詞綴（隨時間提高機率，每日變異可加成）
   var elite = forceElite || (G.mode==='chaos' && Math.random()<0.7) || (mul>1 && Math.random()<Math.min(0.62,(0.015+G.time/1100)*mt.elite));
@@ -3295,6 +3297,7 @@ function killEnemy(e){
   G.heat=Math.min(G.heatMax,(G.heat||0)+(e.boss?0:e.elite?14:4)*((player&&player.charId==='pyromancer')?1.5:1)); if(G.heat>=G.heatMax&&!G._overheat&&!G.over){ G._overheat=true; announce('🔥 殺戮過熱！武器熾化 +25%傷害','#ff7a1a'); GAudio.elite&&GAudio.elite(); }   // 殺戮過熱：連殺累積熱度(停手則衰退,焚心蓄熱+50%),滿熱進入過熱態,熱度越高全武器傷害越強
   if(player&&player.charId==='bloodreaver'&&player.hp>0&&player.hp<player.maxHp){ player.hp=Math.min(player.maxHp,player.hp+(e.boss?15:e.elite?5:1.5)); }   // 噬血者：每擊殺回血(雜兵1.5/精英5/首領15)，越戰越猛的吸血近戰
   if(player&&player.charId==='zephyr'){ player.frenzyT=Math.max(player.frenzyT||0,1.5); }   // 疾風：每擊殺刷新 1.5 秒狂化(射速+傷害)，連殺不停即維持狂化，越殺越快
+  if(G.mode==='goldrush'){ G.shards+=(e.boss?15:e.elite?4:1); }   // 賞金獵場：每擊殺額外掉落碎片(雜兵1/精英4/首領15)，淘金模式
   if(e.elite&&!e.boss){ G.charge=Math.min(G.chargeMax,(G.charge||0)+12); if(G.charge>=G.chargeMax&&!G.over)triggerOvercharge(); var _elb=8+Math.floor(G.time/20); G.shards+=_elb; for(var _eq=0;_eq<2;_eq++)ringFx(e.x,e.y,48+_eq*34,'#ffd54a'); burst(e.x,e.y,'#ffd54a',14,260); GAudio.jackpot&&GAudio.jackpot(); }   // 精英賞金：擊破精英額外注入過載充能 +12 + 隨時間遞增的碎片賞金 + 金色破擊光環
   if(G.mode==='countdown'){ G.modeTimer=(G.modeTimer||0)+(e.boss?8:e.elite?1.5:0.3); }   // 倒數殺戮：每擊殺延長剩餘時間(首領/精英給更多)
   if(e.boss)G.hitStop=Math.max(G.hitStop||0,0.12); else if(e.elite)G.hitStop=Math.max(G.hitStop||0,0.06);   // 頓幀：擊殺首領/精英瞬間慢動作衝擊
@@ -5194,7 +5197,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v519 · 2026-09-01';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v520 · 2026-09-01';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',
@@ -5272,7 +5275,7 @@ function renderMenu(){
     slb.innerHTML='<div class="slname" style="color:'+ssg.bossColor+'">'+ssg.name+' <span class="slboss" style="color:'+ssg.bossColor+';border-color:'+ssg.bossColor+'66">👑 '+ssg.bossName+'</span></div><div class="sltxt">「'+slore+'」</div>';
   }
   var ms=$('modesel'); if(ms){ ms.innerHTML='';
-    ['normal','timeattack','bossrush','hardcore','horde','turbo','chaos','vampire','titanhunt','lonewolf','countdown','bossfrenzy','forge','eclipse','unbroken'].forEach(function(mid){ var md=MODES[mid];
+    ['normal','timeattack','bossrush','hardcore','horde','turbo','chaos','vampire','titanhunt','lonewolf','countdown','bossfrenzy','forge','eclipse','unbroken','goldrush'].forEach(function(mid){ var md=MODES[mid];
       var el=document.createElement('div'); el.className='modecard'+(selMode===mid?' on':'');
       el.innerHTML='<div class="mic">'+md.ic+'</div><div class="mn">'+md.name+'</div><div class="md">'+md.desc+'</div>';
       el.onclick=function(){ selMode=mid; try{localStorage.setItem('neon_mode',mid);}catch(_){} renderMenu(); };

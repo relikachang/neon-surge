@@ -1414,6 +1414,7 @@ var CHARS=[
   {id:'pyromancer',face:'🔥',name:'焚心', desc:'熾焰法師 · 起手熔火噴槍 · 蓄熱 +50% · 高攻敏捷低血', start:'pyroclast', locked:true, unlock:'pyromancer', stat:{dmg:1.16,maxHp:0.82,crit:0.05,speed:1.05,fireRate:1.08}},
   {id:'bloodreaver',face:'🩸',name:'噬血者', desc:'吸血近戰 · 起手靈能場 · 每擊殺回血 · 越戰越猛', start:'aura', locked:true, unlock:'bloodreaver', stat:{dmg:1.1,maxHp:0.9,crit:0.03,speed:1.0}},
   {id:'zephyr',face:'🌀',name:'疾風', desc:'極速游擊 · 起手電漿 · 擊殺入狂化 · 高速大拾取薄血', start:'plasma', locked:true, unlock:'zephyr', stat:{dmg:1.0,maxHp:0.85,crit:0.05,speed:1.32,pickup:1.35}},
+  {id:'bastion',face:'🛡️',name:'壁壘', desc:'重甲堡壘 · 起手淨化波 · 週期自生晶盾 · 高血緩速', start:'purgewave', locked:true, unlock:'bastion', stat:{dmg:0.95,maxHp:1.35,crit:0.05,speed:0.92}},
 ];
 var selChar='ranger';
 // 角色背景故事（世界觀敘事，選角時顯示）
@@ -1457,9 +1458,10 @@ var CHAR_LORE={
   railgunner:'他背著的不是武器，是一門需要整座砲台才能承載的執念。每一次扣下扳機前，他都在心裡默數三下——第三下，是一道足以貫穿整條戰線的白光。他相信：真正的火力，不在快，而在無可阻擋。',
   pyromancer:'她曾是霓潮反應爐的點火師，直到那場失控的燃燒奪走了她的一切，也在她掌心留下永不熄滅的餘燼。如今她不再懼怕火——她就是火。殺得越急，掌心的爐火燒得越旺；她深知自己是根燒得極快的蠟燭，所以從不留力，只求在燃盡之前，把整片黑暗都點燃。',
   bloodreaver:'他們說牠早該死在第一夜。可牠沒有——每一次瀕死，牠都從敵人尚溫熱的殘骸裡奪回一口生機。如今牠不再分辨獵物與藥引：對牠而言，殺戮就是呼吸，鮮血就是氧氣。停下，即是死亡；唯有不斷收割，牠才能一直活著。',
-  zephyr:'她從不站定，也從不回頭。在霓潮的亂流裡，她學會把速度當成唯一的護甲——躲不掉的，就跑得比它更快；打不穿的，就繞到它來不及轉身的地方。每一次收割都讓她的血更熱、手更急，於是她越殺越快，越快越狂，像一陣永不落地的風，把整片戰場攪成自己的旋渦。'
+  zephyr:'她從不站定，也從不回頭。在霓潮的亂流裡，她學會把速度當成唯一的護甲——躲不掉的，就跑得比它更快；打不穿的，就繞到它來不及轉身的地方。每一次收割都讓她的血更熱、手更急，於是她越殺越快，越快越狂，像一陣永不落地的風，把整片戰場攪成自己的旋渦。',
+  bastion:'他是最後一道防線，也甘於只做一道防線。當所有人都在追求更快、更狠、更致命時，他選擇站定——把自己鑄成一堵不會倒下的牆。晶甲在他周身一次次凝結、碎裂、再凝結，那節奏沉穩得近乎固執。他不求擊殺最多，只求：在他身後的一切，永遠不必獨自面對黑暗。'
 };
-var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕',lunar:'單局擊殺1200敵人',enigma:'？？？ 隱藏任務',spiralist:'單局擊殺2500敵人',gunslinger:'單局造成100萬傷害',ronin:'單局擊殺60精英',warden2:'單局存活12分',nemesis:'單局擊敗15首領',ravager:'單局達成250連擊',shinobi:'單局擊殺1800敵人',templar:'單局存活10分鐘',railgunner:'單局擊敗10首領',pyromancer:'單局達成300連擊',bloodreaver:'單局存活9分鐘',zephyr:'單局擊殺1400敵人'};
+var CHAR_UNLOCK={blade:'存活5分',storm:'擊殺800',gunner:'單局Lv20',cryo:'單局擊殺500',void:'存活4分',sniper:'單局殺20精英',engineer:'單局殺3首領',pyro:'單局第15波',demo:'單局擊殺1000',thundergod:'抵達第4幕',blazer:'單局殺3稀有怪',plaguer:'單局存活6分',rover:'單局殺3黃金巨獸',breaker:'單局150連擊',duelist:'單局存活8分',shredder:'單局殺30精英',fortifier:'單局殺6首領',gambler:'單局累積2000碎片',electromancer:'單局造成50萬傷害',judicator:'單局存活10分',novacaster:'單局抵達第40波',prismancer:'單局抵達第6幕',shockmancer:'單局存活7分',bombardier:'單局殺40精英',cometeer:'單局抵達第8幕',lunar:'單局擊殺1200敵人',enigma:'？？？ 隱藏任務',spiralist:'單局擊殺2500敵人',gunslinger:'單局造成100萬傷害',ronin:'單局擊殺60精英',warden2:'單局存活12分',nemesis:'單局擊敗15首領',ravager:'單局達成250連擊',shinobi:'單局擊殺1800敵人',templar:'單局存活10分鐘',railgunner:'單局擊敗10首領',pyromancer:'單局達成300連擊',bloodreaver:'單局存活9分鐘',zephyr:'單局擊殺1400敵人',bastion:'單局存活11分鐘'};
 
 // ===== 皮膚商城：機體外觀塗裝，用碎片購買（含每 2 個月輪換的限量皮膚）=====
 function mkpal(hue){ return {col:'hsl('+hue+',85%,60%)',glow:'hsl('+hue+',90%,62%)',edge:'hsl('+hue+',92%,78%)',hull:'hsl('+hue+',46%,30%)',hull2:'hsl('+((hue+22)%360)+',50%,23%)',core:'hsl('+((hue+16)%360)+',82%,88%)',accent:'hsl('+((hue+40)%360)+',90%,64%)'}; }
@@ -3471,6 +3473,7 @@ function update(dt){
   if(G.comboTimer>0&&G.mode!=='unbroken'){ G.comboTimer-=dt; if(G.comboTimer<=0){ if(G.combo>=15)floatText('連擊中斷 x'+G.combo,'#ff8a3a'); G.combo=0; var cb=$('combo'); cb.style.opacity='0'; cb.classList.remove('flame','inferno');} }   // 連鎖狂潮：連擊計時永不衰竭,combo 不因停手而中斷
   if(G.heat>0&&G.mode!=='forge'){ G.heat=Math.max(0,G.heat-(14-1.6*metaLv('heatcore'))*dt); }   // 殺戮過熱：停止擊殺則熱度逐漸冷卻(14/秒，過熱核心每級 -1.6/秒 冷卻更慢)；熔爐試煉模式熱度永不冷卻
   if(!G.over){ G.noHitT=(G.noHitT||0)+dt; var _flt=(G.noHitT>=30)?3:(G.noHitT>=20)?2:(G.noHitT>=10)?1:0; if(_flt>(G._flawTier||0)){ G._flawTier=_flt; floatText('🎯 無瑕連段 +'+Math.round(Math.min(0.30,G.noHitT*0.01)*100)+'% 傷害','#7dffd0'); ringFx(player.x,player.y,player.radius+18,'#7dffd0'); } }   // 無瑕連段：不受傷計時，跨越 10/20/30 秒里程碑時提示強化
+  if(!G.over&&player&&player.charId==='bastion'){ G.bastT=(G.bastT==null?6:G.bastT-dt); if(G.bastT<=0){ G.bastT=8; if((player.crystalShield||0)<3){ player.crystalShield=(player.crystalShield||0)+1; ringFx(player.x,player.y,player.radius+16,'#8befff'); ringFx(player.x,player.y,player.radius+30,'#dffbff'); floatText('🔰 晶壁凝聚','#8befff'); } } }   // 壁壘：每 8 秒自生一層晶盾(最多 3 層),重甲堡壘的持續防護
   // 血月狂潮：平靜與狂潮交替——血月升起時敵潮暴漲、群敵狂化爆走十餘秒
   if(G.mode==='eclipse'&&!G.over){ if(!G.bmActive){ G.bmT=(G.bmT==null?15:G.bmT-dt); if(G.bmT<=0){ G.bmActive=true; G.bmDur=12;
       announce('🌑 血月升起！敵潮狂化爆走','#ff2b5e'); flashScreen('255,43,94',0.42); shake(11); GAudio.boss&&GAudio.boss();
@@ -4939,6 +4942,7 @@ function gameOver(){
   if((G.peakCombo||0)>=300&&!DB.chars.pyromancer){DB.chars.pyromancer=true; announce&&announce('🔥 角色「焚心」解鎖！','#ff7a1a');}
   if((G.time||0)>=540&&!DB.chars.bloodreaver){DB.chars.bloodreaver=true; announce&&announce('🩸 角色「噬血者」解鎖！','#ff4d6a');}
   if((G.kills||0)>=1400&&!DB.chars.zephyr){DB.chars.zephyr=true; announce&&announce('🌀 角色「疾風」解鎖！','#7cf0ff');}
+  if((G.time||0)>=660&&!DB.chars.bastion){DB.chars.bastion=true; announce&&announce('🛡️ 角色「壁壘」解鎖！','#8befff');}
   // 解鎖下一張地圖：本圖存活滿 3 分鐘
   if(G.time>=180&&G.stage){ var si=STAGES.findIndex(function(s){return s.id===G.stage.id;}); var nx=STAGES[si+1];
     if(nx&&!DB.stages[nx.id]){ DB.stages[nx.id]=true; GAudio.unlock&&GAudio.unlock(); } }
@@ -5190,7 +5194,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v518 · 2026-09-01';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v519 · 2026-09-01';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

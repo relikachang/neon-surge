@@ -3134,7 +3134,7 @@ function spawnBoss(){
     hp:1400*mul,maxHp:1400*mul,sp:46*st.eSpd,dmg:26,color:st.bossColor,xp:60,shape:'boss',flash:0,shoot:1.4,knx:0,kny:0,boss:true,
     pattern:st.pattern,spin:0,dash:0,dvx:0,dvy:0,tp:0,name:st.bossName,slow:0,frozen:0,summonT:9};
   // 高幕首領隨機採用進階攻擊模式，增加多樣性與挑戰
-  if(G&&G.act>=3&&Math.random()<0.6){ e.pattern=pick(['spiral','twin','aimburst','cross','wall','seeker','meteor','gravity','pulsar','sweeper','converge','petal','homingnova','homingwall','starmine','trident','pinwheel','paradoxnova','minefield','blackhole','orbitstrike','helix','vortexnova','prismspray','starrain','supernova','whip','ringpulse','snakewave','phantomrush','starmill','thornnova','spiralgap','tidalsweep','novachain']); }
+  if(G&&G.act>=3&&Math.random()<0.6){ e.pattern=pick(['spiral','twin','aimburst','cross','wall','seeker','meteor','gravity','pulsar','sweeper','converge','petal','homingnova','homingwall','starmine','trident','pinwheel','paradoxnova','minefield','blackhole','orbitstrike','helix','vortexnova','prismspray','starrain','supernova','whip','ringpulse','snakewave','phantomrush','starmill','thornnova','spiralgap','tidalsweep','novachain','arcsweep']); }
   enemies.push(e); bossIntro(st.bossName,st.bossColor);
   var brgb=parseInt(st.bossColor.slice(1,3),16)+','+parseInt(st.bossColor.slice(3,5),16)+','+parseInt(st.bossColor.slice(5,7),16);
   flashScreen(brgb,0.4); shake(16);
@@ -3247,6 +3247,10 @@ function bossAttack(e,dx,dy){
     var _ncx=player.x+Math.cos(e.spin)*150, _ncy=player.y+Math.sin(e.spin)*150, _ncN=16;
     for(var _nc=0;_nc<_ncN;_nc++){ var _nca=_nc/_ncN*TAU+e.tp*0.2; spawnEnemyBullet(_ncx,_ncy,Math.cos(_nca),Math.sin(_nca),175,e.dmg*0.5); }
     ringFx(_ncx,_ncy,54,e.color); ringFx(_ncx,_ncy,30,'#fff'); }
+  else if(e.pattern==='arcsweep'){ e.spin=(e.spin||0)+0.09; e.tp=(e.tp||0)+1;   // 弧光掃射：半圈寬的彈幕弧牆持續旋轉,只留另外半圈為安全區,逼你隨旋轉待在弧牆背側的空半場
+    var _awb=e.spin, _awarc=Math.PI*0.92, _awN=22;
+    for(var _aw=0;_aw<_awN;_aw++){ var _awa=_awb-_awarc/2+(_aw/(_awN-1))*_awarc; spawnEnemyBullet(e.x,e.y,Math.cos(_awa),Math.sin(_awa),195,e.dmg*0.5); }
+    if(e.tp%3===0){ ringFx(e.x,e.y,72,e.color); } }
   else { for(var k=0;k<10;k++){var a=k/10*TAU+G.time; spawnEnemyBullet(e.x,e.y,Math.cos(a),Math.sin(a),200,e.dmg*0.6);} }
 }
 
@@ -5213,7 +5217,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v522 · 2026-09-01';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v523 · 2026-09-03';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',

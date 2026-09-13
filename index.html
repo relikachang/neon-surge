@@ -3640,6 +3640,11 @@ function update(dt){
       var bka=rand(0,TAU), bkd=380; e.x=player.x+Math.cos(bka)*bkd; e.y=player.y+Math.sin(bka)*bkd;
       e.hp=Math.min(e.maxHp,e.hp+e.maxHp*0.10); e.rally=Math.max(e.rally||0,2);
       for(var bk1=0;bk1<24;bk1++){ var bk1a=bk1/24*TAU+0.13; spawnEnemyBullet(e.x,e.y,Math.cos(bk1a),Math.sin(bk1a),230,e.dmg*0.5); } for(var bkr=0;bkr<3;bkr++)ringFx(e.x,e.y,120+bkr*70,'#38f0ff'); ringFx(e.x,e.y,80,'#fff'); }
+    if(e.boss&&!e._phBind&&e.hp/e.maxHp<0.32){ e._phBind=true; e.shoot=0.24;   // 時空禁錮：一次性壓制階段——同時對玩家施加減速+武器遲滯 2 秒,並生成一圈向內收束的彈環把你釘在原地等收網(首個同時壓制玩家移動與火力的階段)
+      announce('🕸 '+(e.name||'首領')+' 時空禁錮！移動與火力受制','#b0a0ff'); flashScreen('176,160,255',0.4); shake(12); GAudio.boss&&GAudio.boss();
+      player.chillT=Math.max(player.chillT||0,2); player.jamT=Math.max(player.jamT||0,2);
+      var _bnc=20, _bnr=240, _bcx=player.x, _bcy=player.y; for(var _bn=0;_bn<_bnc;_bn++){ var _bna=_bn/_bnc*TAU, _bsx=_bcx+Math.cos(_bna)*_bnr, _bsy=_bcy+Math.sin(_bna)*_bnr, _bia=Math.atan2(_bcy-_bsy,_bcx-_bsx); spawnEnemyBullet(_bsx,_bsy,Math.cos(_bia),Math.sin(_bia),135,e.dmg*0.5); }
+      ringFx(_bcx,_bcy,_bnr,'#b0a0ff'); ringFx(player.x,player.y,60,'#d0c0ff'); }
     if(e.boss&&!e.phConverge&&e.hp/e.maxHp<0.28){ e.phConverge=true; e.shoot=0.2;   // 湮滅收束：在你周身生成兩圈全部向內收束的彈幕網,逼你在網合攏前移出缺口(收束型走位挑戰)
       announce('🌀 '+(e.name||'首領')+' 湮滅收束！','#b06bff'); flashScreen('176,107,255',0.4); shake(13); GAudio.boss&&GAudio.boss();
       var ccx=player.x, ccy=player.y;
@@ -5229,7 +5234,7 @@ function toMenu(){ running=false; GAudio.stopMusic(); hideAll(); $('menu').class
 // =====================================================================
 // 選單 / 商店 UI
 // =====================================================================
-var BUILD='v524 · 2026-09-13';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
+var BUILD='v525 · 2026-09-13';   // 版本標記(每次上線更新)，供玩家確認是否為最新版
 var MENU_TIPS=['💡 保持移動、繞圈拉開身位，讓自動火力清場','💡 升級三選一時，優先湊「進化」條件(對應被動+滿級武器)','💡 碎片可回選單購買永久強化，越買越強','💡 低血時「韌命」減傷、瀕死觸發「二度呼吸」','💡 精英與稀有怪掉落豐厚，值得優先擊殺','💡 連擊越高傷害與碎片加成越多，別讓連擊中斷','💡 完成隱藏任務可解鎖隱藏角色','💡 每日挑戰有專屬變異，換換玩法拿獎勵',
   '✦ 永久強化練滿可「轉生」，換取永不重置的星核加成','🎨 皮膚商城每天輪換 5 款，限量皮膚每 2 個月換一檔','🚀 每位角色都有專屬「本色」塗裝，可在皮膚商城收集','🎟️ 主選單「兌換創作者代碼」可領大量碎片(試試 RELIKA)','💀 一命限定模式零復活但碎片獎勵 1.5 倍，挑戰高手','⭐ 局中會隨機降臨補給空投、增益祭壇、首領懸賞等事件','💎 遺物收藏在戰鬥中達成條件即出土，還藏著世界觀故事','📖 武器/怪物圖鑑要在戰鬥中親手集齊，內含背景敘事','🏅 累計登入 7/30/60 天有里程碑大獎，天天回來領','⚙️ 會暈或想更清爽？設定可關閉螢幕震動、閃光、傷害數字','⏱️ 限時狂殺拚 120 秒爆殺、首領亂鬥考驗純火力','🌌 星核殿堂是碎片無底洞，堆滿全能加成成就最強倖存者',
   '🔫 你的子彈能擊碎敵人的子彈——迎著彈幕開火，也是一種防禦',
